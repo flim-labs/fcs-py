@@ -22,7 +22,7 @@ class SwitchCircle(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(self.color))
-        painter.drawEllipse(0, 0, 22, 22)
+        painter.drawEllipse(1, 1, 20, 20)
         painter.end()
 
     def set_color(self, value):
@@ -41,7 +41,7 @@ class SwitchCircle(QWidget):
             self.new_x += (self.move_range[0] - self.new_x)
         if self.new_x > self.move_range[1]:
             self.new_x -= (self.new_x - self.move_range[1])
-        self.move(self.new_x, self.y())
+        self.move(int(self.new_x), self.y())
         self.oldX = event.globalPosition().x()
         return super().mouseMoveEvent(event)
 
@@ -64,7 +64,7 @@ class SwitchCircle(QWidget):
 
 
 class SwitchControl(QCheckBox):
-    def __init__(self, parent=None, bg_color="#777777", circle_color="#DDD", active_color="#aa00ff",
+    def __init__(self, parent=None, bg_color="#777777", circle_color="#222222", active_color="#aa00ff",
                  animation_curve=QEasingCurve.Type.OutBounce, animation_duration=300, checked: bool = False,
                  change_cursor=True, width=80, height=28):
         super().__init__(parent)

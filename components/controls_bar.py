@@ -39,7 +39,6 @@ class ControlsBar:
         controls_layout.addSpacing(10)
         layout_container.addLayout(controls_layout)
         layout_container.addWidget(draw_layout_separator())
-
         return blank_space, layout_container
 
     @staticmethod
@@ -47,7 +46,7 @@ class ControlsBar:
             start_btn_pressed_cb,
             stop_btn_pressed_cb,
             reset_btn_pressed_cb,
-            channels_checkboxes
+            channels_checkboxes,
     ):
         # ACTION BUTTONS
         buttons_row_layout = QHBoxLayout()
@@ -65,14 +64,14 @@ class ControlsBar:
         stop_button = QPushButton("STOP")
         stop_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_stop_btn_style(stop_button)
-        stop_button.setEnabled(False)
+       
         stop_button.clicked.connect(stop_btn_pressed_cb)
         buttons_row_layout.addWidget(stop_button)
         # reset button 
         reset_button = QPushButton("RESET")
         reset_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_reset_btn_style(reset_button)
-        reset_button.setEnabled(True)
+        
         reset_button.clicked.connect(reset_btn_pressed_cb)
         buttons_row_layout.addWidget(reset_button)
 
@@ -110,7 +109,7 @@ class ControlsBar:
         # Acquisition time mode switch control (Free Running/Fixed)
         running_mode_control = QVBoxLayout()
         inp = SwitchControl(
-            active_color="#13B6B4", height=30, checked=value
+            active_color="#ffff00", height=30, checked=value
         )
         inp.stateChanged.connect(
             (lambda state: change_cb(state))
@@ -154,25 +153,6 @@ class ControlsBar:
         )
         inp.setStyleSheet(GUIStyles.set_input_number_style())
         return inp
-
-    @staticmethod
-    def create_show_cps_control(value, change_cb):
-        # Show CPS switch control
-        show_cps_control = QHBoxLayout()
-        show_cps_label = QLabel("Show CPS:")
-        inp = SwitchControl(
-            active_color="#8d4ef2",
-            width=70, height=30, checked=value
-        )
-        inp.stateChanged.connect(
-            (lambda state: change_cb(state))
-        )
-        show_cps_control.addWidget(show_cps_label)
-        show_cps_control.addSpacing(8)
-        show_cps_control.addWidget(inp)
-        show_cps_control.addSpacing(8)
-
-        return show_cps_control, inp
 
 
     @staticmethod    

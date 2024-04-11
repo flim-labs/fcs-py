@@ -10,11 +10,11 @@ class GUIStyles:
         QApplication.setStyle(QStyleFactory.create(theme))
 
     @staticmethod
-    def customize_theme(window):
+    def customize_theme(window, bg = QColor(28, 28, 28, 128), fg = QColor(255, 255, 255)):
         palette = QPalette()
-        background_color = QColor(28, 28, 28, 128)
+        background_color = bg
         palette.setColor(QPalette.ColorRole.Window, background_color)
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
+        palette.setColor(QPalette.ColorRole.WindowText, fg)
         window.setPalette(palette)
 
     @staticmethod
@@ -99,10 +99,10 @@ class GUIStyles:
     @staticmethod
     def set_start_btn_style(button):
         color_dict = {
-            "base": "#13B6B4",
-            "border": "#13B6B4",
-            "hover": "#1EC99F",
-            "pressed": "#1AAE88",
+            "base": "#31c914",
+            "border": "#31c914",
+            "hover": "#57D33D",
+            "pressed": "#7FE777",
         }
         GUIStyles._set_button_style(button, color_dict, min_width="150px")
 
@@ -119,10 +119,10 @@ class GUIStyles:
     @staticmethod
     def set_reset_btn_style(button):
         color_dict = {
-            "base": "#8d4ef2",
-            "border": "#8d4ef2",
-            "hover": "#a179ff",
-            "pressed": "#6b3da5",
+            "base": "#3b3b3b",
+            "border": "#3b3b3b",
+            "hover": "#555555",
+            "pressed": "#292929",
         }
         GUIStyles._set_button_style(button, color_dict, min_width="100px")
 
@@ -166,41 +166,42 @@ class GUIStyles:
 
 
     @staticmethod    
-    def set_radio_style():
+    def set_tau_checkbox_style():
         return """
-            QRadioButton {
+            QCheckBox {
                 spacing: 5px;
                 color: #f8f8f8;
                 font-family: "Montserrat";
                 font-size: 12px;
                 letter-spacing: 0.1em;
-                border: 1px solid #252525;
                 border-radius: 5px;
-                padding: 6px;
             }
-            QRadioButton::indicator {
+            QCheckBox::indicator {
                 width: 12px;
                 height: 12px;
                 border-radius: 6px;  
             }
 
-            QRadioButton::indicator:unchecked {
+            QCheckBox::indicator:unchecked {
                 background-color: #6b6a6a;
             }
 
-            QRadioButton::indicator:checked {
-                background-color: #21EBAC;
+            QCheckBox::indicator:checked {
+                background-color: #f5f538;
             }
         """
 
 
     @staticmethod    
-    def ch_checkbox_wrapper_style():
+    def checkbox_wrapper_style():
         return """
-            QWidget#fancy_checkbox_wrapper{
+            QWidget#fancy_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
                 border: 1px solid #222222;
                 background-color: transparent;
                 padding: 0;
+            } 
+            QWidget#tau_checkbox_wrapper{
+                border-radius: 5px;
             } 
             QWidget{
                 color: #f8f8f8;
@@ -211,45 +212,36 @@ class GUIStyles:
         """
 
     @staticmethod       
-    def corr_menu_button():
+    def toggle_collapse_button():
         return """
             QPushButton{
-                background-color: #8d4ef2;
-                border-radius: 3px;
-                padding: 4px;
-                qproperty-iconSize: 10px;
-            }
-            
-            QPushButton:hover {
-                background-color: #a179ff;
-                border: 2px solid #a179ff;
-            }
-
-            QPushButton:pressed {
                 background-color: transparent;
-                border: 1px solid "#6b3da5";
-            }
-            
-            QPushButton:disabled {
-                background-color: #222222;
-                border: 1px solid #222222;
-                color: #8c8b8b;
-            }   
+                border-radius: 15px;
+                qproperty-iconSize: 15px;
+                border: 1px solid #808080;
+            } 
         """    
 
 
     @staticmethod
     def set_input_number_style():
         return """
-            QDoubleSpinBox, QSpinBox {
+            QDoubleSpinBox, QSpinBox, QLineEdit {
                 color: #f8f8f8;
                 font-family: "Montserrat";
                 font-size: 12px;
                 padding: 8px;
                 min-width: 120px;
-                border: 1px solid #8d4ef2;
                 border-radius: 5px;
                 background-color: transparent;
+            }
+            QDoubleSpinBox, QSpinBox {
+                border: 1px solid #31c914;
+
+            }
+            QLineEdit {
+                border: 1px solid #f5f538;
+
             }
             QDoubleSpinBox:disabled, QSpinBox:disabled {
             color: #404040;  
@@ -266,7 +258,7 @@ class GUIStyles:
                 font-size: 12px;
                 padding: 8px;
                 min-width: 120px;
-                border: 1px solid #8d4ef2;
+                border: 1px solid #31c914;
                 border-radius: 5px;
                 background-color: transparent;
             }
@@ -281,12 +273,12 @@ class GUIStyles:
 
            QComboBox QAbstractItemView {
             font-family: "Montserrat";
-            border: 1px solid #8d4ef2;
+            border: 1px solid #31c914;
             border-bottom-left-radius: 5px;
             border-bottom-right-radius: 5px;
             background-color: #181818;
             color: #f8f8f8;
-            selection-background-color: #8d4ef2;
+            selection-background-color: #31c914;
             }   
         """
 
@@ -432,4 +424,50 @@ class GUIStyles:
                 
             }}
         """
-        
+
+    @staticmethod    
+    def add_tau_btn_style():
+        return f"""
+            QPushButton, QPushButton:released {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 11px;
+                font-weight: bold;
+                border-radius: 4px;
+                background-color: #f5f538;
+                border: 2px solid #f5f538;
+                color: black;
+            }}
+            
+            QPushButton:hover {{
+                background-color: #d4d400;
+                border: 2px solid #d4d400;
+            }}
+
+            QPushButton:focus {{
+                background-color: #c8b900;
+                border: 2px solid #c8b900;
+            }}
+
+            QPushButton:pressed {{
+                background-color: #c8b900;
+                border: 2px solid #c8b900;
+            }}
+
+            QPushButton:disabled {{
+                background-color: #cecece;
+                border: 2px solid #cecece;
+                color: #8c8b8b;
+            }}
+        """
+
+    @staticmethod           
+    def remove_tau_button():
+        return """
+            QPushButton{
+                background-color: #990000;
+                border-radius: 5px;
+                qproperty-iconSize: 8px;
+            } 
+        """            

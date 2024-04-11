@@ -2,7 +2,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QPropertyAnimation, QSize
 from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QMouseEvent, QFont, QCursor, QPalette, QIcon
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QButtonGroup, QRadioButton, QMenu, QPushButton
 
-SELECTED_COLOR = "#8d4ef2"
+SELECTED_COLOR = "#31c914"
 SELECTED_HOVER_COLOR = "#0053a4"
 DISABLED_SELECTED_COLOR = "#2E2E2E"
 UNSELECTED_COLOR = "#00000"
@@ -10,7 +10,7 @@ DISABLED_COLOR = "lightgrey"
 TEXT_COLOR = "#FFFFFF"
 
 
-CHECKED_COLOR = "#8d4ef2"
+CHECKED_COLOR = "#31c914"
 UNCHECKED_COLOR = "lightgrey"
 
 SELECTED_COLOR_BUTTON = "#0078D7"

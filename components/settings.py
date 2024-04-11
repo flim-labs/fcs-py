@@ -1,5 +1,5 @@
 APP_VERSION = "1.0"
-APP_NAME = "FLIM-FCS"
+APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
 
@@ -7,10 +7,11 @@ APP_DEFAULT_HEIGHT = 800
 SETTINGS_ACQUISITION_STOPPED = "acquisition_stopped"
 DEFAULT_ACQUISITION_STOPPED = False
 
-TAUS_INPUTS = ["1us",  "5us",  "10us",  "20us",  "50us",  "100us",  "200us",  "500us",  "1000us",  "5000us",  "10000us",  "50000us", "100000us"]
+SETTINGS_TAUS_INPUTS = "tau_inputs"
+TAUS_INPUTS = "[1,  50,  100,  200,  500,  1000,  5000,  10000,  50000, 100000]"
 
 SETTINGS_TAU = "tau"
-DEFAULT_TAU = None
+DEFAULT_TAU = "[]"
 
 SETTINGS_GT_CALC_MODE = "gt_calc_mode"
 DEFAULT_GT_CALC_MODE = "realtime"
@@ -47,7 +48,7 @@ DEFAULT_WRITE_DATA = True
 MAX_CHANNELS = 8
 
 SETTINGS_ENABLED_CHANNELS = "enabled_channels"
-DEFAULT_ENABLED_CHANNELS = '[]'
+DEFAULT_ENABLED_CHANNELS = "[0]"
 
 SETTINGS_SHOW_CPS = "show_cps"
 DEFAULT_SHOW_CPS = True
@@ -57,6 +58,9 @@ STOP_BUTTON = "stop_button"
 RESET_BUTTON = "reset_button"
 DOWNLOAD_BUTTON = "download_button"
 DOWNLOAD_MENU = "download_menu"
+CHECKBOX_CONTROLS = "ch_and_tau_controls"
+TAU_COMPONENT = "tau_component"
+ADD_TAU_POPUP = "add_tau_popup"
 
 REALTIME_BUTTON = "realtime_button"
 POST_PROCESSING_BUTTON = "post_processing_button"

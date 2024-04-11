@@ -30,7 +30,6 @@ class TopBar:
     @staticmethod
     def create_header_layout(
             logo_and_title,
-            show_cps_control,
             file_size_info_layout,
             info_link_widget,
             export_data_control,
@@ -48,7 +47,6 @@ class TopBar:
         header_layout.addSpacing(10)
         header_layout.addLayout(gt_calc_mode_buttons_row_layout)
         header_layout.addStretch(1)
-        header_layout.addLayout(show_cps_control)
         header_layout.addWidget(info_link_widget)
         header_layout.addLayout(export_data_control)
         export_data_control.addSpacing(10)
@@ -71,8 +69,8 @@ class TopBar:
         row.addWidget(ctl)
         row.addSpacing(10)
         ctl = GradientText(self,
-                           text="FLIM-FCS",
-                           colors=[(0.5, "#23F3AB"), (1.0, "#8d4ef2")],
+                           text="FCS",
+                           colors=[(0.5, "#31c914"), (1.0, "#ffff00")],
                            stylesheet=GUIStyles.set_main_title_style())
         ctl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         row.addWidget(ctl)
