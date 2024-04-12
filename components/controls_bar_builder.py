@@ -21,7 +21,7 @@ from components.input_number_control import InputNumberControl
 from components.layout_utilities import draw_layout_separator
 
 
-class ControlsBar:
+class ControlsBarBuilder:
 
     @staticmethod
     def init_gui_controls_layout(controls_row, buttons_row):
@@ -34,7 +34,7 @@ class ControlsBar:
         buttons_qv_box = QVBoxLayout()
         buttons_qv_box.addSpacing(20)
         buttons_qv_box.addLayout(buttons_row)
-        controls_layout.addLayout(controls_row)
+        controls_layout.addWidget(controls_row)
         controls_layout.addLayout(buttons_qv_box)
         controls_layout.addSpacing(10)
         layout_container.addLayout(controls_layout)
@@ -89,6 +89,21 @@ class ControlsBar:
         )
         inp.setStyleSheet(GUIStyles.set_input_select_style())
         return inp
+
+
+    @staticmethod    
+    def create_tau_control(controls_row, value, change_cb, options):
+        # Channels type control (USB/SMA)
+        _, inp = SelectControl.setup(
+            "Tau (µs):",
+            value,
+            controls_row,
+            options,
+            change_cb,
+        )
+        inp.setStyleSheet(GUIStyles.set_input_select_style())
+        return inp 
+
 
     @staticmethod
     def create_bin_width_control(controls_row, value, change_cb):

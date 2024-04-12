@@ -7,8 +7,8 @@ class SelectControl:
         control = QVBoxLayout() if control_layout == 'vertical' else QHBoxLayout()
         input = QComboBox()
         for value in options:
-            input.addItem(value)
-        input.setCurrentText(selectedValue)
+            input.addItem(str(value))
+        input.setCurrentText(str(selectedValue))
         input.currentIndexChanged.connect(event_callback)
         control.addWidget(q_label)
         control.addWidget(input)

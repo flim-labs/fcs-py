@@ -16,7 +16,7 @@ project_root = os.path.abspath(os.path.join(current_path))
 class ChannelsControl(QWidget):
     def __init__(self, window, parent=None):
         super().__init__(parent)
-        self.main_window = window
+        self.app = window
         layout = QVBoxLayout()
         self.channels_grid = QHBoxLayout()
         layout.addLayout(self.channels_grid)
@@ -43,7 +43,7 @@ class ChannelsControl(QWidget):
             ch_checkbox_wrapper.setObjectName(f"ch_checkbox_wrapper")
             checkbox = FancyCheckbox(text=f"Channel {i + 1}")
             checkbox.setStyleSheet(GUIStyles.set_checkbox_style())
-            checked = i in self.main_window.enabled_channels
+            checked = i in self.app.enabled_channels
             checkbox.set_checked(checked)
             checkbox.toggled.connect(lambda state, index=i: self.on_ch_toggled(state, index))
             row = QHBoxLayout()
@@ -58,20 +58,20 @@ class ChannelsControl(QWidget):
 
     def on_ch_toggled(self, state, index):
         if state:
-            if index not in self.main_window.enabled_channels:
-                self.main_window.enabled_channels.append(index)
+            if index not in self.app.enabled_channels:
+                self.app.enabled_channels.append(index)
         else:
-            if index in self.main_window.enabled_channels:
-                self.main_window.enabled_channels.remove(index)
-                filtered_correlations = [corr for corr in self.main_window.ch_correlations if index not in corr]
-                self.main_window.ch_correlations = filtered_correlations
-                self.main_window.settings.setValue(SETTINGS_CH_CORRELATIONS, json.dumps(filtered_correlations))
-        self.main_window.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.main_window.enabled_channels))
+            if index in self.app.enabled_channels:
+                self.app.enabled_channels.remove(index)
+                filtered_correlations = [corr for corr in self.app.ch_correlations if index not in corr]
+                self.app.ch_correlations = filtered_correlations
+                self.app.settings.setValue(SETTINGS_CH_CORRELATIONS, json.dumps(filtered_correlations))
+        self.app.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.app.enabled_channels))
  
 
 
     def open_ch_correlations_popup(self):
-        self.popup = ChCorrelationsPopup(self.main_window)
+        self.popup = ChCorrelationsPopup(self.app)
         self.popup.show()
 
 
@@ -85,9 +85,9 @@ class ChCorrelationsPopup(QWidget):
                 background-color: #141414;
             }
         """)
-        self.main_window = window
-        self.resize(self.main_window.settings.value("size", QSize(CORR_POPUP_WIDTH, CORR_POPUP_HEIGHT)))
-        self.move(self.main_window.settings.value("pos", QApplication.primaryScreen().geometry().center() - self.frameGeometry().center()))
+        self.app = window
+        self.resize(self.app.settings.value("size", QSize(CORR_POPUP_WIDTH, CORR_POPUP_HEIGHT)))
+        self.move(self.app.settings.value("pos", QApplication.primaryScreen().geometry().center() - self.frameGeometry().center()))
         
         self.setWindowTitle("FCS - Channels correlations")
         TitlebarIcon.setup(self)
@@ -122,11 +122,11 @@ class ChCorrelationsPopup(QWidget):
 
         layout.addLayout(self.buttons_row)
         self.setLayout(layout)
-        self.main_window.widgets[CH_CORRELATIONS_POPUP] = self
+        self.app.widgets[CH_CORRELATIONS_POPUP] = self
         self.populate_matrix()
 
     def populate_matrix(self):
-        enabled_channels = self.main_window.enabled_channels
+        enabled_channels = self.app.enabled_channels
         enabled_channels.sort()
         num_channels = len(enabled_channels)
         self.matrix.setRowCount(num_channels)
@@ -143,7 +143,7 @@ class ChCorrelationsPopup(QWidget):
 
       
     def build_matrix_checkboxes(self, num_channels, enabled_channels):    
-        correlations = self.main_window.ch_correlations
+        correlations = self.app.ch_correlations
         for i, row_index in enumerate(enabled_channels):
             for j, column_index in enumerate(enabled_channels):
                 cell_widget = CheckboxCellWidget()
@@ -171,7 +171,7 @@ class ChCorrelationsPopup(QWidget):
 
     def save_correlations(self):
         correlations = []
-        enabled_channels = self.main_window.enabled_channels
+        enabled_channels = self.app.enabled_channels
         enabled_channels.sort()
         for i, row_index in enumerate(enabled_channels):
             for j, column_index in enumerate(enabled_channels):
@@ -181,8 +181,8 @@ class ChCorrelationsPopup(QWidget):
                     correlations.append([row_index, column_index, True])
                 else:
                     correlations.append([row_index, column_index, False])
-        self.main_window.ch_correlations = correlations
-        self.main_window.settings.setValue(SETTINGS_CH_CORRELATIONS, json.dumps(correlations))
+        self.app.ch_correlations = correlations
+        self.app.settings.setValue(SETTINGS_CH_CORRELATIONS, json.dumps(correlations))
 
     def on_ok_clicked(self): 
         self.save_correlations()       

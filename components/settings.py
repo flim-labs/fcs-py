@@ -10,11 +10,9 @@ CORR_POPUP_HEIGHT = 550
 SETTINGS_ACQUISITION_STOPPED = "acquisition_stopped"
 DEFAULT_ACQUISITION_STOPPED = False
 
-SETTINGS_TAUS_INPUTS = "tau_inputs"
-TAUS_INPUTS = "[1,  50,  100,  200,  500,  1000,  5000,  10000,  50000, 100000]"
-
+TAUS_INPUTS = [100, 1000000]
 SETTINGS_TAU = "tau"
-DEFAULT_TAU = "[]"
+DEFAULT_TAU = 100
 
 SETTINGS_GT_CALC_MODE = "gt_calc_mode"
 DEFAULT_GT_CALC_MODE = "realtime"
@@ -65,8 +63,6 @@ RESET_BUTTON = "reset_button"
 DOWNLOAD_BUTTON = "download_button"
 DOWNLOAD_MENU = "download_menu"
 CHECKBOX_CONTROLS = "ch_and_tau_controls"
-TAU_COMPONENT = "tau_component"
-ADD_TAU_POPUP = "add_tau_popup"
 CHANNELS_COMPONENT = "channels_component"
 CH_CORRELATIONS_POPUP = "ch_correlations_popup"
 
