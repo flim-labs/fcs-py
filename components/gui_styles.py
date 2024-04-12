@@ -473,7 +473,7 @@ class GUIStyles:
         """ 
 
     @staticmethod       
-    def correlations_btn_style():
+    def channels_btn_style(base, hover, pressed, text="white"):
         return f"""
             QPushButton, QPushButton:released {{
                 font-family: "Montserrat";
@@ -482,24 +482,24 @@ class GUIStyles:
                 font-size: 11px;
                 font-weight: bold;
                 border-radius: 4px;
-                background-color: #31c914;
-                border: 2px solid #31c914;
-                color: white;
+                background-color: {base};
+                border: 2px solid {base};
+                color: {text};
             }}
             
             QPushButton:hover {{
-                background-color: #57D33D;
-                border: 2px solid #57D33D;
+                background-color: {hover};
+                border: 2px solid {hover};
             }}
 
             QPushButton:focus {{
-                background-color: #7FE777;
-                border: 2px solid #7FE777;
+                background-color: {base};
+                border: 2px solid {base};
             }}
 
             QPushButton:pressed {{
-                background-color: #7FE777;
-                border: 2px solid #7FE777;
+                background-color: {base};
+                border: 2px solid {base};
             }}
 
             QPushButton:disabled {{
@@ -562,4 +562,18 @@ class GUIStyles:
                 background-color: transparent;
             }
         """      
-                
+
+    @staticmethod
+    def plots_config_popup_style():
+        return """
+            QWidget {
+                background-color: #141414;
+                color: #6e6b6b;
+                font-family: Montserrat;
+                font-size: 14px;
+            }
+            QLabel#prompt_text {
+                color: white;
+                font-size: 18px;
+            }    
+        """            

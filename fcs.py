@@ -63,6 +63,12 @@ class FCSWindow(QWidget):
 
         default_ch_correlations = self.settings.value(SETTINGS_CH_CORRELATIONS, DEFAULT_CH_CORRELATIONS)
         self.ch_correlations = json.loads(default_ch_correlations) if default_ch_correlations is not None else []
+        
+        default_intensity_plots_to_show = self.settings.value(SETTINGS_INTENSITY_PLOTS_TO_SHOW, DEFAULT_INTENSITY_PLOTS_TO_SHOW)
+        self.intensity_plots_to_show = json.loads(default_intensity_plots_to_show) if default_intensity_plots_to_show is not None else []
+        
+        default_gt_plots_to_show = self.settings.value(SETTINGS_GT_PLOTS_TO_SHOW, DEFAULT_GT_PLOTS_TO_SHOW)
+        self.gt_plots_to_show = json.loads(default_gt_plots_to_show) if default_gt_plots_to_show is not None else []
 
         self.control_inputs = {}
         self.widgets = {}
@@ -93,6 +99,7 @@ class FCSWindow(QWidget):
     def init_ui(self):
         self.create_top_utilities_layout()
         main_layout, charts_grid = init_ui(self, self.top_utilities_layout)
+        main_layout.setSpacing(0)
         return main_layout, charts_grid
        
 

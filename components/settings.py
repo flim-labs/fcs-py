@@ -20,6 +20,13 @@ DEFAULT_GT_CALC_MODE = "realtime"
 SETTINGS_CH_CORRELATIONS = "ch_correlations"
 DEFAULT_CH_CORRELATIONS = "[]"
 
+SETTINGS_INTENSITY_PLOTS_TO_SHOW = "intensity_plots_to_show"
+DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[]"
+
+SETTINGS_GT_PLOTS_TO_SHOW = "gt_plots_to_show"
+DEFAULT_GT_PLOTS_TO_SHOW = "[]"
+
+
 EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/fcs-py/python-flim-labs/fcs-file-format.html"
 GUI_GUIDE_LINK = f"https://flim-labs.github.io/fcs-py/v{APP_VERSION}"
 
