@@ -82,7 +82,6 @@ class InputParamsControls(QWidget):
         )
         self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS] = inp   
 
-
     def toggle_acquisition_time_mode(self, state):       
         if state:
             self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(False)
@@ -92,7 +91,6 @@ class InputParamsControls(QWidget):
             self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(True)
             self.app.free_running_acquisition_time = False
             self.app.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
-            
 
     def conn_channel_type_value_change(self, index):       
         self.app.selected_conn_channel = self.sender().currentText()
@@ -103,27 +101,30 @@ class InputParamsControls(QWidget):
         self.app.settings.setValue(SETTINGS_FIRMWARE, self.selected_firmware)
         self.app.settings.setValue(SETTINGS_CONN_CHANNEL, self.selected_conn_channel) 
 
-    def tau_value_change(self, index):          
-        self.app.selected_tau = self.sender().currentText()
-        self.app.settings.setValue(SETTINGS_TAU, self.app.selected_tau)
-
     def acquisition_time_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.acquisition_time_millis = value * 1000  # convert s to ms
         self.app.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.acquisition_time_millis)
         #self.calc_exported_file_size()    
 
-
     def time_span_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.time_span = value
         self.app.settings.setValue(SETTINGS_TIME_SPAN, value)
 
+    def tau_value_change(self, index):
+        value = self.sender().currentText()
+        bin_width_input =  self.app.control_inputs[SETTINGS_BIN_WIDTH_MICROS]
+        bin_width_input.setRange(int(value), 1000000)
+        if self.app.bin_width_micros < int(value):
+            bin_width_input.setValue(int(value))
+        self.app.selected_tau = value
+        self.app.settings.setValue(SETTINGS_TAU, self.app.selected_tau)    
 
-    def bin_width_micros_value_change(self, value):        
+    def bin_width_micros_value_change(self, value):       
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.bin_width_micros = value
-        self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value)
+        self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value) 
         #self.calc_exported_file_size()         
 
 
