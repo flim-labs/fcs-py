@@ -143,7 +143,7 @@ class GUIStyles:
                 spacing: 5px;
                 color: #f8f8f8;
                 font-family: "Montserrat";
-                font-size: 14px;
+                font-size: 11px;
                 letter-spacing: 0.1em;
                 border: 1px solid #252525;
                 border-radius: 5px;
@@ -195,7 +195,7 @@ class GUIStyles:
     @staticmethod    
     def checkbox_wrapper_style():
         return """
-            QWidget#fancy_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
+            QWidget#ch_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
                 border: 1px solid #222222;
                 background-color: transparent;
                 padding: 0;
@@ -206,7 +206,7 @@ class GUIStyles:
             QWidget{
                 color: #f8f8f8;
                 font-family: "Montserrat";
-                font-size: 14px;
+                font-size: 12px;
                 padding: 0;
             }        
         """
@@ -470,4 +470,96 @@ class GUIStyles:
                 border-radius: 5px;
                 qproperty-iconSize: 8px;
             } 
-        """            
+        """ 
+
+    @staticmethod       
+    def correlations_btn_style():
+        return f"""
+            QPushButton, QPushButton:released {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 11px;
+                font-weight: bold;
+                border-radius: 4px;
+                background-color: #31c914;
+                border: 2px solid #31c914;
+                color: white;
+            }}
+            
+            QPushButton:hover {{
+                background-color: #57D33D;
+                border: 2px solid #57D33D;
+            }}
+
+            QPushButton:focus {{
+                background-color: #7FE777;
+                border: 2px solid #7FE777;
+            }}
+
+            QPushButton:pressed {{
+                background-color: #7FE777;
+                border: 2px solid #7FE777;
+            }}
+
+            QPushButton:disabled {{
+                background-color: #cecece;
+                border: 2px solid #cecece;
+                color: #8c8b8b;
+            }}
+        """
+
+    @staticmethod
+    def set_correlation_table_style():
+        return f"""
+            QTableWidget {{
+                background-color: #141414;
+                color: white;
+                border: none;
+                gridline-color: #3b3b3b;
+                
+            }}
+            QTableWidget::item {{
+                background-color: #141414;
+                text-align: center;
+                border: none;
+                
+            }}
+            QHeaderView::section:vertical {{
+                background-color: #222222;
+                color: white;
+
+               
+            }}
+            QHeaderView::section:horizontal {{
+                background-color: #222222;
+                color: white;
+               
+            }}
+            QHeaderView::section {{
+                padding: 14px;
+               
+            }}
+            QTableCornerButton::section{{
+                background-color: #141414;
+            }}
+        """  
+
+    @staticmethod    
+    def set_correlations_checkbox_style():
+        return """
+            QCheckBox::indicator {
+                width: 0;
+                height: 0;
+                border: 0; 
+            }
+
+            QCheckBox::indicator:unchecked {
+                background-color: transparent;
+            }
+
+            QCheckBox::indicator:checked {
+                background-color: transparent;
+            }
+        """      
+                

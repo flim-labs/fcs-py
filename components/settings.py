@@ -3,6 +3,9 @@ APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
 
+CORR_POPUP_WIDTH = 900
+CORR_POPUP_HEIGHT = 550
+
 
 SETTINGS_ACQUISITION_STOPPED = "acquisition_stopped"
 DEFAULT_ACQUISITION_STOPPED = False
@@ -15,6 +18,9 @@ DEFAULT_TAU = "[]"
 
 SETTINGS_GT_CALC_MODE = "gt_calc_mode"
 DEFAULT_GT_CALC_MODE = "realtime"
+
+SETTINGS_CH_CORRELATIONS = "ch_correlations"
+DEFAULT_CH_CORRELATIONS = "[]"
 
 EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/fcs-py/python-flim-labs/fcs-file-format.html"
 GUI_GUIDE_LINK = f"https://flim-labs.github.io/fcs-py/v{APP_VERSION}"
@@ -61,6 +67,8 @@ DOWNLOAD_MENU = "download_menu"
 CHECKBOX_CONTROLS = "ch_and_tau_controls"
 TAU_COMPONENT = "tau_component"
 ADD_TAU_POPUP = "add_tau_popup"
+CHANNELS_COMPONENT = "channels_component"
+CH_CORRELATIONS_POPUP = "ch_correlations_popup"
 
 REALTIME_BUTTON = "realtime_button"
 POST_PROCESSING_BUTTON = "post_processing_button"

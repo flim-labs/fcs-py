@@ -123,8 +123,6 @@ class TauControl(QWidget):
 
 
 
-
-
 class AddTauPopup(QWidget):
     save_tau_clicked = pyqtSignal(int)
 
@@ -167,7 +165,7 @@ class AddTauPopup(QWidget):
         layout.addStretch(1) 
         layout.addLayout(self.buttons_row)
         self.setLayout(layout)
-        self.main_window.widgets[TAU_COMPONENT] = self
+        self.main_window.widgets[ADD_TAU_POPUP] = self
 
     def on_tau_value_changed(self, text):
         value_valid = self.is_tau_value_valid(text)

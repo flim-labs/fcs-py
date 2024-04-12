@@ -23,6 +23,7 @@ from components.resource_path import resource_path
 from components.select_control import SelectControl
 from components.switch_control import SwitchControl
 from components.tau_control import TauControl
+from components.channels_control import ChannelsControl
 from components.top_bar import TopBar
 from components.controls_bar import ControlsBar
 from components.buttons import CollapseButton
@@ -58,6 +59,9 @@ class FCSWindow(QWidget):
 
         default_taus = self.settings.value(SETTINGS_TAUS_INPUTS, TAUS_INPUTS)
         self.taus = json.loads(default_taus) if default_taus is not None else []
+
+        default_ch_correlations = self.settings.value(SETTINGS_CH_CORRELATIONS, DEFAULT_CH_CORRELATIONS)
+        self.ch_correlations = json.loads(default_ch_correlations) if default_ch_correlations is not None else []
 
         default_enabled_tau = self.settings.value(SETTINGS_TAU, DEFAULT_TAU)
         self.selected_tau = json.loads(default_enabled_tau) if default_enabled_tau is not None else []
@@ -97,13 +101,15 @@ class FCSWindow(QWidget):
         self.top_utilities_layout = QVBoxLayout()
         header_layout = self.create_header_layout()
         self.top_utilities_layout.addLayout(header_layout)
-        channel_checkbox_layout = self.create_channels_grid()
+        channels_component = self.create_channels_grid()
+        self.widgets[CHANNELS_COMPONENT] = channels_component
         tau_component = self.create_tau_inputs_grid()
         self.widgets[TAU_COMPONENT] = tau_component
         ch_and_tau_widget = QWidget()
         ch_and_tau_box = QVBoxLayout()
+        ch_and_tau_box.setSpacing(0)
         ch_and_tau_widget.setLayout(ch_and_tau_box)
-        ch_and_tau_box.addLayout(channel_checkbox_layout)
+        ch_and_tau_box.addWidget(channels_component)
         ch_and_tau_box.addWidget(tau_component)
         self.widgets[CHECKBOX_CONTROLS] = ch_and_tau_widget
         self.top_utilities_layout.addWidget(ch_and_tau_widget)
@@ -160,24 +166,8 @@ class FCSWindow(QWidget):
         return download_button, download_menu
         
     def create_channels_grid(self):          
-        ch_grid = QHBoxLayout()
-        for i in range(MAX_CHANNELS):
-            from components.fancy_checkbox import FancyCheckbox
-            fancy_checkbox_wrapper = QWidget()  
-            fancy_checkbox_wrapper.setObjectName(f"fancy_checkbox_wrapper")
-            fancy_checkbox = FancyCheckbox(text=f"Channel {i + 1}")
-            checked = any(channel.get("ch") == i for channel in self.enabled_channels)
-            fancy_checkbox.set_checked(checked)
-            fancy_checkbox.toggled.connect(lambda checked, index=i: self.on_channel_selected(checked, index))
-            row = QHBoxLayout()
-            row.addWidget(fancy_checkbox)
-            fancy_checkbox_wrapper.setLayout(row)
-            fancy_checkbox_wrapper.setStyleSheet(GUIStyles.checkbox_wrapper_style())
-            ch_grid.addWidget(fancy_checkbox_wrapper)
-            self.channel_checkboxes.append(fancy_checkbox)
-        return ch_grid  
-
-
+        channels_component = ChannelsControl(self)
+        return channels_component
 
     def create_tau_inputs_grid(self):
         tau_component = TauControl(self)
@@ -216,7 +206,6 @@ class FCSWindow(QWidget):
         self.control_inputs[STOP_BUTTON] = stop_button
         self.control_inputs[RESET_BUTTON] = reset_button
         return buttons_row_layout
-
 
     def create_gt_calc_mode_buttons(self):        
         buttons_row_layout, realtime_button, post_processing_button = ControlsBar.create_gt_calc_mode_buttons(
@@ -282,15 +271,7 @@ class FCSWindow(QWidget):
             self.set_download_button_icon()
             self.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.bin_file_size_label.hide()
-            
-    def on_channel_selected(self, checked: bool, index: int):
-        found = any(channel.get("ch") == index for channel in self.enabled_channels) 
-        if checked:
-            if not found:
-                self.enabled_channels.append({"ch": index, "auto_corr" : False, "cross_corr": False  })
-        else:
-            self.enabled_channels = [ch for ch in self.enabled_channels if ch.get("ch") != index]
-        self.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.enabled_channels)) 
+
 
     def toggle_acquisition_time_mode(self, state):    
         if state:
@@ -301,8 +282,6 @@ class FCSWindow(QWidget):
             self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(True)
             self.free_running_acquisition_time = False
             self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
-
-
 
 
     def conn_channel_type_value_change(self, index):   
