@@ -283,6 +283,7 @@ class PlotsConfigPopup(QWidget):
 
 
     def init_intensity_grid(self):
+        self.app.enabled_channels.sort()
         for ch in self.app.enabled_channels:
             checkbox = self.set_checkboxes(f"Channel {ch + 1}", "intensity")
             isChecked = ch in self.app.intensity_plots_to_show

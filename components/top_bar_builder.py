@@ -46,7 +46,7 @@ class TopBarBuilder:
         header_layout.addStretch(1)
         header_layout.addWidget(export_data_widget)
         header_layout.addSpacing(20)
-        header_layout.addWidget(download_button)
+        #header_layout.addWidget(download_button)
         header_layout.addWidget(app_guide_link_widget)
 
         return header_layout

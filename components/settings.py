@@ -64,6 +64,8 @@ DEFAULT_ENABLED_CHANNELS = "[0]"
 SETTINGS_SHOW_CPS = "show_cps"
 DEFAULT_SHOW_CPS = True
 
+MAIN_LAYOUT = "main_layout"
+
 START_BUTTON = "start_button"
 STOP_BUTTON = "stop_button"
 RESET_BUTTON = "reset_button"
@@ -73,9 +75,29 @@ CHECKBOX_CONTROLS = "ch_and_tau_controls"
 CHANNELS_COMPONENT = "channels_component"
 CH_CORRELATIONS_POPUP = "ch_correlations_popup"
 
+INTENSITY_PLOTS_GRID = "intensity_plots_grid"
+INTENSITY_ONLY_CPS_GRID = "intensity_only_cps_grid"
+GT_PLOTS_GRID = "gt_plots_grid"
+PLOT_GRIDS_CONTAINER = "plots_grids_container"
+
+TOP_COLLAPSIBLE_WIDGET = "top_collapsible_widget"
+
+INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
+
+CHANNELS_CHECKBOXES = "channels_checkboxes"
+
 REALTIME_BUTTON = "realtime_button"
 POST_PROCESSING_BUTTON = "post_processing_button"
 
 
+
+EXPORTED_DATA_BYTES_UNIT = 12083.2
+
+REALTIME_MS = 10
+REALTIME_ADJUSTMENT = REALTIME_MS * 1000
+REALTIME_HZ = 1000 / REALTIME_MS
+REALTIME_SECS = REALTIME_MS / 1000
+
+NS_IN_S = 1_000_000_000
 
 EXPORTED_DATA_BYTES_UNIT = 12083.2

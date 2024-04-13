@@ -1,7 +1,7 @@
 import os
 import json
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout, QSizePolicy, QCheckBox, QLabel, QLineEdit
-from PyQt6.QtCore import QPropertyAnimation, QSize, QRect, QEasingCurve, Qt, pyqtSignal
+from PyQt6.QtCore import QPropertyAnimation, QSize, QRect, QEasingCurve, Qt, pyqtSignal, QPoint
 from PyQt6.QtGui import QIcon, QColor, QIntValidator
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
@@ -43,14 +43,14 @@ class ExportDataControl(QWidget):
     def toggle_export_data(self, state):        
         if state:
             self.app.write_data = True
-            self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
+            #self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
             #self.set_download_button_icon()
             self.app.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.app.bin_file_size_label.show()
             self.app.calc_exported_file_size()
         else:
             self.app.write_data = False
-            self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
+            #self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
             #self.set_download_button_icon()
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.app.bin_file_size_label.hide()          
@@ -82,7 +82,7 @@ class DownloadDataControl(QWidget):
         return download_button, download_menu 
 
     def show_download_options(self):    
-        self.app.control_inputs[DOWNLOAD_MENU].exec_(self.app.control_inputs[DOWNLOAD_BUTTON].mapToGlobal(QPoint(0, self.app.control_inputs[DOWNLOAD_BUTTON].height())))
+        self.app.control_inputs[DOWNLOAD_MENU].exec(self.app.control_inputs[DOWNLOAD_BUTTON].mapToGlobal(QPoint(0, self.app.control_inputs[DOWNLOAD_BUTTON].height())))
        
     def download_matlab(self):    
         #MatlabScriptUtils.download_matlab(self)

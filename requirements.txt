@@ -3,3 +3,4 @@ pyqt6==6.6.1
 pyqtgraph==0.13.4
 flim-labs==1.0.21
 matplotlib
+pglive

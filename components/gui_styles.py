@@ -37,9 +37,10 @@ class GUIStyles:
             QLabel{
                 color: #23F3AB;
                 font-family: "Montserrat";
-                font-size: 40px;
+                font-size: 48px;
                 font-weight: 100;
                 font-style: italic;
+                margin: 0;
             }
         """
 
@@ -312,12 +313,34 @@ class GUIStyles:
     def set_cps_label_style():
         return """
             QLabel{
-                color: white;
+                font-weight: 700;
+                font-family: "Montserrat";
+                font-size: 18px;
+                color: #FB8C00;
+            }
+        """
+
+    @staticmethod   
+    def only_cps_widget():
+        return """
+            QWidget#container{
+                background-color: #141414;
+                padding: 12px;
+                border: 1px solid #3b3b3b;
+                margin-right: 10px;
+            }
+            QLabel#cps{
                 font-weight: 700;
                 font-family: "Montserrat";
                 font-size: 22px;
+                color: #FB8C00;
+            }
+            QLabel#ch{
+                color: #cecece;
             }
         """
+
+
 
     @staticmethod
     def set_context_menu_style(base, selected, pressed):

@@ -95,16 +95,16 @@ class InputParamsControls(QWidget):
     def conn_channel_type_value_change(self, index):       
         self.app.selected_conn_channel = self.sender().currentText()
         if self.app.selected_conn_channel == "USB":
-            self.app.selected_firmware = self.firmwares[0]
+            self.app.selected_firmware = self.app.firmwares[0]
         else:
-            self.app.selected_firmware = self.firmwares[1]
-        self.app.settings.setValue(SETTINGS_FIRMWARE, self.selected_firmware)
-        self.app.settings.setValue(SETTINGS_CONN_CHANNEL, self.selected_conn_channel) 
+            self.app.selected_firmware = self.app.firmwares[1]
+        self.app.settings.setValue(SETTINGS_FIRMWARE, self.app.selected_firmware)
+        self.app.settings.setValue(SETTINGS_CONN_CHANNEL, self.app.selected_conn_channel) 
 
     def acquisition_time_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.acquisition_time_millis = value * 1000  # convert s to ms
-        self.app.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.acquisition_time_millis)
+        self.app.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.app.acquisition_time_millis)
         #self.calc_exported_file_size()    
 
     def time_span_value_change(self, value):        

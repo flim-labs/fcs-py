@@ -6,11 +6,13 @@ project_root = os.path.abspath(os.path.join(current_path, ".."))
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QScrollArea,
     QGridLayout,
     QFrame,
     QSizePolicy,
-    QApplication
+    QApplication,
+    QLabel
 )
 
 from PyQt6.QtCore import  QSize, Qt
@@ -56,13 +58,37 @@ def init_ui(self, top_utilities_layout):
     GUIStyles.customize_theme(self)
     main_layout = QVBoxLayout()
     main_layout.addLayout(top_utilities_layout)
-    grid_layout = QGridLayout()
-    main_layout.addLayout(grid_layout)
+   
+    intensity_widget = QWidget()
+    intensity_widget.setFixedWidth(int(self.width() / 2))
+    self.widgets[INTENSITY_WIDGET_WRAPPER] = intensity_widget
+
+    intensity_v_box = QVBoxLayout()
+    plot_grids_container = QHBoxLayout()
+    plot_grids_container.setSpacing(0)
+    intensity_plots_grid = QGridLayout()
+    only_cps_grid = QGridLayout()
+    gt_plots_grid = QGridLayout()
+
+
+    plot_grids_container.addLayout(intensity_plots_grid)
+    plot_grids_container.addLayout(gt_plots_grid)
+    intensity_v_box.addLayout(plot_grids_container)
+    intensity_v_box.addLayout(only_cps_grid)
+    intensity_widget.setLayout(intensity_v_box)
+
+    main_layout.addWidget(intensity_widget)
+
     main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
     self.setLayout(main_layout)
+    self.layouts[MAIN_LAYOUT] = main_layout
+    self.layouts[PLOT_GRIDS_CONTAINER] = plot_grids_container
+    self.layouts[INTENSITY_PLOTS_GRID] = intensity_plots_grid
+    self.layouts[GT_PLOTS_GRID] = gt_plots_grid
+    self.layouts[INTENSITY_ONLY_CPS_GRID] = only_cps_grid
     
     self.resize(self.settings.value("size", QSize(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT)))
     self.move(self.settings.value("pos", QApplication.primaryScreen().geometry().center() - self.frameGeometry().center()))
     
-    return main_layout, grid_layout
+
     

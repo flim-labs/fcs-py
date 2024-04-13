@@ -38,7 +38,6 @@ class ControlsBarBuilder:
         controls_layout.addLayout(buttons_qv_box)
         controls_layout.addSpacing(10)
         layout_container.addLayout(controls_layout)
-        layout_container.addWidget(draw_layout_separator())
         return blank_space, layout_container
 
     @staticmethod
@@ -46,7 +45,7 @@ class ControlsBarBuilder:
             start_btn_pressed_cb,
             stop_btn_pressed_cb,
             reset_btn_pressed_cb,
-            channels_checkboxes,
+            enabled_channels,
     ):
         # ACTION BUTTONS
         buttons_row_layout = QHBoxLayout()
@@ -57,7 +56,7 @@ class ControlsBarBuilder:
         GUIStyles.set_start_btn_style(start_button)
         start_button.clicked.connect(start_btn_pressed_cb)
         start_button.setEnabled(
-            not all(not checkbox.is_checked() for checkbox in channels_checkboxes)
+            len(enabled_channels) > 0
         )
         buttons_row_layout.addWidget(start_button)
         # stop button
