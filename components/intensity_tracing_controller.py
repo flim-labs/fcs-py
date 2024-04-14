@@ -149,8 +149,8 @@ class IntensityTracingPlot:
         intensity_widget.setLabel('bottom', 'Time', units='s')
         intensity_widget.setTitle(f'Channel {channel_index + 1}')
         intensity_widget.setBackground('#0E0E0E') 
-        intensity_widget.setStyleSheet("border: 1px solid #3b3b3b;")
-        intensity_widget.plotItem.setContentsMargins(0, 0, 0, 0)
+        intensity_widget.setStyleSheet("border: 1px solid #3b3b3b")
+        intensity_widget.plotItem.setContentsMargins(5, 10, 10, 10)  
         x = np.arange(1)
         y = x * 0
         pen = pg.mkPen(color='#FB8C00', width=1)

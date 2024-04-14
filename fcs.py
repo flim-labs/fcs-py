@@ -87,6 +87,7 @@ class FCSWindow(QWidget):
         self.installEventFilter(self)
       
         self.top_utilities_layout = QVBoxLayout()
+
         self.blank_space = QWidget()
         
         self.warning_box = None
@@ -130,7 +131,11 @@ class FCSWindow(QWidget):
         top_collapsible_widget = QWidget()
         self.widgets[TOP_COLLAPSIBLE_WIDGET] = top_collapsible_widget
         qv_box = QVBoxLayout() 
+        qv_box.setSpacing(0)
+        qv_box.setContentsMargins(0,0,0,0)
         self.top_utilities_layout = QVBoxLayout()
+        self.top_utilities_layout.setSpacing(0)
+        self.top_utilities_layout.setContentsMargins(0,0,0,0)
         header_layout = self.create_header_layout()
         channels_component = self.create_channels_grid()
         self.widgets[CHANNELS_COMPONENT] = channels_component
@@ -141,15 +146,16 @@ class FCSWindow(QWidget):
         ch_and_tau_box.addWidget(channels_component)
         self.widgets[CHECKBOX_CONTROLS] = ch_and_tau_widget
         qv_box.addLayout(header_layout)
-        qv_box.addWidget(ch_and_tau_widget)
+        qv_box.addWidget(ch_and_tau_widget,0, Qt.AlignmentFlag.AlignTop)
         top_collapsible_widget.setLayout(qv_box)
         controls_layout = self.create_controls_layout()
         qv_box_2 = QVBoxLayout()
-        qv_box_2.addWidget(top_collapsible_widget)
+        qv_box_2.setSpacing(0)
+        qv_box_2.setContentsMargins(0,0,0,0)
+        qv_box_2.addWidget(top_collapsible_widget,0, Qt.AlignmentFlag.AlignTop)
         qv_box_2.addLayout(controls_layout)
-
         self.top_utilities_layout.addLayout(qv_box_2)
-        self.top_utilities_layout.addWidget(self.blank_space)  
+        self.top_utilities_layout.addWidget(self.blank_space, 0, Qt.AlignmentFlag.AlignTop)  
 
     def create_header_layout(self):   
         title_row = self.create_logo_and_title()
@@ -211,8 +217,18 @@ class FCSWindow(QWidget):
 
     def resizeEvent(self, event):  
         super(FCSWindow, self).resizeEvent(event)
-        if self.widgets[INTENSITY_WIDGET_WRAPPER] is not None:
+        if INTENSITY_WIDGET_WRAPPER in self.widgets:
             self.widgets[INTENSITY_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 2))
+        if GT_WIDGET_WRAPPER in self.widgets: 
+            self.widgets[GT_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 2))   
+            
+
+    def closeEvent(self, event): 
+        if CH_CORRELATIONS_POPUP in self.widgets:
+            self.widgets[CH_CORRELATIONS_POPUP].close()
+        if PLOTS_CONFIG_POPUP in self.widgets:
+            self.widgets[PLOTS_CONFIG_POPUP].close()    
+        event.accept()     
 
 
 if __name__ == "__main__":

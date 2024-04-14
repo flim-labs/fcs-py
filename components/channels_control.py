@@ -19,8 +19,11 @@ class ChannelsControl(QWidget):
         super().__init__(parent)
         self.app = window
         layout = QVBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
+
         self.channels_grid = QHBoxLayout()
         layout.addLayout(self.channels_grid)
+
         self.setLayout(layout)
         self.ch_checkboxes = []
         self.correlations_btn = QPushButton("CORRELATIONS")
@@ -33,7 +36,7 @@ class ChannelsControl(QWidget):
         self.plots_config_btn = QPushButton("PLOTS CONFIG")
         self.plots_config_btn.setIcon(QIcon(resource_path("assets/chart-icon.png")))
         self.plots_config_btn.setFixedWidth(150)
-        self.plots_config_btn.setStyleSheet(GUIStyles.channels_btn_style(base="#f5f538", hover="#d4d400", pressed="#c8b900", text="black"))
+        self.plots_config_btn.setStyleSheet(GUIStyles.channels_btn_style(base="#FB8C00", hover="#FFA726", pressed="#FB8C00", text="white"))
         self.plots_config_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.plots_config_btn.clicked.connect(self.open_plots_config_popup) 
 
@@ -270,7 +273,7 @@ class PlotsConfigPopup(QWidget):
             layout.addLayout(self.gt_corr_grid)    
         self.setLayout(layout)
         self.setStyleSheet(GUIStyles.plots_config_popup_style())
-
+        self.app.widgets[PLOTS_CONFIG_POPUP] = self
 
     def init_gt_grid(self):
         corr_data = self.get_cleaned_correlations()
@@ -288,6 +291,8 @@ class PlotsConfigPopup(QWidget):
             checkbox = self.set_checkboxes(f"Channel {ch + 1}", "intensity")
             isChecked = ch in self.app.intensity_plots_to_show
             checkbox.setChecked(isChecked)
+            if len(self.app.intensity_plots_to_show) >=4 and ch not in self.app.intensity_plots_to_show:
+                checkbox.setEnabled(False)
         self.update_layout(self.intensity_checkboxes_wrappers, self.intensity_ch_grid, "intensity")        
 
 
@@ -296,7 +301,7 @@ class PlotsConfigPopup(QWidget):
         checkbox_wrapper.setObjectName(f"tau_checkbox_wrapper")
         row = QHBoxLayout()
         checkbox = QCheckBox(text)
-        checkbox.setStyleSheet(GUIStyles.set_tau_checkbox_style())
+        checkbox.setStyleSheet(GUIStyles.set_tau_checkbox_style(color = "#FB8C00" if typology == 'intensity' else "#31c914" ))
         checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
         checkbox.toggled.connect(lambda state, checkbox=checkbox: self.on_ch_intensity_toggled(state, checkbox) if typology == 'intensity' else self.on_ch_gt_toggled(state, checkbox) )
         row.addWidget(checkbox)
@@ -344,6 +349,7 @@ class PlotsConfigPopup(QWidget):
         else:
             if ch_num_index in self.app.intensity_plots_to_show:
                 self.app.intensity_plots_to_show.remove(ch_num_index) 
+        self.app.intensity_plots_to_show.sort()        
         self.app.settings.setValue(SETTINGS_INTENSITY_PLOTS_TO_SHOW, json.dumps(self.app.intensity_plots_to_show)) 
         if len(self.app.intensity_plots_to_show) >= 4:
             for checkbox in self.intensity_checkboxes:

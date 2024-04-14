@@ -74,6 +74,7 @@ DOWNLOAD_MENU = "download_menu"
 CHECKBOX_CONTROLS = "ch_and_tau_controls"
 CHANNELS_COMPONENT = "channels_component"
 CH_CORRELATIONS_POPUP = "ch_correlations_popup"
+PLOTS_CONFIG_POPUP = "plots_config_popup"
 
 INTENSITY_PLOTS_GRID = "intensity_plots_grid"
 INTENSITY_ONLY_CPS_GRID = "intensity_only_cps_grid"
@@ -83,6 +84,7 @@ PLOT_GRIDS_CONTAINER = "plots_grids_container"
 TOP_COLLAPSIBLE_WIDGET = "top_collapsible_widget"
 
 INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
+GT_WIDGET_WRAPPER = "gt_widget_wrapper"
 
 CHANNELS_CHECKBOXES = "channels_checkboxes"
 

@@ -26,18 +26,24 @@ class ControlsBarBuilder:
     @staticmethod
     def init_gui_controls_layout(controls_row, buttons_row):
         layout_container = QVBoxLayout()
+        layout_container.setSpacing(0)
+        layout_container.setContentsMargins(0,0,0,0)
+
         controls_layout = QHBoxLayout()
         controls_layout.addSpacing(10)
         blank_space = QWidget()
         blank_space.setMinimumHeight(1)
         blank_space.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         buttons_qv_box = QVBoxLayout()
+        buttons_qv_box.setSpacing(0)
+        buttons_qv_box.setContentsMargins(0,0,0,0)
         buttons_qv_box.addSpacing(20)
         buttons_qv_box.addLayout(buttons_row)
         controls_layout.addWidget(controls_row)
         controls_layout.addLayout(buttons_qv_box)
         controls_layout.addSpacing(10)
         layout_container.addLayout(controls_layout)
+        layout_container.addWidget(draw_layout_separator())
         return blank_space, layout_container
 
     @staticmethod
@@ -94,7 +100,7 @@ class ControlsBarBuilder:
     def create_tau_control(controls_row, value, change_cb, options):
         # Channels type control (USB/SMA)
         _, inp = SelectControl.setup(
-            "Tau (µs):",
+            "Tau:",
             value,
             controls_row,
             options,
@@ -123,7 +129,7 @@ class ControlsBarBuilder:
         # Acquisition time mode switch control (Free Running/Fixed)
         running_mode_control = QVBoxLayout()
         inp = SwitchControl(
-            active_color="#ffff00", height=30, checked=value
+            active_color="#31c914", height=30, checked=value
         )
         inp.stateChanged.connect(
             (lambda state: change_cb(state))

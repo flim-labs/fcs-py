@@ -143,9 +143,11 @@ class ButtonsActionsController:
         for chart in app.gt_charts:
             chart.setVisible(False)    
         app.intensity_charts_wrappers.clear()
-        ButtonsActionsController.clear_intensity_grid_widgets(app)    
+        ButtonsActionsController.clear_intensity_grid_widgets(app) 
         app.update_plots = True
         ButtonsActionsController.intensity_tracing_start(app)
+        if not app.widgets[GT_WIDGET_WRAPPER].isVisible():
+            ButtonsActionsController.show_gt_widget(app, True)    
         QApplication.processEvents()
         IntensityTracing.start_photons_tracing(app)
 
@@ -200,7 +202,8 @@ class ButtonsActionsController:
         app.intensity_charts.clear()
         app.cps.clear()
         app.intensity_charts_wrappers.clear()
-        ButtonsActionsController.clear_intensity_grid_widgets(app)        
+        ButtonsActionsController.clear_intensity_grid_widgets(app)  
+        ButtonsActionsController.show_gt_widget(app, False)      
 
     @staticmethod
     def clear_intensity_grid_widgets(app):
@@ -216,7 +219,14 @@ class ButtonsActionsController:
             if widget is not None:
                 app.layouts[INTENSITY_PLOTS_GRID].removeWidget(widget)
                 widget.deleteLater()
-                QApplication.processEvents()        
+                QApplication.processEvents()   
+
+
+    @staticmethod
+    def show_gt_widget(app, show):
+        if GT_WIDGET_WRAPPER in app.widgets and app.widgets[GT_WIDGET_WRAPPER] is not None:
+            app.widgets[GT_WIDGET_WRAPPER].setVisible(show)
+    
 
 
 
