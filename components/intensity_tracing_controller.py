@@ -111,13 +111,14 @@ class IntensityTracing:
             cps_counts = [0] * 8
             next_second = 1
             seconds = time_ns / NS_IN_S
-            for channel in only_cps_widgets:
+            for channel, widget in app.only_cps_ch.items():
                 if 0 <= channel < len(app.only_cps):
                     cps_counts[channel] += counts[channel] 
                     if seconds >= next_second:
-                        app.only_cps[channel].setText(
-                            FormatUtils.format_cps(round(cps_counts[channel])) + " CPS"
-                        )
+                        if channel in app.only_cps_ch and app.only_cps_ch[channel] is not None:
+                            app.only_cps_ch[channel].setText(
+                                FormatUtils.format_cps(round(cps_counts[channel])) + " CPS"
+                            )
                         cps_counts[channel] = 0     
             if seconds >= next_second:        
                 next_second += 1
@@ -229,6 +230,7 @@ class IntensityTracingOnlyCPS:
         app.only_cps.append(cps)
         only_cps_widget.setLayout(row_cps)
         only_cps_widget.setStyleSheet(GUIStyles.only_cps_widget())
+        app.only_cps_ch[channel] = cps
         row, col = divmod(index, 2)
         app.layouts[INTENSITY_ONLY_CPS_GRID].addWidget(only_cps_widget, row, col)
         app.only_cps_widgets.append(only_cps_widget)

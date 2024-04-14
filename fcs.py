@@ -104,6 +104,7 @@ class FCSWindow(QWidget):
         self.intensity_lines = []
 
         self.only_cps_widgets = []
+        self.only_cps_ch = {}
 
         self.pull_from_queue_timer2 = QTimer()
         self.pull_from_queue_timer2.timeout.connect(partial(IntensityTracing.pull_from_queue2, self))
