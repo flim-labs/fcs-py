@@ -46,7 +46,7 @@ class TopBarBuilder:
         header_layout.addStretch(1)
         header_layout.addWidget(export_data_widget)
         header_layout.addSpacing(20)
-        header_layout.addWidget(download_button)
+        #header_layout.addWidget(download_button)
         header_layout.addWidget(app_guide_link_widget)
 
         return header_layout
@@ -120,7 +120,9 @@ class TopBarBuilder:
         download_button.setIconSize(QSize(16, 16))
         download_button.clicked.connect(show_download_options_cb)
         layout = QVBoxLayout()
-        layout.addWidget(download_button)
+        layout.setSpacing(0)
+        layout.setContentsMargins(0,0,0,0)
+        layout.addWidget(download_button, 0, Qt.AlignmentFlag.AlignTop)
         layout.setDirection(QHBoxLayout.Direction.RightToLeft)
         # context menu
         download_menu = QMenu()

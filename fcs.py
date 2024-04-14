@@ -4,6 +4,7 @@ import json
 import queue
 import sys
 import time
+from functools import partial
 import flim_labs
 import numpy as np
 import pyqtgraph as pg
@@ -28,6 +29,7 @@ from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
+from components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
 from components.settings import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -54,7 +56,6 @@ class FCSWindow(QWidget):
         self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) in ['true', True]    
         self.show_cps = True
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
-        self.acquisition_stopped = False
         default_enabled_channels = self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)
         self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
         
@@ -70,6 +71,7 @@ class FCSWindow(QWidget):
         default_gt_plots_to_show = self.settings.value(SETTINGS_GT_PLOTS_TO_SHOW, DEFAULT_GT_PLOTS_TO_SHOW)
         self.gt_plots_to_show = json.loads(default_gt_plots_to_show) if default_gt_plots_to_show is not None else []
 
+        self.test_mode = False
         self.control_inputs = {}
         self.widgets = {}
         self.layouts = {}
@@ -81,14 +83,38 @@ class FCSWindow(QWidget):
 
         #### LAYOUT ###
         self.channel_checkboxes = []
-        self.logo_overlay = LogoOverlay(self)
+        #self.logo_overlay = LogoOverlay(self)
         self.installEventFilter(self)
-
-        GUIStyles.set_fonts()
+      
         self.top_utilities_layout = QVBoxLayout()
-        self.blank_space = QWidget()
 
-        self.main_layout, self.charts_grid = self.init_ui()
+        self.blank_space = QWidget()
+        
+        self.warning_box = None
+        self.test_mode = False
+        
+        self.acquisition_stopped = False
+        self.cps = []
+        self.only_cps = []
+        self.connectors = []
+
+        self.intensity_charts = []
+        self.intensity_charts_wrappers = []
+        self.gt_charts = []
+        self.intensity_lines = []
+
+        self.only_cps_widgets = []
+
+        self.pull_from_queue_timer2 = QTimer()
+        self.pull_from_queue_timer2.timeout.connect(partial(IntensityTracing.pull_from_queue2, self))
+        self.update_plots = True
+        
+        self.current_time = 0 
+        self.update_interval = 50  
+        self.move_speed = 0.1  
+        
+        GUIStyles.set_fonts()
+        self.init_ui()
         
 
     @staticmethod    
@@ -98,15 +124,19 @@ class FCSWindow(QWidget):
 
     def init_ui(self):
         self.create_top_utilities_layout()
-        main_layout, charts_grid = init_ui(self, self.top_utilities_layout)
-        main_layout.setSpacing(0)
-        return main_layout, charts_grid
+        init_ui(self, self.top_utilities_layout)
        
 
-    def create_top_utilities_layout(self):    
+    def create_top_utilities_layout(self): 
+        top_collapsible_widget = QWidget()
+        self.widgets[TOP_COLLAPSIBLE_WIDGET] = top_collapsible_widget
+        qv_box = QVBoxLayout() 
+        qv_box.setSpacing(0)
+        qv_box.setContentsMargins(0,0,0,0)
         self.top_utilities_layout = QVBoxLayout()
+        self.top_utilities_layout.setSpacing(0)
+        self.top_utilities_layout.setContentsMargins(0,0,0,0)
         header_layout = self.create_header_layout()
-        self.top_utilities_layout.addLayout(header_layout)
         channels_component = self.create_channels_grid()
         self.widgets[CHANNELS_COMPONENT] = channels_component
         ch_and_tau_widget = QWidget()
@@ -115,10 +145,17 @@ class FCSWindow(QWidget):
         ch_and_tau_widget.setLayout(ch_and_tau_box)
         ch_and_tau_box.addWidget(channels_component)
         self.widgets[CHECKBOX_CONTROLS] = ch_and_tau_widget
-        self.top_utilities_layout.addWidget(ch_and_tau_widget)
+        qv_box.addLayout(header_layout)
+        qv_box.addWidget(ch_and_tau_widget,0, Qt.AlignmentFlag.AlignTop)
+        top_collapsible_widget.setLayout(qv_box)
         controls_layout = self.create_controls_layout()
-        self.top_utilities_layout.addLayout(controls_layout)
-        self.top_utilities_layout.addWidget(self.blank_space)  
+        qv_box_2 = QVBoxLayout()
+        qv_box_2.setSpacing(0)
+        qv_box_2.setContentsMargins(0,0,0,0)
+        qv_box_2.addWidget(top_collapsible_widget,0, Qt.AlignmentFlag.AlignTop)
+        qv_box_2.addLayout(controls_layout)
+        self.top_utilities_layout.addLayout(qv_box_2)
+        self.top_utilities_layout.addWidget(self.blank_space, 0, Qt.AlignmentFlag.AlignTop)  
 
     def create_header_layout(self):   
         title_row = self.create_logo_and_title()
@@ -153,7 +190,7 @@ class FCSWindow(QWidget):
         buttons_widget = self.create_buttons()
         buttons_row_layout.addStretch(1)
         buttons_row_layout.addWidget(buttons_widget)
-        collapse_button = CollapseButton(self.widgets[CHECKBOX_CONTROLS])
+        collapse_button = CollapseButton(self.widgets[TOP_COLLAPSIBLE_WIDGET])
         buttons_row_layout.addWidget(collapse_button)
         blank_space, controls_layout = ControlsBarBuilder.init_gui_controls_layout(controls_row, buttons_row_layout)
         self.blank_space = blank_space
@@ -180,12 +217,25 @@ class FCSWindow(QWidget):
 
     def resizeEvent(self, event):  
         super(FCSWindow, self).resizeEvent(event)
-        self.logo_overlay.update_position(self)
-        self.logo_overlay.update_visibility(self) 
-    
+        if INTENSITY_WIDGET_WRAPPER in self.widgets:
+            self.widgets[INTENSITY_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 2))
+        if GT_WIDGET_WRAPPER in self.widgets: 
+            self.widgets[GT_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 2))   
+            
+
+    def closeEvent(self, event): 
+        if CH_CORRELATIONS_POPUP in self.widgets:
+            self.widgets[CH_CORRELATIONS_POPUP].close()
+        if PLOTS_CONFIG_POPUP in self.widgets:
+            self.widgets[PLOTS_CONFIG_POPUP].close()    
+        event.accept()     
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = FCSWindow()
     window.show()
+    window.pull_from_queue_timer2.stop()
+    IntensityTracing.stop_button_pressed(window)
+    window.update_plots = False
     sys.exit(app.exec())

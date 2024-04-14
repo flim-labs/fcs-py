@@ -37,9 +37,10 @@ class GUIStyles:
             QLabel{
                 color: #23F3AB;
                 font-family: "Montserrat";
-                font-size: 40px;
+                font-size: 48px;
                 font-weight: 100;
                 font-style: italic;
+                margin: 0;
             }
         """
 
@@ -109,9 +110,9 @@ class GUIStyles:
     @staticmethod
     def set_stop_btn_style(button):
         color_dict = {
-            "base": "#FFA726",
-            "border": "#FFA726",
-            "hover": "#FB8C00",
+            "base": "#FB8C00",
+            "border": "#FB8C00",
+            "hover": "#FFA726",
             "pressed": "#E65100",
         }
         GUIStyles._set_button_style(button, color_dict, min_width="150px")
@@ -166,29 +167,29 @@ class GUIStyles:
 
 
     @staticmethod    
-    def set_tau_checkbox_style():
-        return """
-            QCheckBox {
+    def set_tau_checkbox_style(color):
+        return f"""
+            QCheckBox {{
                 spacing: 5px;
                 color: #f8f8f8;
                 font-family: "Montserrat";
                 font-size: 12px;
                 letter-spacing: 0.1em;
                 border-radius: 5px;
-            }
-            QCheckBox::indicator {
+            }}
+            QCheckBox::indicator {{
                 width: 12px;
                 height: 12px;
                 border-radius: 6px;  
-            }
+            }}
 
-            QCheckBox::indicator:unchecked {
+            QCheckBox::indicator:unchecked {{
                 background-color: #6b6a6a;
-            }
+            }}
 
-            QCheckBox::indicator:checked {
-                background-color: #f5f538;
-            }
+            QCheckBox::indicator:checked {{
+                background-color: {color};
+            }}
         """
 
 
@@ -312,12 +313,36 @@ class GUIStyles:
     def set_cps_label_style():
         return """
             QLabel{
-                color: white;
+                font-weight: 700;
+                font-family: "Montserrat";
+                font-size: 18px;
+                color: #FB8C00;
+            }
+        """
+
+    @staticmethod   
+    def only_cps_widget():
+        return """
+            QWidget#container{
+                background-color: #141414;
+                padding: 12px;
+                border: 1px solid #3b3b3b;
+                margin-right: 8px;
+                margin-left: 8px;
+            }
+            QLabel#cps{
                 font-weight: 700;
                 font-family: "Montserrat";
                 font-size: 22px;
+                color: #FB8C00;
+            }
+            QLabel#ch{
+                color: #cecece;
+                margin-left: 8px;
             }
         """
+
+
 
     @staticmethod
     def set_context_menu_style(base, selected, pressed):
@@ -435,24 +460,24 @@ class GUIStyles:
                 font-size: 11px;
                 font-weight: bold;
                 border-radius: 4px;
-                background-color: #f5f538;
-                border: 2px solid #f5f538;
+                background-color: #FB8C00;
+                border: 2px solid #FB8C00;
                 color: black;
             }}
             
             QPushButton:hover {{
-                background-color: #d4d400;
-                border: 2px solid #d4d400;
+                background-color: #FFA726;
+                border: 2px solid #FFA726;
             }}
 
             QPushButton:focus {{
-                background-color: #c8b900;
-                border: 2px solid #c8b900;
+                background-color: #FB8C00;
+                border: 2px solid #FB8C00;
             }}
 
             QPushButton:pressed {{
-                background-color: #c8b900;
-                border: 2px solid #c8b900;
+                background-color: #FB8C00;
+                border: 2px solid #FB8C00;
             }}
 
             QPushButton:disabled {{
@@ -576,4 +601,30 @@ class GUIStyles:
                 color: white;
                 font-size: 18px;
             }    
-        """            
+        """ 
+        
+    @staticmethod       
+    def gt_widget_container():
+        return """
+            QWidget#container{
+                padding: 12px;
+                border: 1px solid #3b3b3b;
+                margin: 10px;
+                background-color: #141414; 
+            }
+            QLabel#title{
+                font-weight: 700;
+                font-size: 30px; 
+                text-align: center;
+                margin-top: 20px; 
+                color: #3b3b3b; 
+                margin-bottom: 10px;
+            }
+            QLabel#desc{
+                font-weight: 300;
+                font-size: 24px;  
+                text-align: center; 
+                color: #3b3b3b;
+            }
+        """
+               
