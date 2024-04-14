@@ -25,16 +25,13 @@ from components.link_widget import LinkWidget
 from components.settings import *
 
 
-class TopBar:
+class TopBarBuilder:
 
     @staticmethod
     def create_header_layout(
             logo_and_title,
-            file_size_info_layout,
-            info_link_widget,
-            export_data_control,
+            export_data_widget,
             download_button,
-            download_menu,
             gt_calc_mode_buttons_row_layout
     ):
         header_layout = QHBoxLayout()
@@ -45,15 +42,10 @@ class TopBar:
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         header_layout.addLayout(logo_and_title)
         header_layout.addSpacing(10)
-        header_layout.addLayout(gt_calc_mode_buttons_row_layout)
+        header_layout.addWidget(gt_calc_mode_buttons_row_layout)
         header_layout.addStretch(1)
-        header_layout.addWidget(info_link_widget)
-        header_layout.addLayout(export_data_control)
-        export_data_control.addSpacing(10)
-
-        header_layout.addLayout(file_size_info_layout)
+        header_layout.addWidget(export_data_widget)
         header_layout.addSpacing(20)
-
         header_layout.addWidget(download_button)
         header_layout.addWidget(app_guide_link_widget)
 

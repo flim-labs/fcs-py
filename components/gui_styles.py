@@ -143,7 +143,7 @@ class GUIStyles:
                 spacing: 5px;
                 color: #f8f8f8;
                 font-family: "Montserrat";
-                font-size: 14px;
+                font-size: 11px;
                 letter-spacing: 0.1em;
                 border: 1px solid #252525;
                 border-radius: 5px;
@@ -195,7 +195,7 @@ class GUIStyles:
     @staticmethod    
     def checkbox_wrapper_style():
         return """
-            QWidget#fancy_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
+            QWidget#ch_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
                 border: 1px solid #222222;
                 background-color: transparent;
                 padding: 0;
@@ -206,7 +206,7 @@ class GUIStyles:
             QWidget{
                 color: #f8f8f8;
                 font-family: "Montserrat";
-                font-size: 14px;
+                font-size: 12px;
                 padding: 0;
             }        
         """
@@ -470,4 +470,110 @@ class GUIStyles:
                 border-radius: 5px;
                 qproperty-iconSize: 8px;
             } 
+        """ 
+
+    @staticmethod       
+    def channels_btn_style(base, hover, pressed, text="white"):
+        return f"""
+            QPushButton, QPushButton:released {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 11px;
+                font-weight: bold;
+                border-radius: 4px;
+                background-color: {base};
+                border: 2px solid {base};
+                color: {text};
+            }}
+            
+            QPushButton:hover {{
+                background-color: {hover};
+                border: 2px solid {hover};
+            }}
+
+            QPushButton:focus {{
+                background-color: {base};
+                border: 2px solid {base};
+            }}
+
+            QPushButton:pressed {{
+                background-color: {base};
+                border: 2px solid {base};
+            }}
+
+            QPushButton:disabled {{
+                background-color: #cecece;
+                border: 2px solid #cecece;
+                color: #8c8b8b;
+            }}
+        """
+
+    @staticmethod
+    def set_correlation_table_style():
+        return f"""
+            QTableWidget {{
+                background-color: #141414;
+                color: white;
+                border: none;
+                gridline-color: #3b3b3b;
+                
+            }}
+            QTableWidget::item {{
+                background-color: #141414;
+                text-align: center;
+                border: none;
+                
+            }}
+            QHeaderView::section:vertical {{
+                background-color: #222222;
+                color: white;
+
+               
+            }}
+            QHeaderView::section:horizontal {{
+                background-color: #222222;
+                color: white;
+               
+            }}
+            QHeaderView::section {{
+                padding: 14px;
+               
+            }}
+            QTableCornerButton::section{{
+                background-color: #141414;
+            }}
+        """  
+
+    @staticmethod    
+    def set_correlations_checkbox_style():
+        return """
+            QCheckBox::indicator {
+                width: 0;
+                height: 0;
+                border: 0; 
+            }
+
+            QCheckBox::indicator:unchecked {
+                background-color: transparent;
+            }
+
+            QCheckBox::indicator:checked {
+                background-color: transparent;
+            }
+        """      
+
+    @staticmethod
+    def plots_config_popup_style():
+        return """
+            QWidget {
+                background-color: #141414;
+                color: #6e6b6b;
+                font-family: Montserrat;
+                font-size: 14px;
+            }
+            QLabel#prompt_text {
+                color: white;
+                font-size: 18px;
+            }    
         """            

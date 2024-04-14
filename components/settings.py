@@ -3,18 +3,29 @@ APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
 
+CORR_POPUP_WIDTH = 900
+CORR_POPUP_HEIGHT = 550
+
 
 SETTINGS_ACQUISITION_STOPPED = "acquisition_stopped"
 DEFAULT_ACQUISITION_STOPPED = False
 
-SETTINGS_TAUS_INPUTS = "tau_inputs"
-TAUS_INPUTS = "[1,  50,  100,  200,  500,  1000,  5000,  10000,  50000, 100000]"
-
+TAUS_INPUTS = [1, 100, 1000000]
 SETTINGS_TAU = "tau"
-DEFAULT_TAU = "[]"
+DEFAULT_TAU = 100
 
 SETTINGS_GT_CALC_MODE = "gt_calc_mode"
 DEFAULT_GT_CALC_MODE = "realtime"
+
+SETTINGS_CH_CORRELATIONS = "ch_correlations"
+DEFAULT_CH_CORRELATIONS = "[]"
+
+SETTINGS_INTENSITY_PLOTS_TO_SHOW = "intensity_plots_to_show"
+DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[]"
+
+SETTINGS_GT_PLOTS_TO_SHOW = "gt_plots_to_show"
+DEFAULT_GT_PLOTS_TO_SHOW = "[]"
+
 
 EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/fcs-py/python-flim-labs/fcs-file-format.html"
 GUI_GUIDE_LINK = f"https://flim-labs.github.io/fcs-py/v{APP_VERSION}"
@@ -59,8 +70,8 @@ RESET_BUTTON = "reset_button"
 DOWNLOAD_BUTTON = "download_button"
 DOWNLOAD_MENU = "download_menu"
 CHECKBOX_CONTROLS = "ch_and_tau_controls"
-TAU_COMPONENT = "tau_component"
-ADD_TAU_POPUP = "add_tau_popup"
+CHANNELS_COMPONENT = "channels_component"
+CH_CORRELATIONS_POPUP = "ch_correlations_popup"
 
 REALTIME_BUTTON = "realtime_button"
 POST_PROCESSING_BUTTON = "post_processing_button"
