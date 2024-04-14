@@ -17,8 +17,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QLabel,
-    QWidget
+    QWidget,
 )
+from PyQt6.QtGui import QPixmap
+from components.resource_path import resource_path
 
 class IntensityTracing:
     @staticmethod
@@ -219,6 +221,9 @@ class IntensityTracingOnlyCPS:
         channel_label = QLabel(f"Channel {channel + 1}")
         channel_label.setObjectName("ch")
         row_cps.addWidget(channel_label)
+        arrow_icon = QLabel()
+        arrow_icon.setPixmap(QPixmap(resource_path("assets/arrow-right-grey.png")).scaledToWidth(30))
+        row_cps.addWidget(arrow_icon)
         row_cps.addWidget(cps)
         row_cps.addStretch(1)
         app.only_cps.append(cps)
