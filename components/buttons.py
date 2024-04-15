@@ -113,6 +113,7 @@ class GTModeButtons(QWidget):
 class ButtonsActionsController:
     @staticmethod
     def start_button_pressed(app):
+        ButtonsActionsController.clear_intensity_grid_widgets(app) 
         app.acquisition_stopped = False
         app.warning_box = None
         app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
@@ -143,12 +144,11 @@ class ButtonsActionsController:
         for chart in app.gt_charts:
             chart.setVisible(False)    
         app.intensity_charts_wrappers.clear()
-        ButtonsActionsController.clear_intensity_grid_widgets(app) 
         app.update_plots = True
+        QApplication.processEvents()         
         ButtonsActionsController.intensity_tracing_start(app)
         if not app.widgets[GT_WIDGET_WRAPPER].isVisible():
-            ButtonsActionsController.show_gt_widget(app, True)    
-        QApplication.processEvents()
+            ButtonsActionsController.show_gt_widget(app, True) 
         IntensityTracing.start_photons_tracing(app)
 
 
@@ -168,6 +168,8 @@ class ButtonsActionsController:
 
     @staticmethod
     def stop_button_pressed(app):
+        flim_labs.request_stop()
+        app.pull_from_queue_timer2.stop() 
         app.acquisition_stopped = True
         app.update_plots = False
         app.current_time = 0 
@@ -177,9 +179,7 @@ class ButtonsActionsController:
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         QApplication.processEvents()
-        flim_labs.request_stop()
-        app.pull_from_queue_timer2.stop() 
-
+   
     @staticmethod
     def reset_button_pressed(app):
         app.update_plots = False  
@@ -208,18 +208,18 @@ class ButtonsActionsController:
     @staticmethod
     def clear_intensity_grid_widgets(app):
         app.only_cps.clear()
+        app.only_cps_ch = {}
         for i in reversed(range(app.layouts[INTENSITY_ONLY_CPS_GRID].count())):
             widget = app.layouts[INTENSITY_ONLY_CPS_GRID].itemAt(i).widget()
             if widget is not None:
                 app.layouts[INTENSITY_ONLY_CPS_GRID].removeWidget(widget)
                 widget.deleteLater()
-                QApplication.processEvents()
         for i in reversed(range(app.layouts[INTENSITY_PLOTS_GRID].count())):  
             widget = app.layouts[INTENSITY_PLOTS_GRID].itemAt(i).widget()
             if widget is not None:
                 app.layouts[INTENSITY_PLOTS_GRID].removeWidget(widget)
                 widget.deleteLater()
-                QApplication.processEvents()   
+    QApplication.processEvents()               
 
 
     @staticmethod
