@@ -138,11 +138,14 @@ class ButtonsActionsController:
         app.intensity_charts.clear()
         app.intensity_lines.clear()
         app.gt_charts.clear()
-        app.cps.clear()
+        app.cps_ch.clear()
         for chart in app.intensity_charts:
             chart.setVisible(False)
         for chart in app.gt_charts:
-            chart.setVisible(False)    
+            chart.setVisible(False)
+        for channel, curr_conn in app.connectors.items():    
+            curr_conn.disconnect()
+        app.connectors.clear()        
         app.intensity_charts_wrappers.clear()
         app.update_plots = True
         QApplication.processEvents()         
@@ -155,11 +158,11 @@ class ButtonsActionsController:
     @staticmethod
     def intensity_tracing_start(app):
         only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
-        for i in range(len(app.intensity_plots_to_show)):
+        for i, channel in enumerate(app.intensity_plots_to_show):
             if i < len(app.intensity_charts):
                 app.intensity_charts[i].show()
             else:
-                IntensityTracingPlot.create_chart_widget(app, i)
+                IntensityTracingPlot.create_chart_widget(app, i, channel)
         if len(only_cps_widgets) > 0:        
             for index, channel in enumerate(only_cps_widgets):
                 IntensityTracingOnlyCPS.create_only_cps_widget(app, index, channel)
@@ -168,29 +171,33 @@ class ButtonsActionsController:
 
     @staticmethod
     def stop_button_pressed(app):
-        flim_labs.request_stop()
-        app.pull_from_queue_timer2.stop() 
-        app.acquisition_stopped = True
-        app.update_plots = False
-        app.current_time = 0 
-        app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, True)
-        #app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        #self.set_download_button_icon()
+        app.last_cps_update_time = 0
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         QApplication.processEvents()
+        flim_labs.request_stop()
+        app.realtime_queue.queue.clear()
+        app.realtime_queue_worker_stop = True
+        if app.realtime_queue_thread is not None:
+            app.realtime_queue_thread.join()
+        app.pull_from_queue_timer.stop() 
+        for channel, curr_conn in app.connectors.items():     
+            curr_conn.pause()    
+        
+        #app.pull_from_queue_timer2.stop() 
+        #app.acquisition_stopped = True
+        #app.update_plots = False
+        #app.current_time = 0 
+        #app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, True)
+        
+        #app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
+        #self.set_download_button_icon()
+    
    
     @staticmethod
     def reset_button_pressed(app):
-        app.update_plots = False  
         flim_labs.request_stop()
-        app.pull_from_queue_timer2.stop()
-        app.current_time = 0 
         app.blank_space.show()
-        app.acquisition_stopped = False
-        app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
-        #app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        #self.set_download_button_icon()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         for chart in app.intensity_charts:
@@ -198,17 +205,19 @@ class ButtonsActionsController:
             chart.deleteLater()
         for wrapper in app.intensity_charts_wrappers:
             wrapper.setParent(None)
-            wrapper.deleteLater()   
+            wrapper.deleteLater()  
+        app.connectors.clear()         
         app.intensity_charts.clear()
-        app.cps.clear()
+        app.cps_ch.clear()
         app.intensity_charts_wrappers.clear()
         ButtonsActionsController.clear_intensity_grid_widgets(app)  
-        ButtonsActionsController.show_gt_widget(app, False)      
+        ButtonsActionsController.show_gt_widget(app, False)
+        app.last_cps_update_time = 0
+        QApplication.processEvents()    
+ 
 
     @staticmethod
     def clear_intensity_grid_widgets(app):
-        app.only_cps.clear()
-        app.only_cps_ch = {}
         for i in reversed(range(app.layouts[INTENSITY_ONLY_CPS_GRID].count())):
             widget = app.layouts[INTENSITY_ONLY_CPS_GRID].itemAt(i).widget()
             if widget is not None:
@@ -219,7 +228,7 @@ class ButtonsActionsController:
             if widget is not None:
                 app.layouts[INTENSITY_PLOTS_GRID].removeWidget(widget)
                 widget.deleteLater()
-    QApplication.processEvents()               
+             
 
 
     @staticmethod

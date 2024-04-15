@@ -627,4 +627,12 @@ class GUIStyles:
                 color: #3b3b3b;
             }
         """
+    @staticmethod
+    def set_chart_container_style():
+        return """
+            QWidget#chart_widget{
+                border: 1px solid #3b3b3b;
+            }
+    
+        """   
                

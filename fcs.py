@@ -49,7 +49,6 @@ class FCSWindow(QWidget):
         self.selected_firmware = self.settings.value(SETTINGS_FIRMWARE, DEFAULT_FIRMWARE)
         self.conn_channels = CONN_CHANNELS
         self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
-        self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
         self.time_span = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
         default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
         self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
@@ -61,6 +60,9 @@ class FCSWindow(QWidget):
         
         self.taus = TAUS_INPUTS
         self.selected_tau = self.settings.value(SETTINGS_TAU, DEFAULT_TAU)
+        
+        self.bin_width_inputs = BIN_WIDTH_INPUTS
+        self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
 
         default_ch_correlations = self.settings.value(SETTINGS_CH_CORRELATIONS, DEFAULT_CH_CORRELATIONS)
         self.ch_correlations = json.loads(default_ch_correlations) if default_ch_correlations is not None else []
@@ -94,20 +96,28 @@ class FCSWindow(QWidget):
         self.test_mode = False
         
         self.acquisition_stopped = False
-        self.cps = []
-        self.only_cps = []
-        self.connectors = []
+        
+        self.cps_ch = {}
 
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
         self.gt_charts = []
         self.intensity_lines = []
+        self.last_cps_update_time = 0
 
         self.only_cps_widgets = []
-        self.only_cps_ch = {}
-
+      
+      
+        ######
+        self.connectors = {}
+        self.pull_from_queue_timer = QTimer()
+        self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
+        self.realtime_queue_thread = None
+        self.realtime_queue_worker_stop = False
+        self.realtime_queue = queue.Queue()
+        #####
+        
         self.pull_from_queue_timer2 = QTimer()
-        self.pull_from_queue_timer2.timeout.connect(partial(IntensityTracing.pull_from_queue2, self))
         self.update_plots = True
         
         self.current_time = 0 
@@ -236,7 +246,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = FCSWindow()
     window.show()
-    window.pull_from_queue_timer2.stop()
+    exit_code = app.exec()
     IntensityTracing.stop_button_pressed(window)
-    window.update_plots = False
-    sys.exit(app.exec())
+    sys.exit(exit_code)
