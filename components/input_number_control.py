@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QDoubleSpinBox, QSpinBox
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QSpinBox
 
 class InputNumberControl:
     @staticmethod

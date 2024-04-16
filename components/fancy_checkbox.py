@@ -1,6 +1,6 @@
-from PyQt6.QtCore import pyqtSignal, Qt, QPropertyAnimation, QSize
-from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QMouseEvent, QFont, QCursor, QPalette, QIcon
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QButtonGroup, QRadioButton, QMenu, QPushButton
+from PyQt6.QtCore import pyqtSignal, Qt, QSize
+from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QMouseEvent, QIcon
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 
 SELECTED_COLOR = "#31c914"
 SELECTED_HOVER_COLOR = "#0053a4"

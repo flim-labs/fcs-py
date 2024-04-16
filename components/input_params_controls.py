@@ -1,15 +1,8 @@
 
 import os
-import json
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout, QSizePolicy, QCheckBox, QLabel, QLineEdit
-from PyQt6.QtCore import QPropertyAnimation, QSize, QRect, QEasingCurve, Qt, pyqtSignal
-from PyQt6.QtGui import QIcon, QColor, QIntValidator
-from components.resource_path import resource_path
-from components.gui_styles import GUIStyles
+from PyQt6.QtWidgets import QWidget, QHBoxLayout
 from components.controls_bar_builder import ControlsBarBuilder
-from components.logo_utilities import LogoOverlay, TitlebarIcon
 from components.settings import *
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 

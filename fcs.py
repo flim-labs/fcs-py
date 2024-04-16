@@ -3,33 +3,18 @@ import os
 import json
 import queue
 import sys
-import time
 from functools import partial
-import flim_labs
-import numpy as np
-import pyqtgraph as pg
-from PyQt6.QtCore import QTimer, QSettings, QSize, Qt, QEvent
-from PyQt6.QtGui import QPixmap, QIcon, QAction
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QHBoxLayout, QLayout, QLabel, \
-    QSizePolicy, QPushButton, QDialog, QMessageBox, QMainWindow, QMenu, QRadioButton
-from components.fancy_checkbox import FancyButton
-from components.gradient_text import GradientText
+from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from components.gui_styles import GUIStyles
-from components.format_utilities import FormatUtils
-from components.input_number_control import InputNumberControl
-from components.link_widget import LinkWidget
 from components.layout_utilities import init_ui
-from components.logo_utilities import LogoOverlay
-from components.resource_path import resource_path
-from components.select_control import SelectControl
-from components.switch_control import SwitchControl
 from components.channels_control import ChannelsControl
 from components.top_bar_builder import TopBarBuilder
 from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
+from components.intensity_tracing_controller import IntensityTracing
 from components.settings import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -103,10 +88,7 @@ class FCSWindow(QWidget):
         self.intensity_charts_wrappers = []
         self.gt_charts = []
         self.intensity_lines = []
-        self.last_cps_update_time = 0
-
         self.only_cps_widgets = []
-      
       
         ######
         self.connectors = {}
@@ -118,11 +100,9 @@ class FCSWindow(QWidget):
         #####
         
         self.pull_from_queue_timer2 = QTimer()
-        self.update_plots = True
         
-        self.current_time = 0 
-        self.update_interval = 50  
-        self.move_speed = 0.1  
+        self.last_cps_update_time = QElapsedTimer() 
+        self.cps_update_interval = 400  
         
         GUIStyles.set_fonts()
         self.init_ui()

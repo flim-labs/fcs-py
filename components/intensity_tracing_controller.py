@@ -2,7 +2,6 @@
 import queue
 import threading
 import time
-import numpy as np
 import pyqtgraph as pg
 from flim_labs import flim_labs
 from functools import partial
@@ -28,6 +27,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap
 from components.resource_path import resource_path
+
 
 class IntensityTracing:
     @staticmethod
@@ -63,6 +63,7 @@ class IntensityTracing:
                 print("File bin written in: " + str(file_bin))
             app.blank_space.hide()
             app.pull_from_queue_timer.start(1)
+            app.last_cps_update_time.start()
             #app.pull_from_queue_timer2.start(1)
            
            
@@ -84,31 +85,25 @@ class IntensityTracing:
         if len(val) > 0:
             for v in val:
                 if v == ('end',):  # End of acquisition
-                    app.last_cps_update_time = 0
-                    app.cps_ch.clear()
                     IntensityTracing.stop_button_pressed(app)
-                    app.control_inputs[START_BUTTON].setEnabled(True)
-                    app.control_inputs[STOP_BUTTON].setEnabled(False)
                     break
                 ((time_ns), (intensities)) = v
+                #print(intensities)
                 app.realtime_queue.put((time_ns[0], intensities))
                 
                 
     @staticmethod            
     def calculate_cps(app, time_ns, counts):
-        if not hasattr(app, "last_cps_update_time"):
-            app.last_cps_update_time = time_ns
-        time_diff_ns = time_ns - app.last_cps_update_time
-        time_diff_ms = time_diff_ns / NS_IN_MS
-        if time_diff_ms >= 400:
-            app.last_cps_update_time = time_ns 
+        if app.last_cps_update_time.elapsed() >= app.cps_update_interval:
             cps_counts = [0] * 8
             for channel, cps in app.cps_ch.items():
                 cps_counts[channel] += counts[channel]
+                #print(f"{channel} - {cps_counts[channel]}")
                 app.cps_ch[channel].setText(FormatUtils.format_cps(round(cps_counts[channel])) + " CPS")
+                app.last_cps_update_time.restart()
         for channel, curr_conn in app.connectors.items():
             curr_conn.cb_append_data_point(y=(counts[channel]), x=(time_ns / NS_IN_S))
-        QApplication.processEvents()       
+        QApplication.processEvents()           
 
             
     @staticmethod            
@@ -131,6 +126,7 @@ class IntensityTracing:
 
     @staticmethod    
     def stop_button_pressed(app):
+        app.last_cps_update_time.invalidate() 
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         QApplication.processEvents()
@@ -141,7 +137,7 @@ class IntensityTracing:
             app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
         for channel, curr_conn in app.connectors.items():     
-            curr_conn.pause()   
+            curr_conn.pause()         
         
  
 
@@ -172,8 +168,8 @@ class IntensityTracingPlot:
         app.time_span = app.control_inputs[SETTINGS_TIME_SPAN].value()
         connector = DataConnector(
             plot_curve,
-            update_rate=50,
-            max_points= 100,
+            update_rate=10,
+            max_points=int((14 * app.time_span)/2),
         )
         plot_widget.setBackground("#0E0E0E")
         plot_widget.setStyleSheet("border: 1px solid #3b3b3b;")

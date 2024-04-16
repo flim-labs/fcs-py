@@ -1,10 +1,7 @@
 import os
-
 from PyQt6.QtCore import Qt
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
-
 from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
@@ -13,7 +10,6 @@ from PyQt6.QtWidgets import (
     QLabel,
     QSizePolicy,
 )
-
 from components.gui_styles import GUIStyles
 from components.switch_control import SwitchControl
 from components.select_control import SelectControl

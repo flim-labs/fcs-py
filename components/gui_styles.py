@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QColor, QPalette, QFont, QFontDatabase
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel
+from PyQt6.QtGui import QColor, QPalette, QFont
+from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QStyleFactory
 
 
@@ -126,17 +126,7 @@ class GUIStyles:
             "pressed": "#292929",
         }
         GUIStyles._set_button_style(button, color_dict, min_width="100px")
-
-    @staticmethod
-    def set_config_btn_style(button):
-        color_dict = {
-            "base": "black",
-            "border": "#FFA726",
-            "hover": "#FB8C00",
-            "pressed": "#E65100",
-        }
-        GUIStyles._set_button_style(button, color_dict, min_width="100px")
-
+ 
     @staticmethod
     def set_checkbox_style():
         return """
@@ -165,7 +155,6 @@ class GUIStyles:
             }
         """
 
-
     @staticmethod    
     def set_tau_checkbox_style(color):
         return f"""
@@ -191,7 +180,6 @@ class GUIStyles:
                 background-color: {color};
             }}
         """
-
 
     @staticmethod    
     def checkbox_wrapper_style():
@@ -222,7 +210,6 @@ class GUIStyles:
                 border: 1px solid #808080;
             } 
         """    
-
 
     @staticmethod
     def set_input_number_style():
@@ -342,8 +329,6 @@ class GUIStyles:
             }
         """
 
-
-
     @staticmethod
     def set_context_menu_style(base, selected, pressed):
         return f"""
@@ -381,42 +366,6 @@ class GUIStyles:
          }}
 
         """
-
-    @staticmethod    
-    def correlation_menu(width):
-        return f"""
-
-        QWidget {{
-            background-color: #3b3b3b;  
-            width: {width};
-        }}
-        
-        QMenu {{
-            margin: 0;   
-            padding: 5px;
-            width: {width};
-            border-radius: 4px;
-            background: #3b3b3b; 
-              
-        }}
-
-        QMenu::item {{
-            color: white; 
-            margin: 0;
-            width: {width};
-            border-radius: 4px;   
-            font-family: "Montserrat";
-            font-size: 12px;
-            font-weight: bold;
-            padding: 8px 12px 8px 12px;
-        }}
-
-        QMenu::item:pressed {{
-            color: #8d4ef2;
-        }}
-
-        """
-
     
     @staticmethod
     def gt_calc_mode_btn_style():
@@ -449,53 +398,6 @@ class GUIStyles:
                 
             }}
         """
-
-    @staticmethod    
-    def add_tau_btn_style():
-        return f"""
-            QPushButton, QPushButton:released {{
-                font-family: "Montserrat";
-                letter-spacing: 0.1em;
-                padding: 10px 12px;
-                font-size: 11px;
-                font-weight: bold;
-                border-radius: 4px;
-                background-color: #FB8C00;
-                border: 2px solid #FB8C00;
-                color: black;
-            }}
-            
-            QPushButton:hover {{
-                background-color: #FFA726;
-                border: 2px solid #FFA726;
-            }}
-
-            QPushButton:focus {{
-                background-color: #FB8C00;
-                border: 2px solid #FB8C00;
-            }}
-
-            QPushButton:pressed {{
-                background-color: #FB8C00;
-                border: 2px solid #FB8C00;
-            }}
-
-            QPushButton:disabled {{
-                background-color: #cecece;
-                border: 2px solid #cecece;
-                color: #8c8b8b;
-            }}
-        """
-
-    @staticmethod           
-    def remove_tau_button():
-        return """
-            QPushButton{
-                background-color: #990000;
-                border-radius: 5px;
-                qproperty-iconSize: 8px;
-            } 
-        """ 
 
     @staticmethod       
     def channels_btn_style(base, hover, pressed, text="white"):
@@ -627,12 +529,6 @@ class GUIStyles:
                 color: #3b3b3b;
             }
         """
-    @staticmethod
-    def set_chart_container_style():
-        return """
-            QWidget#chart_widget{
-                border: 1px solid #3b3b3b;
-            }
     
-        """   
+  
                
