@@ -274,7 +274,7 @@ class PlotsConfigPopup(QWidget):
             layout.addLayout(self.gt_corr_grid) 
         
         self.start_btn = QPushButton("START")
-        self.start_btn.setEnabled(len(self.app.intensity_plots_to_show) > 0 and len(self.app.gt_plots_to_show) > 0)
+        self.start_btn.setEnabled(len(self.app.intensity_plots_to_show) > 0)
         self.start_btn.setStyleSheet(GUIStyles.channels_btn_style(base="#FB8C00", hover="#FFA726", pressed="#FB8C00", text="white")) 
         self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.start_btn.clicked.connect(self.start_acquisition)  
@@ -375,7 +375,7 @@ class PlotsConfigPopup(QWidget):
             for checkbox in self.intensity_checkboxes:
                 checkbox.setEnabled(True)
         if hasattr(self, 'start_btn'):        
-            start_btn_enabled = len(self.app.intensity_plots_to_show) > 0 and len(self.app.gt_plots_to_show) > 0
+            start_btn_enabled = len(self.app.intensity_plots_to_show) > 0
             self.start_btn.setEnabled(start_btn_enabled)
 
 
@@ -399,7 +399,7 @@ class PlotsConfigPopup(QWidget):
             for checkbox in self.gt_checkboxes:
                 checkbox.setEnabled(True) 
         if hasattr(self, 'start_btn'):        
-            start_btn_enabled = len(self.app.intensity_plots_to_show) > 0 and len(self.app.gt_plots_to_show) > 0        
+            start_btn_enabled = len(self.app.intensity_plots_to_show) > 0       
             self.start_btn.setEnabled(start_btn_enabled)        
                     
                            

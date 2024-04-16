@@ -302,7 +302,7 @@ class GUIStyles:
             QLabel{
                 font-weight: 700;
                 font-family: "Montserrat";
-                font-size: 18px;
+                font-size: 30px;
                 color: #FB8C00;
             }
         """
@@ -320,7 +320,7 @@ class GUIStyles:
             QLabel#cps{
                 font-weight: 700;
                 font-family: "Montserrat";
-                font-size: 22px;
+                font-size: 26px;
                 color: #FB8C00;
             }
             QLabel#ch{
