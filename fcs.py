@@ -14,7 +14,7 @@ from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import IntensityTracing
+from components.intensity_tracing_controller import IntensityTracing, IntensityDataProcessor
 from components.settings import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -97,10 +97,11 @@ class FCSWindow(QWidget):
         self.realtime_queue_thread = None
         self.realtime_queue_worker_stop = False
         self.realtime_queue = queue.Queue()
+        self.intensities_data_processor = IntensityDataProcessor()
         #####
         
         self.pull_from_queue_timer2 = QTimer()
-        
+        self.last_acquisition_ns = 0
         self.last_cps_update_time = QElapsedTimer() 
         self.cps_update_interval = 400  
         

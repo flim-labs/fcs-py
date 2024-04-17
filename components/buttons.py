@@ -8,6 +8,7 @@ from PyQt6.QtCore import QPropertyAnimation, Qt
 from PyQt6.QtGui import QIcon, QPixmap, QColor
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
+from components.fcs_controller import FCSPostProcessing
 from components.gui_styles import GUIStyles
 from components.controls_bar_builder import ControlsBarBuilder
 from components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot, IntensityTracingOnlyCPS
@@ -72,7 +73,7 @@ class ActionButtons(QWidget):
         return buttons_row_layout 
 
     def start_button_pressed(self):
-        open_popup = len(self.app.intensity_plots_to_show) == 0 or len(self.app.gt_plots_to_show)  == 0
+        open_popup = len(self.app.intensity_plots_to_show) == 0
         if open_popup: 
             popup = PlotsConfigPopup(self.app, start_acquisition=True)
             popup.show()
@@ -144,6 +145,7 @@ class ButtonsActionsController:
         app.control_inputs[STOP_BUTTON].setEnabled(True)   
         app.intensity_charts.clear()
         app.intensity_lines.clear()
+        app.last_acquisition_ns = 0
         app.gt_charts.clear()
         app.cps_ch.clear()
         for chart in app.intensity_charts:
@@ -152,7 +154,8 @@ class ButtonsActionsController:
             chart.setVisible(False)
         for channel, curr_conn in app.connectors.items():    
             curr_conn.disconnect()
-        app.connectors.clear()        
+        app.connectors.clear()
+        app.intensities_data_processor.clear_data()           
         app.intensity_charts_wrappers.clear()
         QApplication.processEvents()         
         ButtonsActionsController.intensity_tracing_start(app)
@@ -188,13 +191,15 @@ class ButtonsActionsController:
             app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
         for channel, curr_conn in app.connectors.items():     
-            curr_conn.pause()    
+            curr_conn.pause()
+        FCSPostProcessing.get_input(app)        
     
    
     @staticmethod
     def reset_button_pressed(app):
         flim_labs.request_stop()
         app.last_cps_update_time.invalidate() 
+        app.last_acquisition_ns = 0
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
@@ -203,7 +208,8 @@ class ButtonsActionsController:
             chart.deleteLater()
         for wrapper in app.intensity_charts_wrappers:
             wrapper.setParent(None)
-            wrapper.deleteLater()  
+            wrapper.deleteLater()
+        app.intensities_data_processor.clear_data()     
         app.connectors.clear()         
         app.intensity_charts.clear()
         app.cps_ch.clear()

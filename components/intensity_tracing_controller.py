@@ -11,6 +11,7 @@ from pglive.sources.live_axis import LiveAxis
 from pglive.sources.live_axis_range import LiveAxisRange
 from pglive.sources.live_plot import LiveLinePlot
 from pglive.sources.live_plot_widget import LivePlotWidget
+from components.fcs_controller import FCSPostProcessing
 from components.box_message import BoxMessage
 from components.format_utilities import FormatUtils
 from components.messages_utilities import MessagesUtilities
@@ -88,8 +89,8 @@ class IntensityTracing:
                     IntensityTracing.stop_button_pressed(app)
                     break
                 ((time_ns), (intensities)) = v
-                print(v)
                 app.realtime_queue.put((time_ns[0], intensities))
+                app.intensities_data_processor.process_data(intensities, app.enabled_channels, time_ns[0], app)
                 
                 
     @staticmethod            
@@ -121,8 +122,6 @@ class IntensityTracing:
             app.realtime_queue_worker_stop = False
 
     
-            
-
 
     @staticmethod    
     def stop_button_pressed(app):
@@ -137,13 +136,32 @@ class IntensityTracing:
             app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
         for channel, curr_conn in app.connectors.items():     
-            curr_conn.pause()         
+            curr_conn.pause() 
+        FCSPostProcessing.get_input(app)    
+              
         
- 
+
+class IntensityDataProcessor:
+    def __init__(self):
+        self.data_dict = {}
+
+    def process_data(self, intensities, enabled_channels, time_ns, app):
+        if app.free_running_acquisition_time:
+            app.last_acquisition_ns = time_ns
+        for i, intensity in enumerate(intensities):
+            if i in enabled_channels:
+                if i not in self.data_dict:
+                    self.data_dict[i] = {'index': i, 'data': []}
+                self.data_dict[i]['data'].append(intensity)    
+
+    def get_processed_data(self):
+        return list(self.data_dict.values()) 
+    
+    def clear_data(self):    
+        self.data_dict = {}
 
 
 class IntensityTracingPlot:
-    
     @staticmethod
     def generate_chart(channel_index, app):
         left_axis = LiveAxis("left", axisPen="#cecece", textPen="#cecece")
@@ -174,16 +192,12 @@ class IntensityTracingPlot:
         plot_widget.setBackground("#0E0E0E")
         plot_widget.setStyleSheet("border: 1px solid #3b3b3b;")
         return plot_widget, connector
-    
 
     @staticmethod
     def create_cps_label():    
         # cps indicator
         cps_label = QLabel("0 CPS")
         return cps_label   
-   
-
-
 
     @staticmethod
     def create_chart_widget(app, index, channel):
