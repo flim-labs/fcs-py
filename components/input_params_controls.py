@@ -1,15 +1,8 @@
 
 import os
-import json
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout, QSizePolicy, QCheckBox, QLabel, QLineEdit
-from PyQt6.QtCore import QPropertyAnimation, QSize, QRect, QEasingCurve, Qt, pyqtSignal
-from PyQt6.QtGui import QIcon, QColor, QIntValidator
-from components.resource_path import resource_path
-from components.gui_styles import GUIStyles
+from PyQt6.QtWidgets import QWidget, QHBoxLayout
 from components.controls_bar_builder import ControlsBarBuilder
-from components.logo_utilities import LogoOverlay, TitlebarIcon
 from components.settings import *
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
@@ -21,8 +14,8 @@ class InputParamsControls(QWidget):
         layout = QHBoxLayout()
         self.setLayout(layout)
         self.create_channel_type_control(layout)
-        self.create_tau_control(layout)
         self.create_bin_width_control(layout)
+        self.create_tau_control(layout)
         running_mode_control = self.create_running_mode_control()
         layout.addLayout(running_mode_control)
         layout.addSpacing(15)
@@ -52,7 +45,8 @@ class InputParamsControls(QWidget):
         inp = ControlsBarBuilder.create_bin_width_control(
             layout,
             self.app.bin_width_micros,
-            self.bin_width_micros_value_change, )
+             self.bin_width_micros_value_change,
+            self.app.bin_width_inputs, )
         self.app.control_inputs[SETTINGS_BIN_WIDTH_MICROS] = inp    
 
 
@@ -114,17 +108,13 @@ class InputParamsControls(QWidget):
 
     def tau_value_change(self, index):
         value = self.sender().currentText()
-        bin_width_input =  self.app.control_inputs[SETTINGS_BIN_WIDTH_MICROS]
-        bin_width_input.setRange(int(value), 1000000)
-        if self.app.bin_width_micros < int(value):
-            bin_width_input.setValue(int(value))
         self.app.selected_tau = value
         self.app.settings.setValue(SETTINGS_TAU, self.app.selected_tau)    
 
-    def bin_width_micros_value_change(self, value):       
-        self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
-        self.app.bin_width_micros = value
-        self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value) 
+    def bin_width_micros_value_change(self, value):
+        value = self.sender().currentText()   
+        self.app.bin_width_micros = int(value)   
+        self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, int(value)) 
         #self.calc_exported_file_size()         
 
 

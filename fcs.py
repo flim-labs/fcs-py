@@ -3,33 +3,18 @@ import os
 import json
 import queue
 import sys
-import time
 from functools import partial
-import flim_labs
-import numpy as np
-import pyqtgraph as pg
-from PyQt6.QtCore import QTimer, QSettings, QSize, Qt, QEvent
-from PyQt6.QtGui import QPixmap, QIcon, QAction
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QHBoxLayout, QLayout, QLabel, \
-    QSizePolicy, QPushButton, QDialog, QMessageBox, QMainWindow, QMenu, QRadioButton
-from components.fancy_checkbox import FancyButton
-from components.gradient_text import GradientText
+from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from components.gui_styles import GUIStyles
-from components.format_utilities import FormatUtils
-from components.input_number_control import InputNumberControl
-from components.link_widget import LinkWidget
 from components.layout_utilities import init_ui
-from components.logo_utilities import LogoOverlay
-from components.resource_path import resource_path
-from components.select_control import SelectControl
-from components.switch_control import SwitchControl
 from components.channels_control import ChannelsControl
 from components.top_bar_builder import TopBarBuilder
 from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
+from components.intensity_tracing_controller import IntensityTracing
 from components.settings import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +34,6 @@ class FCSWindow(QWidget):
         self.selected_firmware = self.settings.value(SETTINGS_FIRMWARE, DEFAULT_FIRMWARE)
         self.conn_channels = CONN_CHANNELS
         self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
-        self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
         self.time_span = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
         default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
         self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
@@ -61,6 +45,9 @@ class FCSWindow(QWidget):
         
         self.taus = TAUS_INPUTS
         self.selected_tau = self.settings.value(SETTINGS_TAU, DEFAULT_TAU)
+        
+        self.bin_width_inputs = BIN_WIDTH_INPUTS
+        self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
 
         default_ch_correlations = self.settings.value(SETTINGS_CH_CORRELATIONS, DEFAULT_CH_CORRELATIONS)
         self.ch_correlations = json.loads(default_ch_correlations) if default_ch_correlations is not None else []
@@ -94,25 +81,28 @@ class FCSWindow(QWidget):
         self.test_mode = False
         
         self.acquisition_stopped = False
-        self.cps = []
-        self.only_cps = []
-        self.connectors = []
+        
+        self.cps_ch = {}
 
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
         self.gt_charts = []
         self.intensity_lines = []
-
         self.only_cps_widgets = []
-        self.only_cps_ch = {}
-
-        self.pull_from_queue_timer2 = QTimer()
-        self.pull_from_queue_timer2.timeout.connect(partial(IntensityTracing.pull_from_queue2, self))
-        self.update_plots = True
+      
+        ######
+        self.connectors = {}
+        self.pull_from_queue_timer = QTimer()
+        self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
+        self.realtime_queue_thread = None
+        self.realtime_queue_worker_stop = False
+        self.realtime_queue = queue.Queue()
+        #####
         
-        self.current_time = 0 
-        self.update_interval = 50  
-        self.move_speed = 0.1  
+        self.pull_from_queue_timer2 = QTimer()
+        
+        self.last_cps_update_time = QElapsedTimer() 
+        self.cps_update_interval = 400  
         
         GUIStyles.set_fonts()
         self.init_ui()
@@ -236,7 +226,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = FCSWindow()
     window.show()
-    window.pull_from_queue_timer2.stop()
+    exit_code = app.exec()
     IntensityTracing.stop_button_pressed(window)
-    window.update_plots = False
-    sys.exit(app.exec())
+    sys.exit(exit_code)

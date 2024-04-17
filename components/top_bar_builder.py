@@ -1,9 +1,6 @@
 import os
-
 from PyQt6.QtCore import Qt, QSize
-
 from components.resource_path import resource_path
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 

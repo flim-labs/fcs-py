@@ -1,10 +1,7 @@
 import os
-
 from PyQt6.QtCore import Qt
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
-
 from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
@@ -13,7 +10,6 @@ from PyQt6.QtWidgets import (
     QLabel,
     QSizePolicy,
 )
-
 from components.gui_styles import GUIStyles
 from components.switch_control import SwitchControl
 from components.select_control import SelectControl
@@ -100,29 +96,34 @@ class ControlsBarBuilder:
     def create_tau_control(controls_row, value, change_cb, options):
         # Channels type control (USB/SMA)
         _, inp = SelectControl.setup(
-            "Tau:",
+            "#τ:",
             value,
             controls_row,
             options,
             change_cb,
+            20,
+            "vertical",
+            "font-family: Times New Roman; color: #f8f8f8; font-size: 18px;"
+            
         )
         inp.setStyleSheet(GUIStyles.set_input_select_style())
         return inp 
 
 
     @staticmethod
-    def create_bin_width_control(controls_row, value, change_cb):
-        # Bin width micros control
-        _, inp = InputNumberControl.setup(
+    def create_bin_width_control(controls_row, value, change_cb, options):
+        # Bin width micros control    
+        _, inp = SelectControl.setup(
             "Bin width (µs):",
-            1,
-            1000000,
             value,
             controls_row,
+            options,
             change_cb,
+            
         )
-        inp.setStyleSheet(GUIStyles.set_input_number_style())
-        return inp
+        inp.setStyleSheet(GUIStyles.set_input_select_style())
+        return inp 
+    
 
     @staticmethod
     def create_running_mode_control(value, change_cb):

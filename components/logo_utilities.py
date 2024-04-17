@@ -1,11 +1,8 @@
 import os
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
-
 from components.resource_path import resource_path
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, '..'))
 
