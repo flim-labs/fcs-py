@@ -1,0 +1,12 @@
+[package]
+name = "fcs-pyo3-wrapper"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "fcs_pyo3"
+
+[dependencies]
+pyo3 = { version = "0.21.2" , features = ["extension-module"] }
+numpy = "0.21.0"
+rand = "0.8.4"
