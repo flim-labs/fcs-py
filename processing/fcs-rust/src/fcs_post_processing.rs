@@ -1,6 +1,7 @@
 
 use std::fmt;
-
+use std::sync::Arc;
+use rayon::prelude::*;
 
 #[derive(Clone, Debug)] 
 pub struct IntensityData {
@@ -62,16 +63,16 @@ pub fn fluorescence_correlation_spectroscopy(
 ) -> Vec<GtCorrelationResult> {
     let PostProcessingFCSInput { correlations, bin_width_us, taus_number, acquisition_time_us, intensities } = input_data;
 
-    let mut results = Vec::new();
-    for correlation in correlations {
+    let intensities: Arc<Vec<_>> = Arc::new(intensities);
+    let results: Vec<GtCorrelationResult> = correlations.into_par_iter().map(|correlation| {
         let (intensity1_index, intensity2_index) = correlation;
         let intensity1_data = intensities.iter().find(|&intensity| intensity.index == intensity1_index).unwrap();
         let intensity2_data = intensities.iter().find(|&intensity| intensity.index == intensity2_index).unwrap();
         let tau: Vec<f64> = (0..taus_number).map(|i| (i as f64) * (acquisition_time_us as f64) / (taus_number as f64)).collect();
         let tau_int: Vec<f64> = tau.iter().map(|&t| ((t / (bin_width_us as f64)).floor()) * (bin_width_us as f64)).collect();
         let (g2_values, lag_index) = calculate_correlation(&intensity1_data.data, &intensity2_data.data, &tau_int);
-        results.push(GtCorrelationResult::new(correlation, g2_values, lag_index));
-    }
+        GtCorrelationResult::new(correlation, g2_values, lag_index)
+    }).collect();
     results
 }
 

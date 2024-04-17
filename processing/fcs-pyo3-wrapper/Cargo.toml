@@ -8,5 +8,5 @@ name = "fcs_pyo3"
 
 [dependencies]
 pyo3 = { version = "0.21.2" , features = ["extension-module"] }
-numpy = "0.21.0"
 rand = "0.8.4"
+rayon = "1.10.0"
