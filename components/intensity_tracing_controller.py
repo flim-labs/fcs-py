@@ -88,7 +88,7 @@ class IntensityTracing:
                     IntensityTracing.stop_button_pressed(app)
                     break
                 ((time_ns), (intensities)) = v
-                #print(intensities)
+                print(v)
                 app.realtime_queue.put((time_ns[0], intensities))
                 
                 
@@ -145,7 +145,7 @@ class IntensityTracing:
 class IntensityTracingPlot:
     
     @staticmethod
-    def generate_chart_2(channel_index, app):
+    def generate_chart(channel_index, app):
         left_axis = LiveAxis("left", axisPen="#cecece", textPen="#cecece")
         bottom_axis = LiveAxis(
             "bottom",
@@ -187,7 +187,7 @@ class IntensityTracingPlot:
 
     @staticmethod
     def create_chart_widget(app, index, channel):
-           chart, connector = IntensityTracingPlot.generate_chart_2(app.intensity_plots_to_show[index], app)
+           chart, connector = IntensityTracingPlot.generate_chart(app.intensity_plots_to_show[index], app)
            cps = IntensityTracingPlot.create_cps_label()
            cps.setStyleSheet(GUIStyles.set_cps_label_style())
            chart_widget = QWidget()

@@ -6,7 +6,6 @@ import sys
 from functools import partial
 from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
-from components.fcs_controller import FCSController
 from components.gui_styles import GUIStyles
 from components.layout_utilities import init_ui
 from components.channels_control import ChannelsControl
