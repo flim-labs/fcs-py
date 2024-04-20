@@ -102,7 +102,7 @@ class IntensityTracing:
                 #print(f"{channel} - {cps_counts[channel]}")
                 app.cps_ch[channel].setText(FormatUtils.format_cps(round(cps_counts[channel])) + " CPS")
                 app.last_cps_update_time.restart()
-        for channel, curr_conn in app.connectors.items():
+        for channel, curr_conn in app.intensity_connectors.items():
             curr_conn.cb_append_data_point(y=(counts[channel]), x=(time_ns / NS_IN_S))
         QApplication.processEvents()           
 
@@ -124,7 +124,7 @@ class IntensityTracing:
     
 
     @staticmethod    
-    def stop_button_pressed(app):
+    def stop_button_pressed(app, app_close = False):
         app.last_cps_update_time.invalidate() 
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
@@ -135,9 +135,10 @@ class IntensityTracing:
         if app.realtime_queue_thread is not None:
             app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
-        for channel, curr_conn in app.connectors.items():     
+        for channel, curr_conn in app.intensity_connectors.items():     
             curr_conn.pause() 
-        FCSPostProcessing.get_input(app)    
+        if not app_close:    
+            FCSPostProcessing.get_input(app)    
               
         
 
@@ -212,13 +213,11 @@ class IntensityTracingPlot:
            row, col = divmod(index, 2)
            app.layouts[INTENSITY_PLOTS_GRID].addWidget(chart_widget, row, col)
            app.intensity_charts.append(chart)
-           app.connectors[app.intensity_plots_to_show[index]] = connector
+           app.intensity_connectors[app.intensity_plots_to_show[index]] = connector
            app.intensity_charts_wrappers.append(chart_widget)
            app.cps_ch[channel] = cps
          
            
-
-
 
 class IntensityTracingOnlyCPS:
     @staticmethod

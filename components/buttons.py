@@ -6,6 +6,7 @@ import flim_labs
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QCheckBox, QHBoxLayout, QMessageBox, QGridLayout, QVBoxLayout, QLabel
 from PyQt6.QtCore import QPropertyAnimation, Qt
 from PyQt6.QtGui import QIcon, QPixmap, QColor
+from components.layout_utilities import create_gt_layout, create_gt_wait_layout, insert_widget, remove_widget
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
 from components.fcs_controller import FCSPostProcessing
@@ -152,9 +153,13 @@ class ButtonsActionsController:
             chart.setVisible(False)
         for chart in app.gt_charts:
             chart.setVisible(False)
-        for channel, curr_conn in app.connectors.items():    
+        for channel, curr_conn in app.intensity_connectors.items():    
             curr_conn.disconnect()
-        app.connectors.clear()
+        remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])      
+        gt_widget = create_gt_wait_layout(app)
+        insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)    
+        app.intensity_connectors.clear()
+        app.gt_lines.clear()
         app.intensities_data_processor.clear_data()           
         app.intensity_charts_wrappers.clear()
         QApplication.processEvents()         
@@ -190,7 +195,7 @@ class ButtonsActionsController:
         if app.realtime_queue_thread is not None:
             app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
-        for channel, curr_conn in app.connectors.items():     
+        for channel, curr_conn in app.intensity_connectors.items():     
             curr_conn.pause()
         FCSPostProcessing.get_input(app)        
     
@@ -210,7 +215,7 @@ class ButtonsActionsController:
             wrapper.setParent(None)
             wrapper.deleteLater()
         app.intensities_data_processor.clear_data()     
-        app.connectors.clear()         
+        app.intensity_connectors.clear()         
         app.intensity_charts.clear()
         app.cps_ch.clear()
         app.intensity_charts_wrappers.clear()

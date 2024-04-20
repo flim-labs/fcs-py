@@ -7,8 +7,8 @@ use fcs_post_processing::{fluorescence_correlation_spectroscopy,
     IntensityData, PostProcessingFCSInput, GtCorrelationResult};
 
 #[pymodule]
-#[pyo3(name = "fcs")]
-fn fcs(_py: Python, m: &PyModule) -> PyResult<()> {
+#[pyo3(name = "fcs_flim")]
+fn fcs_flim(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(fluorescence_correlation_spectroscopy, m)?)?;
     m.add_class::<IntensityData>()?;
     m.add_class::<PostProcessingFCSInput>()?;

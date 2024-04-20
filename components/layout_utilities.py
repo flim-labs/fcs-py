@@ -64,7 +64,7 @@ def init_ui(self, top_utilities_layout):
     plot_grids_container.setSpacing(0)
     plot_grids_container.setAlignment(Qt.AlignmentFlag.AlignLeft)
     intensity_widget = create_intensity_layout(self)
-    gt_widget = create_gt_layout(self)
+    gt_widget = create_gt_wait_layout(self)
     plot_grids_container.addWidget(intensity_widget)
     plot_grids_container.addWidget(gt_widget)
     main_layout.addLayout(plot_grids_container)
@@ -94,7 +94,7 @@ def create_intensity_layout(app):
     return intensity_widget
 
 
-def create_gt_layout(app):    
+def create_gt_wait_layout(app):    
     gt_widget = QWidget()
     gt_widget.setObjectName("container")
     gt_widget.setFixedWidth(int(app.width() / 2))
@@ -118,6 +118,32 @@ def create_gt_layout(app):
     gt_widget.setLayout(gt_v_box)
     gt_widget.setVisible(False)
     return gt_widget
+
+
+def create_gt_layout(app):    
+    gt_widget = QWidget()
+    gt_widget.setObjectName("container")
+    gt_widget.setFixedWidth(int(app.width() / 2))
+    gt_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+    app.widgets[GT_WIDGET_WRAPPER] = gt_widget
+    gt_v_box = QVBoxLayout()
+    gt_plots_grid = QGridLayout()
+    gt_v_box.addLayout(gt_plots_grid)
+    gt_widget.setLayout(gt_v_box)
+    app.layouts[GT_PLOTS_GRID] = gt_plots_grid
+    return gt_widget
+
+
+def remove_widget(layout, widget):
+    layout.removeWidget(widget)
+    widget.deleteLater() 
+    
+    
+def insert_widget(layout, widget, position):
+    layout.insertWidget(position, widget)
+        
+
+
 
 
 

@@ -16,7 +16,6 @@ from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
 from components.intensity_tracing_controller import IntensityTracing, IntensityDataProcessor
 from components.settings import *
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
@@ -88,10 +87,12 @@ class FCSWindow(QWidget):
         self.intensity_charts_wrappers = []
         self.gt_charts = []
         self.intensity_lines = []
+        self.gt_lines = []
         self.only_cps_widgets = []
       
         ######
-        self.connectors = {}
+        self.intensity_connectors = {}
+        self.gt_connectors = {}
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
         self.realtime_queue_thread = None
@@ -228,5 +229,5 @@ if __name__ == "__main__":
     window = FCSWindow()
     window.show()
     exit_code = app.exec()
-    IntensityTracing.stop_button_pressed(window)
+    IntensityTracing.stop_button_pressed(window, app_close=True)
     sys.exit(exit_code)
