@@ -230,4 +230,5 @@ if __name__ == "__main__":
     window.show()
     exit_code = app.exec()
     IntensityTracing.stop_button_pressed(window, app_close=True)
+    print(f"EXIT CODE: {exit_code}")
     sys.exit(exit_code)

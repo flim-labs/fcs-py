@@ -506,7 +506,7 @@ class GUIStyles:
         """ 
         
     @staticmethod       
-    def gt_widget_container():
+    def gt_wait_widget_container():
         return """
             QWidget#container{
                 padding: 12px;
@@ -521,6 +521,7 @@ class GUIStyles:
                 margin-top: 20px; 
                 color: #3b3b3b; 
                 margin-bottom: 10px;
+                font-family: Times New Roman;
             }
             QLabel#desc{
                 font-weight: 300;
@@ -530,5 +531,21 @@ class GUIStyles:
             }
         """
     
+    @staticmethod           
+    def gt_widget_container():
+        return """
+            QWidget#container{
+                border-left: 1px solid #3b3b3b;
+                background-color: #141414; 
+            }
+            QLabel#title{
+                font-weight: 700;
+                font-size: 30px; 
+                text-align: center;
+                color: #3b3b3b; 
+                margin-bottom: 10px;
+                font-family: Times New Roman;
+            }
+        """
   
                
