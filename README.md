@@ -18,6 +18,10 @@
    ```sh
    pip install -r requirements.txt
    ```
+5. Build and install Pyo3 module by running
+   ```sh
+   maturin develop
+   ```   
 5. Run the project
    ```sh
    python fcs.py

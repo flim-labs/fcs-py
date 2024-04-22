@@ -36,7 +36,8 @@ class FCSPostProcessing:
             bin_width_us = bin_width_us,
             taus_number = taus_number,
             acquisition_time_us = acquisition_time_us
-        )   
+        )  
+        print(gt_results) 
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)
         insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)
