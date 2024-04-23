@@ -1,6 +1,9 @@
 use pyo3::prelude::*;
+use pyo3::exceptions::PyValueError;
 use rayon::prelude::*;
-use nalgebra::DVector;
+use std::vec::Vec;
+
+
 
 #[pyclass]
 #[derive(Clone)]
@@ -36,8 +39,6 @@ pub struct PostProcessingFCSInput {
     #[pyo3(get)]
     pub bin_width_us: usize,
     #[pyo3(get)]
-    pub taus_number: usize,
-    #[pyo3(get)]
     pub acquisition_time_us: usize,
     #[pyo3(get)]
     pub intensities: Vec<IntensityData>,
@@ -65,12 +66,17 @@ pub fn fluorescence_correlation_spectroscopy(
     correlations: Vec<(usize, usize)>,
     #[allow(unused_variables)]
     bin_width_us: usize,
-    taus_number: usize,
     #[allow(unused_variables)]
     acquisition_time_us: usize,
     intensities: Vec<IntensityData>,
 ) -> PyResult<(Vec<i32>, Vec<((usize, usize), Vec<f64>)>)> {
-    let lag_index = calculate_lag_index(taus_number);
+    let intensity1_data_length = if let Some(intensity1_data) = intensities.first() {
+        intensity1_data.data.len()
+    } else {
+        return Err(PyErr::new::<PyValueError, _>("The intensities vector is empty"));
+    };
+
+    let lag_index = calculate_lag_index(intensity1_data_length);
     let g2_correlations: Vec<_> = correlations
         .par_iter()
         .filter_map(|&correlation| {
@@ -90,26 +96,19 @@ pub fn fluorescence_correlation_spectroscopy(
     Ok((lag_index, g2_correlations))
 }
 
-fn linspace(start: f64, end: f64, num_points: usize) -> DVector<f64> {
-    let step = (end - start) / (num_points - 1) as f64;
-    let mut result = DVector::zeros(num_points);
-    for i in 0..num_points {
-        result[i] = start + i as f64 * step;
-    }
-    result
-}
 
-fn calculate_lag_index(taus_number: usize) -> Vec<i32> {
-    let mut steps = Vec::with_capacity(taus_number);
-    let mut value = 2.0;
-    let end = 8.0;
-    let step_size = 0.05;
-    while value < end {
-        steps.push((3.0_f64).powf(value).round());
-        value += step_size;
+fn calculate_lag_index(data_length: usize) -> Vec<i32> {
+    let max_tau = data_length - 1;
+    let scale_factor = max_tau as f64 / (3.0f64.powf(8.0 - 2.0));
+    let mut lag_index: Vec<i32> = Vec::new();
+    let mut exponent = 2.0;
+    while exponent < 8.0 {
+        let result = (scale_factor * 3.0f64.powf(exponent)).round() as i32;
+        lag_index.push(result);
+        exponent += 0.05;
     }
-    let tau_ind = linspace(steps[0], *steps.last().unwrap(), taus_number - 1);
-    let mut lag_index: Vec<i32> = tau_ind.iter().map(|&x| x as i32).collect();
+    lag_index.sort();
+    lag_index.dedup();
     lag_index.insert(0, 0);
     lag_index
 }

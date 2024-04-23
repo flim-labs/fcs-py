@@ -11,11 +11,10 @@ class FCSPostProcessing:
     @staticmethod
     def get_input(app):
         acquisition_time_us = int(app.last_acquisition_ns / 1000) if app.free_running_acquisition_time else int(app.acquisition_time_millis * 1000)
-        intensities_data = app.intensities_data_processor.get_processed_data() 
+        intensities_data = app.intensities_data_processor.get_processed_data()
         correlations = [tuple(item) if isinstance(item, list) else item for item in app.ch_correlations]
         active_correlations = [(ch1, ch2) for ch1, ch2, active in correlations if active]
         bin_width_us = int(app.bin_width_micros)
-        taus_number = int(app.selected_tau)
         intensities_input = [
             fcs_flim.IntensityData(
                 index=d['index'],
@@ -23,26 +22,25 @@ class FCSPostProcessing:
             ) 
             for d in intensities_data
         ]
-        FCSPostProcessing.start_fcs_post_processing(app, intensities_input, active_correlations, bin_width_us, taus_number, acquisition_time_us)  
+        FCSPostProcessing.start_fcs_post_processing(app, intensities_input, active_correlations, bin_width_us, acquisition_time_us)  
        
         
   
             
     @staticmethod
-    def start_fcs_post_processing(app, intensities_input, active_correlations, bin_width_us, taus_number, acquisition_time_us):
+    def start_fcs_post_processing(app, intensities_input, active_correlations, bin_width_us, acquisition_time_us):
         gt_results = fcs_flim.fluorescence_correlation_spectroscopy(
             intensities = intensities_input,
             correlations = active_correlations,
             bin_width_us = bin_width_us,
-            taus_number = taus_number,
             acquisition_time_us = acquisition_time_us
         )  
-        print(gt_results) 
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)
         insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)
         gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in app.gt_plots_to_show]
         lag_index = gt_results[0]
+        print(lag_index)
         filtered_gt_results = [res for res in gt_results[1] if res[0] in gt_plot_to_show]
         for index, res in enumerate(filtered_gt_results):
             correlation = res[0]
