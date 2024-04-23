@@ -15,6 +15,7 @@ class FCSPostProcessing:
         correlations = [tuple(item) if isinstance(item, list) else item for item in app.ch_correlations]
         active_correlations = [(ch1, ch2) for ch1, ch2, active in correlations if active]
         bin_width_us = int(app.bin_width_micros)
+        print(len(intensities_data[0]["data"]))
         intensities_input = [
             fcs_flim.IntensityData(
                 index=d['index'],

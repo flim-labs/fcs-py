@@ -15,7 +15,6 @@ class InputParamsControls(QWidget):
         self.setLayout(layout)
         self.create_channel_type_control(layout)
         self.create_bin_width_control(layout)
-        self.create_tau_control(layout)
         running_mode_control = self.create_running_mode_control()
         layout.addLayout(running_mode_control)
         layout.addSpacing(15)

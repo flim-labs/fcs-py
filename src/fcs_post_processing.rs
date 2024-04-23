@@ -98,7 +98,8 @@ pub fn fluorescence_correlation_spectroscopy(
 
 
 fn calculate_lag_index(data_length: usize) -> Vec<i32> {
-    let max_tau = data_length - 1;
+    println!("DATA LENGTH {}", data_length);
+    let max_tau = (data_length - 1) as i32;
     let scale_factor = max_tau as f64 / (3.0f64.powf(8.0 - 2.0));
     let mut lag_index: Vec<i32> = Vec::new();
     let mut exponent = 2.0;
@@ -109,9 +110,18 @@ fn calculate_lag_index(data_length: usize) -> Vec<i32> {
     }
     lag_index.sort();
     lag_index.dedup();
-    lag_index.insert(0, 0);
+    if let Some(last_value) = lag_index.last().cloned() {
+        if last_value > max_tau {
+            lag_index.retain(|&x| x <= max_tau);
+        }
+    }
+    if lag_index.is_empty() || lag_index[0] != 0 {
+        lag_index.insert(0, 0);
+    }
+
     lag_index
 }
+
 
 fn calculate_correlation(intensity1: &[usize], intensity2: &[usize], lag_index: &[i32]) -> Vec<f64> {
     let mut g2_values = vec![0.0; lag_index.len()];
