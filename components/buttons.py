@@ -301,12 +301,6 @@ class PlotsConfigPopup(QWidget):
     
     
     def get_cleaned_correlations(self):
-        filtered_corr = sorted([(x, y) if x < y else (y, x) for x, y, boolean in self.app.ch_correlations if boolean])
-        unique_filtered_data = []
-        seen_pairs = set()
-        for pair in filtered_corr:
-            if pair not in seen_pairs:
-                unique_filtered_data.append(pair)
-                seen_pairs.add(pair)
-        return unique_filtered_data      
+        filtered_corr = [(x, y) for x, y, boolean in self.app.ch_correlations if boolean]
+        return filtered_corr      
         

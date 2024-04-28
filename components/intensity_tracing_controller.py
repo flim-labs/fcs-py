@@ -244,8 +244,7 @@ class IntensityTracingButtonsActions:
             chart.deleteLater()
         for wrapper in app.intensity_charts_wrappers:
             wrapper.setParent(None)
-            wrapper.deleteLater()
-        app.intensities_data_processor.clear_data()     
+            wrapper.deleteLater()  
         app.intensity_connectors.clear()         
         app.intensity_charts.clear()
         app.cps_ch.clear()
@@ -272,28 +271,6 @@ class IntensityTracingButtonsActions:
     def show_gt_widget(app, show):
         if GT_WIDGET_WRAPPER in app.widgets and app.widgets[GT_WIDGET_WRAPPER] is not None:
             app.widgets[GT_WIDGET_WRAPPER].setVisible(show)                    
-        
-
-class IntensityDataProcessor:
-    def __init__(self):
-        self.data_dict = {}
-
-    def process_data(self, intensities, enabled_channels, time_ns, app):
-        if app.free_running_acquisition_time:
-            app.last_acquisition_ns = time_ns
-        for i, intensity in enumerate(intensities):
-            if i in enabled_channels:
-                if i not in self.data_dict:
-                    self.data_dict[i] = {'index': i, 'data': []}
-                self.data_dict[i]['data'].append(intensity)    
-
-    def get_processed_data(self):
-        return list(self.data_dict.values()) 
-    
-    def clear_data(self):    
-        self.data_dict = {}
-        
-        
         
 
 
