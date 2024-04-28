@@ -88,7 +88,9 @@ class IntensityTracing:
                     print("Got end of acquisition, stopping")
                     IntensityTracing.stop_button_pressed(app)
                     if app.acquisitions_count < app.selected_average:
-                        IntensityTracingButtonsActions.start_button_pressed(app) 
+                        IntensityTracingButtonsActions.start_button_pressed(app)
+                    else:
+                        app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)     
                     break       
                     
                 ((time_ns), (intensities)) = v
@@ -123,8 +125,7 @@ class IntensityTracing:
         else:    
             app.acquisitions_count = app.acquisitions_count + 1  
         app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()         
-        app.last_cps_update_time.invalidate() 
-        app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)    
+        app.last_cps_update_time.invalidate()     
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         if not app_close and app.acquisitions_count == app.selected_average: 
             remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
