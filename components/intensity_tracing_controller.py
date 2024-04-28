@@ -116,16 +116,16 @@ class IntensityTracing:
 
     @staticmethod    
     def stop_button_pressed(app, app_close = False):
+        app.pull_from_queue_timer.stop() 
         try:
             flim_labs.request_stop()
         except Exception as e:
             pass 
-        time.sleep(0.5)
         if app.acquisitions_count >= app.selected_average:           
             app.acquisition_count = 0
         else:    
-            app.acquisitions_count = app.acquisitions_count + 1  
-        app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()         
+            app.acquisitions_count = app.acquisitions_count + 1     
+        app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()      
         app.last_cps_update_time.invalidate()     
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         if not app_close and app.acquisitions_count == app.selected_average: 
@@ -133,9 +133,8 @@ class IntensityTracing:
             gt_widget = create_gt_loading_layout(app)
             insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)  
         QApplication.processEvents()
-        app.pull_from_queue_timer.stop() 
         for channel, curr_conn in app.intensity_connectors.items():     
-            curr_conn.pause()            
+            curr_conn.pause()              
         if not app_close: 
             if app.acquisitions_count == app.selected_average:
                 FCSPostProcessing.get_input(app)  
@@ -210,6 +209,7 @@ class IntensityTracingButtonsActions:
                    
     @staticmethod    
     def stop_button_pressed(app):
+        app.pull_from_queue_timer.stop()  
         try:     
             flim_labs.request_stop()
         except:
@@ -222,7 +222,6 @@ class IntensityTracingButtonsActions:
         gt_widget = create_gt_loading_layout(app) 
         insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)               
         QApplication.processEvents()
-        app.pull_from_queue_timer.stop()  
         for channel, curr_conn in app.intensity_connectors.items():     
             curr_conn.pause()          
         FCSPostProcessing.get_input(app) 
@@ -230,6 +229,7 @@ class IntensityTracingButtonsActions:
                
     @staticmethod    
     def reset_button_pressed(app):
+        app.pull_from_queue_timer.stop()  
         try:
             flim_labs.request_stop()
         except:
