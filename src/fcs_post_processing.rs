@@ -168,30 +168,33 @@ fn calculate_correlation(
     lag_index: &[i32]
 ) -> Vec<f64> {
     let mut g2_values = vec![0.0; lag_index.len()];
+    let epsilon = 1e-10; 
     let mean_intensity1: f64 =
         (intensity1.iter().sum::<usize>() as f64) / (intensity1.len() as f64);
     let mean_intensity2: f64 =
         (intensity2.iter().sum::<usize>() as f64) / (intensity2.len() as f64);
 
     for (i, &tau) in lag_index.iter().enumerate() {
+        let mean1 = if mean_intensity1 == 0.0 { epsilon } else { mean_intensity1 };
+        let mean2 = if mean_intensity2 == 0.0 { epsilon } else { mean_intensity2 };
         if tau == 0 {
             let correlation_sum: f64 = intensity1
                 .iter()
                 .zip(intensity2)
-                .map(|(&x1, &x2)| ((x1 as f64) - mean_intensity1) * ((x2 as f64) - mean_intensity2))
+                .map(|(&x1, &x2)| ((x1 as f64) - mean1) * ((x2 as f64) - mean2))
                 .sum();
             g2_values[i] =
-                correlation_sum / (mean_intensity1 * mean_intensity2 * (intensity2.len() as f64));
+                correlation_sum / (mean1 * mean2 * (intensity2.len() as f64));
         } else if tau < (intensity2.len() as i32) {
             let correlation_sum: f64 = intensity1
                 .iter()
                 .take(intensity1.len() - (tau as usize))
                 .zip(&intensity2[tau as usize..])
-                .map(|(&x1, &x2)| ((x1 as f64) - mean_intensity1) * ((x2 as f64) - mean_intensity2))
+                .map(|(&x1, &x2)| ((x1 as f64) - mean1) * ((x2 as f64) - mean2))
                 .sum();
             g2_values[i] =
                 correlation_sum /
-                (mean_intensity1 * mean_intensity2 * ((intensity2.len() - (tau as usize)) as f64));
+                (mean1 * mean2 * ((intensity2.len() - (tau as usize)) as f64));
         }
     }
     g2_values
