@@ -19,7 +19,11 @@ pub fn get_intensity_tracing_bin_files(
     let files = read_data_folder(data_folder_path)?;
     let sorted_files = sort_files_by_modified_time(files);
 
-    process_files_in_parallel(&channel_data, sorted_files, num_files)?;
+    process_files_in_parallel(&channel_data, &sorted_files, num_files)?;
+
+    if let Err(err) = delete_files(&sorted_files) {
+        eprintln!("Error during intensity tracing bin files removal: {}", err);
+    }
 
     let max_length = adjust_channel_data_lengths(&channel_data);
 
@@ -140,7 +144,7 @@ fn sort_files_by_modified_time(files: Vec<PathBuf>) -> Vec<PathBuf> {
 
 fn process_files_in_parallel(
     channel_data: &Arc<RwLock<HashMap<u8, Vec<Vec<usize>>>>>,
-    files: Vec<PathBuf>,
+    files: &Vec<PathBuf>,
     num_files: usize
 ) -> Result<(), Box<dyn Error>> {
     files
@@ -175,4 +179,14 @@ fn calculate_intensities_vector_max_length(data: &HashMap<u8, Vec<Vec<usize>>>) 
         .map(Vec::len)
         .max()
         .unwrap_or(0)
+}
+
+
+fn delete_files(files:  &Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
+    files.par_iter().for_each(|file_path| {
+        if let Err(err) = fs::remove_file(&file_path) {
+            eprintln!("Error during intensity tracing bin files removal {}: {}", file_path.display(), err);
+        }
+    });
+    Ok(())
 }

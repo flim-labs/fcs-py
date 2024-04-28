@@ -96,6 +96,7 @@ class IntensityTracing:
                 ((time_ns), (intensities)) = v
                 IntensityTracing.calculate_cps(app, time_ns[0], intensities)
                 
+ 
                 
     @staticmethod            
     def calculate_cps(app, time_ns, counts):

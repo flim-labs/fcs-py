@@ -101,8 +101,6 @@ class FCSWindow(QMainWindow):
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
         
         #####
-        
-        self.pull_from_queue_timer2 = QTimer()
         self.last_acquisition_ns = 0
         self.last_cps_update_time = QElapsedTimer() 
         self.cps_update_interval = 400  
