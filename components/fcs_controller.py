@@ -2,53 +2,59 @@ from components.layout_utilities import create_gt_layout, insert_widget, remove_
 from components.settings import GT_PLOTS_GRID, GT_WIDGET_WRAPPER, PLOT_GRIDS_CONTAINER
 import numpy as np
 import pyqtgraph as pg
-import matplotlib.pyplot as plt
 from fcs_flim import fcs_flim
+from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtWidgets import QApplication
+
+
+class FCSPostProcessingWorker(QThread):
+    finished = pyqtSignal(object)
+
+    def __init__(self, active_correlations, num_acquisitions):
+        super().__init__()
+        self.active_correlations = active_correlations
+        self.num_acquisitions = num_acquisitions
+        self.is_running = True
+
+    def run(self):
+        gt_results = fcs_flim.fluorescence_correlation_spectroscopy(
+            num_acquisitions=self.num_acquisitions,
+            correlations=self.active_correlations,
+        )  
+        self.finished.emit(gt_results)    
+
+    def stop(self):
+        self.is_running = False
 
 
 class FCSPostProcessing:
-    
     @staticmethod
     def get_input(app):
-        acquisition_time_us = int(app.last_acquisition_ns / 1000) if app.free_running_acquisition_time else int(app.acquisition_time_millis * 1000)
-        intensities_data = app.intensities_data_processor.get_processed_data()
+        free_running_mode = app.free_running_acquisition_time
         correlations = [tuple(item) if isinstance(item, list) else item for item in app.ch_correlations]
         active_correlations = [(ch1, ch2) for ch1, ch2, active in correlations if active]
-        bin_width_us = int(app.bin_width_micros)
-        print(len(intensities_data[0]["data"]))
-        intensities_input = [
-            fcs_flim.IntensityData(
-                index=d['index'],
-                data=d['data']
-            ) 
-            for d in intensities_data
-        ]
-        FCSPostProcessing.start_fcs_post_processing(app, intensities_input, active_correlations, bin_width_us, acquisition_time_us)  
-       
+        num_acquisitions = app.selected_average if free_running_mode == False else 1
+        worker = FCSPostProcessingWorker(active_correlations, num_acquisitions)
+        QApplication.processEvents()
+        worker.finished.connect(lambda result: FCSPostProcessing.handle_fcs_post_processing_result(app, result, worker))
+        worker.start()
         
-  
-            
+
     @staticmethod
-    def start_fcs_post_processing(app, intensities_input, active_correlations, bin_width_us, acquisition_time_us):
-        gt_results = fcs_flim.fluorescence_correlation_spectroscopy(
-            intensities = intensities_input,
-            correlations = active_correlations,
-            bin_width_us = bin_width_us,
-            acquisition_time_us = acquisition_time_us
-        )  
+    def handle_fcs_post_processing_result(app, gt_results, worker):
+        worker.stop()
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)
         insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)
         gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in app.gt_plots_to_show]
         lag_index = gt_results[0]
-        print(lag_index)
         filtered_gt_results = [res for res in gt_results[1] if res[0] in gt_plot_to_show]
         for index, res in enumerate(filtered_gt_results):
             correlation = res[0]
             gt_values = res[1]
             FCSPostProcessingPlot.generate_chart(correlation, index, app, lag_index, gt_values)
         
-
+        
 
 class FCSPostProcessingPlot:
     @staticmethod

@@ -250,7 +250,7 @@ class GUIStyles:
                 border-radius: 5px;
                 background-color: transparent;
             }
-            QSpinBox:disabled {
+            QSpinBox:disabled, QComboBox:disabled {
                 color: #404040;  
                 border-color: #404040;
             } 
@@ -546,6 +546,27 @@ class GUIStyles:
                 margin-bottom: 10px;
                 font-family: Times New Roman;
             }
+        """
+        
+    @staticmethod    
+    def set_progress_bar_widget():
+        return """
+            QLabel {
+                color: #FB8C00;
+                font-family: "Montserrat";
+                font-size: 18px;
+                font-weight: bold;
+                
+            } 
+            QProgressBar {
+                color: transparent;
+                background-color: #3b3b3b;
+                padding: 0;
+            }
+            QProgressBar::chunk {
+            background: #FB8C00;
+            color: transparent;
+            }               
         """
   
                

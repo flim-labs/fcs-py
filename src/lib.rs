@@ -1,5 +1,5 @@
 // File: src/lib.rs
-
+mod bin_processing;
 mod fcs_post_processing;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;

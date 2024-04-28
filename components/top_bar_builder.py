@@ -51,9 +51,10 @@ class TopBarBuilder:
     @staticmethod   
     def create_logo_and_title(self):
         row = QHBoxLayout()
+        row.addSpacing(10)
         pixmap = QPixmap(
             resource_path("assets/fcs-logo-white.png")
-        ).scaledToWidth(38)
+        ).scaledToWidth(40)
         ctl = QLabel(pixmap=pixmap)
         row.addWidget(ctl)
         row.addSpacing(10)
