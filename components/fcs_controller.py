@@ -5,6 +5,7 @@ import pyqtgraph as pg
 from fcs_flim import fcs_flim
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QFont, QColor
 
 
 class FCSPostProcessingWorker(QThread):
@@ -63,6 +64,9 @@ class FCSPostProcessingPlot:
         gt_widget = pg.PlotWidget()
         gt_widget.setLabel('left', 'G(τ)', units='')
         gt_widget.setLabel('bottom', 'τ', units='')
+        q_font = QFont("Times New Roman")
+        gt_widget.getAxis("bottom").label.setFont(q_font)
+        gt_widget.getAxis("left").label.setFont(q_font)
         gt_widget.setTitle(f'Channel {correlation[0] + 1} - Channel {correlation[1] + 1}')
         gt_widget.plotItem.setRange(yRange=[min(gt_values), max(gt_values)])
         gt_widget.plotItem.setRange(xRange=[min(lag_index), max(lag_index)])
