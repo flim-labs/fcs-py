@@ -108,6 +108,25 @@ class ControlsBarBuilder:
         )
         inp.setStyleSheet(GUIStyles.set_input_select_style())
         return inp 
+    
+    
+    
+    @staticmethod        
+    def create_averages_control(controls_row, value, change_cb, options, free_running):
+        # Averages control
+        _, inp = SelectControl.setup(
+            "#averages:",
+            value,
+            controls_row,
+            options,
+            change_cb,
+        )
+        inp.setEnabled(
+            not free_running.isChecked()
+        )
+        inp.setStyleSheet(GUIStyles.set_input_select_style())
+        return inp 
+
 
 
     @staticmethod

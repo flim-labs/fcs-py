@@ -1,18 +1,15 @@
-
 import os
 import re
 import json
 import flim_labs
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QCheckBox, QHBoxLayout, QMessageBox, QGridLayout, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import  QWidget, QPushButton, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout, QLabel
 from PyQt6.QtCore import QPropertyAnimation, Qt
 from PyQt6.QtGui import QIcon, QPixmap, QColor
+from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
 from components.controls_bar_builder import ControlsBarBuilder
-from components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot, IntensityTracingOnlyCPS
-from components.messages_utilities import MessagesUtilities
-from components.box_message import BoxMessage
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -72,18 +69,18 @@ class ActionButtons(QWidget):
         return buttons_row_layout 
 
     def start_button_pressed(self):
-        open_popup = len(self.app.intensity_plots_to_show) == 0 or len(self.app.gt_plots_to_show)  == 0
+        open_popup = len(self.app.intensity_plots_to_show) == 0
         if open_popup: 
             popup = PlotsConfigPopup(self.app, start_acquisition=True)
             popup.show()
         else: 
-            ButtonsActionsController.start_button_pressed(self.app)       
+            IntensityTracingButtonsActions.start_button_pressed(self.app)       
 
     def stop_button_pressed(self):
-        ButtonsActionsController.stop_button_pressed(self.app)
+        IntensityTracingButtonsActions.stop_button_pressed(self.app)
 
     def reset_button_pressed(self):
-        ButtonsActionsController.reset_button_pressed(self.app)        
+        IntensityTracingButtonsActions.reset_button_pressed(self.app)        
                
 
 
@@ -115,124 +112,6 @@ class GTModeButtons(QWidget):
         self.app.control_inputs[REALTIME_BUTTON].setChecked(not checked)
         self.app.control_inputs[POST_PROCESSING_BUTTON].setChecked(checked)  
         self.app.settings.setValue(SETTINGS_GT_CALC_MODE, 'post-processing' if checked else 'realtime') 
-
-
-class ButtonsActionsController:
-    @staticmethod
-    def start_button_pressed(app):
-        ButtonsActionsController.clear_intensity_grid_widgets(app) 
-        app.acquisition_stopped = False
-        app.warning_box = None
-        app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
-        #app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        #self.set_download_button_icon()
-        warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
-            app.bin_width_micros,
-            app.time_span,
-            app.acquisition_time_millis,
-            app.control_inputs[SETTINGS_FREE_RUNNING_MODE],
-            app.enabled_channels,
-            app.selected_conn_channel,
-        )
-        if warn_title and warn_msg:
-            message_box = BoxMessage.setup(
-                warn_title, warn_msg, QMessageBox.Icon.Warning, GUIStyles.set_msg_box_style(), app.test_mode
-            )
-            app.warning_box = message_box
-            return
-        app.control_inputs[START_BUTTON].setEnabled(False)
-        app.control_inputs[STOP_BUTTON].setEnabled(True)   
-        app.intensity_charts.clear()
-        app.intensity_lines.clear()
-        app.gt_charts.clear()
-        app.cps_ch.clear()
-        for chart in app.intensity_charts:
-            chart.setVisible(False)
-        for chart in app.gt_charts:
-            chart.setVisible(False)
-        for channel, curr_conn in app.connectors.items():    
-            curr_conn.disconnect()
-        app.connectors.clear()        
-        app.intensity_charts_wrappers.clear()
-        QApplication.processEvents()         
-        ButtonsActionsController.intensity_tracing_start(app)
-        if not app.widgets[GT_WIDGET_WRAPPER].isVisible():
-            ButtonsActionsController.show_gt_widget(app, True) 
-        IntensityTracing.start_photons_tracing(app)
-
-
-    @staticmethod
-    def intensity_tracing_start(app):
-        only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
-        for i, channel in enumerate(app.intensity_plots_to_show):
-            if i < len(app.intensity_charts):
-                app.intensity_charts[i].show()
-            else:
-                IntensityTracingPlot.create_chart_widget(app, i, channel)
-        if len(only_cps_widgets) > 0:        
-            for index, channel in enumerate(only_cps_widgets):
-                IntensityTracingOnlyCPS.create_only_cps_widget(app, index, channel)
-
-
-
-    @staticmethod
-    def stop_button_pressed(app):
-        app.last_cps_update_time.invalidate() 
-        app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
-        app.control_inputs[STOP_BUTTON].setEnabled(False)
-        QApplication.processEvents()
-        flim_labs.request_stop()
-        app.realtime_queue.queue.clear()
-        app.realtime_queue_worker_stop = True
-        if app.realtime_queue_thread is not None:
-            app.realtime_queue_thread.join()
-        app.pull_from_queue_timer.stop() 
-        for channel, curr_conn in app.connectors.items():     
-            curr_conn.pause()    
-    
-   
-    @staticmethod
-    def reset_button_pressed(app):
-        flim_labs.request_stop()
-        app.last_cps_update_time.invalidate() 
-        app.blank_space.show()
-        app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
-        app.control_inputs[STOP_BUTTON].setEnabled(False)
-        for chart in app.intensity_charts:
-            chart.setParent(None)
-            chart.deleteLater()
-        for wrapper in app.intensity_charts_wrappers:
-            wrapper.setParent(None)
-            wrapper.deleteLater()  
-        app.connectors.clear()         
-        app.intensity_charts.clear()
-        app.cps_ch.clear()
-        app.intensity_charts_wrappers.clear()
-        ButtonsActionsController.clear_intensity_grid_widgets(app)  
-        ButtonsActionsController.show_gt_widget(app, False)
-        QApplication.processEvents()    
- 
-
-    @staticmethod
-    def clear_intensity_grid_widgets(app):
-        for i in reversed(range(app.layouts[INTENSITY_ONLY_CPS_GRID].count())):
-            widget = app.layouts[INTENSITY_ONLY_CPS_GRID].itemAt(i).widget()
-            if widget is not None:
-                app.layouts[INTENSITY_ONLY_CPS_GRID].removeWidget(widget)
-                widget.deleteLater()
-        for i in reversed(range(app.layouts[INTENSITY_PLOTS_GRID].count())):  
-            widget = app.layouts[INTENSITY_PLOTS_GRID].itemAt(i).widget()
-            if widget is not None:
-                app.layouts[INTENSITY_PLOTS_GRID].removeWidget(widget)
-                widget.deleteLater()
-             
-
-
-    @staticmethod
-    def show_gt_widget(app, show):
-        if GT_WIDGET_WRAPPER in app.widgets and app.widgets[GT_WIDGET_WRAPPER] is not None:
-            app.widgets[GT_WIDGET_WRAPPER].setVisible(show)
-    
 
 
 
@@ -405,7 +284,7 @@ class PlotsConfigPopup(QWidget):
                            
     def start_acquisition(self):
         self.close()
-        ButtonsActionsController.start_button_pressed(self.app)
+        IntensityTracingButtonsActions.start_button_pressed(self.app)
        
 
 
@@ -422,12 +301,6 @@ class PlotsConfigPopup(QWidget):
     
     
     def get_cleaned_correlations(self):
-        filtered_corr = sorted([(x, y) if x < y else (y, x) for x, y, boolean in self.app.ch_correlations if boolean])
-        unique_filtered_data = []
-        seen_pairs = set()
-        for pair in filtered_corr:
-            if pair not in seen_pairs:
-                unique_filtered_data.append(pair)
-                seen_pairs.add(pair)
-        return unique_filtered_data      
+        filtered_corr = [(x, y) for x, y, boolean in self.app.ch_correlations if boolean]
+        return filtered_corr      
         

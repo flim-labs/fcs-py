@@ -1,11 +1,11 @@
 
+from multiprocessing import Queue
 import os
 import json
-import queue
 import sys
 from functools import partial
-from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
+from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer, QThread
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMainWindow
 from components.gui_styles import GUIStyles
 from components.layout_utilities import init_ui
 from components.channels_control import ChannelsControl
@@ -14,12 +14,10 @@ from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import IntensityTracing
+from components.intensity_tracing_controller import FlimLabsPullValuesWorkerProcess, IntensityTracing, IntensityTracingButtonsActions
 from components.settings import *
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
-
 
 
 class FCSWindow(QWidget):
@@ -48,6 +46,9 @@ class FCSWindow(QWidget):
         
         self.bin_width_inputs = BIN_WIDTH_INPUTS
         self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
+        
+        self.averages_inputs = AVERAGES_INPUTS
+        self.selected_average = int(self.settings.value(SETTINGS_AVERAGES, DEFAULT_AVERAGES))
 
         default_ch_correlations = self.settings.value(SETTINGS_CH_CORRELATIONS, DEFAULT_CH_CORRELATIONS)
         self.ch_correlations = json.loads(default_ch_correlations) if default_ch_correlations is not None else []
@@ -58,6 +59,8 @@ class FCSWindow(QWidget):
         default_gt_plots_to_show = self.settings.value(SETTINGS_GT_PLOTS_TO_SHOW, DEFAULT_GT_PLOTS_TO_SHOW)
         self.gt_plots_to_show = json.loads(default_gt_plots_to_show) if default_gt_plots_to_show is not None else []
 
+        self.acquisitions_count = 0
+        
         self.test_mode = False
         self.control_inputs = {}
         self.widgets = {}
@@ -88,25 +91,34 @@ class FCSWindow(QWidget):
         self.intensity_charts_wrappers = []
         self.gt_charts = []
         self.intensity_lines = []
+        self.gt_lines = []
         self.only_cps_widgets = []
       
         ######
-        self.connectors = {}
+        self.intensity_connectors = {}
+        self.gt_connectors = {}
+        
+        #self.pull_value_worker_queue = Queue()
+        #self.pull_value_worker_thread = QThread()
+        #self.pull_value_worker = FlimLabsPullValuesWorkerProcess(self.pull_value_worker_queue)
+        #self.pull_value_worker.moveToThread(self.pull_value_worker_thread)
+        #self.pull_value_worker_thread.started.connect(self.pull_value_worker.run)
+        #self.pull_value_worker.new_data.connect(partial(IntensityTracing.pull_from_queue, self))
+        #self.pull_value_worker.finished.connect(self.pull_value_worker_thread.quit)
+        #self.pull_value_worker.finished.connect(self.pull_value_worker.deleteLater)
+        #self.pull_value_worker.finished.connect(self.pull_value_worker_thread.deleteLater)
+        
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
-        self.realtime_queue_thread = None
-        self.realtime_queue_worker_stop = False
-        self.realtime_queue = queue.Queue()
+       
         #####
-        
-        self.pull_from_queue_timer2 = QTimer()
-        
+        self.last_acquisition_ns = 0
         self.last_cps_update_time = QElapsedTimer() 
         self.cps_update_interval = 400  
         
         GUIStyles.set_fonts()
         self.init_ui()
-        
+
 
     @staticmethod    
     def init_settings():
@@ -209,9 +221,9 @@ class FCSWindow(QWidget):
     def resizeEvent(self, event):  
         super(FCSWindow, self).resizeEvent(event)
         if INTENSITY_WIDGET_WRAPPER in self.widgets:
-            self.widgets[INTENSITY_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 2))
+            self.widgets[INTENSITY_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 2.1))
         if GT_WIDGET_WRAPPER in self.widgets: 
-            self.widgets[GT_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 2))   
+            self.widgets[GT_WIDGET_WRAPPER].setFixedWidth(int(self.width() / 1.95))   
             
 
     def closeEvent(self, event): 
@@ -225,7 +237,8 @@ class FCSWindow(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = FCSWindow()
+    window.showMaximized()
     window.show()
     exit_code = app.exec()
-    IntensityTracing.stop_button_pressed(window)
+    IntensityTracing.stop_button_pressed(window, app_close=True)
     sys.exit(exit_code)

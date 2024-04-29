@@ -12,11 +12,15 @@ DEFAULT_ACQUISITION_STOPPED = False
 
 TAUS_INPUTS = [10, 100, 1000]
 SETTINGS_TAU = "tau"
-DEFAULT_TAU = 1
+DEFAULT_TAU = 100
 
 BIN_WIDTH_INPUTS = [1, 10, 100, 1000]
 SETTINGS_BIN_WIDTH_MICROS = "bin_width_micros"
 DEFAULT_BIN_WIDTH_MICROS = 1
+
+AVERAGES_INPUTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+SETTINGS_AVERAGES = "averages"
+DEFAULT_AVERAGES = 1
 
 SETTINGS_GT_CALC_MODE = "gt_calc_mode"
 DEFAULT_GT_CALC_MODE = "realtime"
@@ -84,6 +88,9 @@ GT_PLOTS_GRID = "gt_plots_grid"
 PLOT_GRIDS_CONTAINER = "plots_grids_container"
 
 TOP_COLLAPSIBLE_WIDGET = "top_collapsible_widget"
+
+PROGRESS_BAR_LAYOUT = "progress_bar_layout"
+PROGRESS_BAR_WIDGET = "progress_bar_widget"
 
 INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
 GT_WIDGET_WRAPPER = "gt_widget_wrapper"

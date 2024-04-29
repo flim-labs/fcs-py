@@ -1,6 +1,4 @@
-
-import queue
-import threading
+from multiprocessing import Process, Queue
 import time
 import pyqtgraph as pg
 from flim_labs import flim_labs
@@ -11,12 +9,13 @@ from pglive.sources.live_axis import LiveAxis
 from pglive.sources.live_axis_range import LiveAxisRange
 from pglive.sources.live_plot import LiveLinePlot
 from pglive.sources.live_plot_widget import LivePlotWidget
+from components.fcs_controller import FCSPostProcessing
 from components.box_message import BoxMessage
 from components.format_utilities import FormatUtils
+from components.layout_utilities import create_gt_loading_layout, create_gt_wait_layout, insert_widget, remove_widget
 from components.messages_utilities import MessagesUtilities
 from components.gui_styles import GUIStyles
 from components.settings import *
-from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
     QApplication,
     QMessageBox,
@@ -24,9 +23,29 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QWidget,
+    QLabel,
+    QHBoxLayout,
+   
 )
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import QObject, pyqtSignal
 from components.resource_path import resource_path
+
+
+
+class FlimLabsPullValuesWorkerProcess(QObject):
+    finished = pyqtSignal()
+    new_data = pyqtSignal(object)
+
+    def __init__(self, queue):
+        super().__init__()
+        self.queue = queue
+
+    def run(self):
+        while True:
+            val = flim_labs.pull_from_queue()
+            self.new_data.emit(val)
+
 
 
 class IntensityTracing:
@@ -45,29 +64,25 @@ class IntensityTracing:
             print("Time span (s): " + str(app.time_span))
             print("Max points: " + str(40 * app.time_span))
             print("Bin width (µs): " + str(app.bin_width_micros))
-
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=app.enabled_channels,
                 bin_width_micros=app.bin_width_micros, 
                 write_bin=False,  
-                write_data=app.write_data,  
+                write_data=True,  
                 acquisition_time_millis=acquisition_time_millis, 
                 firmware_file=app.selected_firmware,
             )
-            app.realtime_queue_worker_stop = False
-            app.realtime_queue_thread = threading.Thread(target=partial(IntensityTracing.realtime_queue_worker, app))
-            app.realtime_queue_thread.start()
-
+            if app.acquisitions_count >= app.selected_average:           
+                app.widgets[PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)
+            if not free_running_mode:
+                app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()
+                app.widgets[PROGRESS_BAR_WIDGET].setVisible(True)
             file_bin = result.bin_file
             if file_bin != "":
                 print("File bin written in: " + str(file_bin))
             app.blank_space.hide()
             app.pull_from_queue_timer.start(1)
-            app.last_cps_update_time.start()
-            #app.pull_from_queue_timer2.start(1)
-           
-           
-
+            app.last_cps_update_time.start()  
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
             BoxMessage.setup(
@@ -77,6 +92,17 @@ class IntensityTracing:
                 GUIStyles.set_msg_box_style(),
                 app.test_mode
             )
+            
+            
+    @staticmethod
+    def start_pull_from_queue_worker(app):
+        if not app.pull_value_worker_thread.isRunning():
+            app.pull_value_worker_thread.start()   
+            
+    @staticmethod
+    def stop_pull_from_queue_worker(app):
+        app.pull_value_worker_thread.requestInterruption()
+        app.pull_value_worker_thread.quit()         
 
 
     @staticmethod
@@ -85,12 +111,19 @@ class IntensityTracing:
         if len(val) > 0:
             for v in val:
                 if v == ('end',):  # End of acquisition
+                    print("Got end of acquisition, stopping")
                     IntensityTracing.stop_button_pressed(app)
-                    break
+                    if app.acquisitions_count < app.selected_average:
+                        time.sleep(0.20)
+                        IntensityTracingButtonsActions.start_button_pressed(app)
+                    else:
+                        app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)     
+                    break       
+                    
                 ((time_ns), (intensities)) = v
-                #print(intensities)
-                app.realtime_queue.put((time_ns[0], intensities))
+                IntensityTracing.calculate_cps(app, time_ns[0], intensities)
                 
+ 
                 
     @staticmethod            
     def calculate_cps(app, time_ns, counts):
@@ -101,51 +134,177 @@ class IntensityTracing:
                 #print(f"{channel} - {cps_counts[channel]}")
                 app.cps_ch[channel].setText(FormatUtils.format_cps(round(cps_counts[channel])) + " CPS")
                 app.last_cps_update_time.restart()
-        for channel, curr_conn in app.connectors.items():
+        for channel, curr_conn in app.intensity_connectors.items():
             curr_conn.cb_append_data_point(y=(counts[channel]), x=(time_ns / NS_IN_S))
         QApplication.processEvents()           
 
             
-    @staticmethod            
-    def realtime_queue_worker(app):
-        while app.realtime_queue_worker_stop is False:
-            try:
-                (current_time_ns, counts) = app.realtime_queue.get(timeout=REALTIME_MS / 1000)
-            except queue.Empty:
-                continue
-            IntensityTracing.calculate_cps(app, current_time_ns, counts)
-            time.sleep(REALTIME_SECS / 2)
-        else:
-            print("Realtime queue worker stopped")
-            app.realtime_queue.queue.clear()
-            app.realtime_queue_worker_stop = False
-
     
-            
-
 
     @staticmethod    
+    def stop_button_pressed(app, app_close = False):
+        app.pull_from_queue_timer.stop() 
+        try:
+            flim_labs.request_stop()
+        except Exception as e:
+            pass 
+        if app.acquisitions_count >= app.selected_average:           
+            app.acquisition_count = 0
+        else:    
+            app.acquisitions_count = app.acquisitions_count + 1     
+        app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()      
+        app.last_cps_update_time.invalidate()     
+        app.control_inputs[STOP_BUTTON].setEnabled(False)
+        if not app_close and app.acquisitions_count == app.selected_average: 
+            remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
+            gt_widget = create_gt_loading_layout(app)
+            insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)  
+        QApplication.processEvents()
+        for channel, curr_conn in app.intensity_connectors.items():     
+            curr_conn.pause()              
+        if not app_close: 
+            if app.acquisitions_count == app.selected_average:
+                FCSPostProcessing.get_input(app)  
+                  
+      
+            
+               
+
+class IntensityTracingButtonsActions:
+    @staticmethod    
+    def start_button_pressed(app):
+        IntensityTracingButtonsActions.clear_intensity_grid_widgets(app) 
+        app.acquisition_stopped = False
+        app.warning_box = None
+        app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
+        #app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
+        #self.set_download_button_icon()
+        warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
+            app.bin_width_micros,
+            app.time_span,
+            app.acquisition_time_millis,
+            app.control_inputs[SETTINGS_FREE_RUNNING_MODE],
+            app.enabled_channels,
+            app.selected_conn_channel,
+        )
+        if warn_title and warn_msg:
+            message_box = BoxMessage.setup(
+                warn_title, warn_msg, QMessageBox.Icon.Warning, GUIStyles.set_msg_box_style(), app.test_mode
+            )
+            app.warning_box = message_box
+            return
+        app.control_inputs[START_BUTTON].setEnabled(False)
+        app.control_inputs[STOP_BUTTON].setEnabled(app.free_running_acquisition_time)   
+        app.intensity_charts.clear()
+        app.intensity_lines.clear()
+        app.last_acquisition_ns = 0
+        app.gt_charts.clear()
+        app.cps_ch.clear()
+        for chart in app.intensity_charts:
+            chart.setVisible(False)
+        for chart in app.gt_charts:
+            chart.setVisible(False)
+        for channel, curr_conn in app.intensity_connectors.items():    
+            curr_conn.disconnect()
+        remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])      
+        gt_widget = create_gt_wait_layout(app)
+        insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)    
+        app.intensity_connectors.clear()
+        app.gt_lines.clear()         
+        app.intensity_charts_wrappers.clear()
+        QApplication.processEvents()         
+        IntensityTracingButtonsActions.intensity_tracing_start(app)
+        if not app.widgets[GT_WIDGET_WRAPPER].isVisible():
+            IntensityTracingButtonsActions.show_gt_widget(app, True) 
+        IntensityTracing.start_photons_tracing(app)
+        
+        
+    
+    @staticmethod    
+    def intensity_tracing_start(app):
+        only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
+        for i, channel in enumerate(app.intensity_plots_to_show):
+            if i < len(app.intensity_charts):
+                app.intensity_charts[i].show()
+            else:
+                IntensityTracingPlot.create_chart_widget(app, i, channel)
+        if len(only_cps_widgets) > 0:        
+            for index, channel in enumerate(only_cps_widgets):
+                IntensityTracingOnlyCPS.create_only_cps_widget(app, index, channel) 
+                 
+                
+                   
+    @staticmethod    
     def stop_button_pressed(app):
+        app.pull_from_queue_timer.stop()   
+        try:     
+            flim_labs.request_stop()
+        except:
+            pass    
         app.last_cps_update_time.invalidate() 
+        app.widgets[PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
+        app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
+        app.control_inputs[STOP_BUTTON].setEnabled(False)  
+        remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER]) 
+        gt_widget = create_gt_loading_layout(app) 
+        insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)               
+        QApplication.processEvents()
+        for channel, curr_conn in app.intensity_connectors.items():     
+            curr_conn.pause()          
+        FCSPostProcessing.get_input(app) 
+        
+               
+    @staticmethod    
+    def reset_button_pressed(app):
+        app.pull_from_queue_timer.stop()  
+        try:
+            flim_labs.request_stop()
+        except:
+            pass    
+        app.last_cps_update_time.invalidate() 
+        app.last_acquisition_ns = 0  
+        app.widgets[PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
+        app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
-        QApplication.processEvents()
-        flim_labs.request_stop()
-        app.realtime_queue.queue.clear()
-        app.realtime_queue_worker_stop = True
-        if app.realtime_queue_thread is not None:
-            app.realtime_queue_thread.join()
-        app.pull_from_queue_timer.stop() 
-        for channel, curr_conn in app.connectors.items():     
-            curr_conn.pause()         
+        for chart in app.intensity_charts:
+            chart.setParent(None)
+            chart.deleteLater()
+        for wrapper in app.intensity_charts_wrappers:
+            wrapper.setParent(None)
+            wrapper.deleteLater()  
+        app.intensity_connectors.clear()         
+        app.intensity_charts.clear()
+        app.cps_ch.clear()
+        app.intensity_charts_wrappers.clear()
+        IntensityTracingButtonsActions.clear_intensity_grid_widgets(app)  
+        IntensityTracingButtonsActions.show_gt_widget(app, False)
+        QApplication.processEvents()  
         
- 
+    
+    @staticmethod    
+    def clear_intensity_grid_widgets(app):
+        for i in reversed(range(app.layouts[INTENSITY_ONLY_CPS_GRID].count())):
+            widget = app.layouts[INTENSITY_ONLY_CPS_GRID].itemAt(i).widget()
+            if widget is not None:
+                app.layouts[INTENSITY_ONLY_CPS_GRID].removeWidget(widget)
+                widget.deleteLater()
+        for i in reversed(range(app.layouts[INTENSITY_PLOTS_GRID].count())):  
+            widget = app.layouts[INTENSITY_PLOTS_GRID].itemAt(i).widget()
+            if widget is not None:
+                app.layouts[INTENSITY_PLOTS_GRID].removeWidget(widget)
+                widget.deleteLater()
+
+    @staticmethod
+    def show_gt_widget(app, show):
+        if GT_WIDGET_WRAPPER in app.widgets and app.widgets[GT_WIDGET_WRAPPER] is not None:
+            app.widgets[GT_WIDGET_WRAPPER].setVisible(show)                    
+        
 
 
 class IntensityTracingPlot:
-    
     @staticmethod
-    def generate_chart_2(channel_index, app):
+    def generate_chart(channel_index, app):
         left_axis = LiveAxis("left", axisPen="#cecece", textPen="#cecece")
         bottom_axis = LiveAxis(
             "bottom",
@@ -174,20 +333,16 @@ class IntensityTracingPlot:
         plot_widget.setBackground("#0E0E0E")
         plot_widget.setStyleSheet("border: 1px solid #3b3b3b;")
         return plot_widget, connector
-    
 
     @staticmethod
     def create_cps_label():    
         # cps indicator
         cps_label = QLabel("0 CPS")
         return cps_label   
-   
-
-
 
     @staticmethod
     def create_chart_widget(app, index, channel):
-           chart, connector = IntensityTracingPlot.generate_chart_2(app.intensity_plots_to_show[index], app)
+           chart, connector = IntensityTracingPlot.generate_chart(app.intensity_plots_to_show[index], app)
            cps = IntensityTracingPlot.create_cps_label()
            cps.setStyleSheet(GUIStyles.set_cps_label_style())
            chart_widget = QWidget()
@@ -198,13 +353,11 @@ class IntensityTracingPlot:
            row, col = divmod(index, 2)
            app.layouts[INTENSITY_PLOTS_GRID].addWidget(chart_widget, row, col)
            app.intensity_charts.append(chart)
-           app.connectors[app.intensity_plots_to_show[index]] = connector
+           app.intensity_connectors[app.intensity_plots_to_show[index]] = connector
            app.intensity_charts_wrappers.append(chart_widget)
            app.cps_ch[channel] = cps
          
            
-
-
 
 class IntensityTracingOnlyCPS:
     @staticmethod
@@ -229,3 +382,6 @@ class IntensityTracingOnlyCPS:
         app.layouts[INTENSITY_ONLY_CPS_GRID].addWidget(only_cps_widget, row, col)
         app.only_cps_widgets.append(only_cps_widget)
       
+
+
+

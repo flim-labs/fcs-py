@@ -250,7 +250,7 @@ class GUIStyles:
                 border-radius: 5px;
                 background-color: transparent;
             }
-            QSpinBox:disabled {
+            QSpinBox:disabled, QComboBox:disabled {
                 color: #404040;  
                 border-color: #404040;
             } 
@@ -506,7 +506,7 @@ class GUIStyles:
         """ 
         
     @staticmethod       
-    def gt_widget_container():
+    def gt_wait_widget_container():
         return """
             QWidget#container{
                 padding: 12px;
@@ -521,6 +521,7 @@ class GUIStyles:
                 margin-top: 20px; 
                 color: #3b3b3b; 
                 margin-bottom: 10px;
+                font-family: Times New Roman;
             }
             QLabel#desc{
                 font-weight: 300;
@@ -530,5 +531,43 @@ class GUIStyles:
             }
         """
     
+    @staticmethod           
+    def gt_widget_container():
+        return """
+            QWidget#container{
+                border-left: 1px solid #3b3b3b;
+                background-color: #141414; 
+            }
+            QLabel#title{
+                font-weight: 700;
+                font-size: 30px; 
+                text-align: center;
+                color: #3b3b3b; 
+                margin-bottom: 10px;
+                font-family: Times New Roman;
+            }
+        """
+        
+    @staticmethod    
+    def set_progress_bar_widget():
+        return """
+            QLabel {
+                color: #FB8C00;
+                font-family: "Montserrat";
+                font-size: 18px;
+                font-weight: bold;
+                
+            } 
+            QProgressBar {
+                color: transparent;
+                background-color: white;
+                max-height: 30px;
+                padding: 0;
+            }
+            QProgressBar::chunk {
+            background: #FB8C00;
+            color: transparent;
+            }               
+        """
   
                
