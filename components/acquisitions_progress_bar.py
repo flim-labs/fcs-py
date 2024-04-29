@@ -33,11 +33,12 @@ class AcquisitionsProgressBar(QWidget):
             QApplication.processEvents()
         else:
             self.progress_bar.setValue(100)
-            time.sleep(0.5)
-            self.progress_bar.setValue(0)
             self.label.setText(
                 f"Acquisition {self.app.selected_average}/{self.app.selected_average} finished"
             )
+            QApplication.processEvents()
+            time.sleep(0.5)
+            self.progress_bar.setValue(0)
             self.remove_progress_bar(self.app)
             QApplication.processEvents()
 

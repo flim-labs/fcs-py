@@ -1,4 +1,5 @@
 from multiprocessing import Process, Queue
+import time
 import pyqtgraph as pg
 from flim_labs import flim_labs
 from functools import partial
@@ -113,6 +114,7 @@ class IntensityTracing:
                     print("Got end of acquisition, stopping")
                     IntensityTracing.stop_button_pressed(app)
                     if app.acquisitions_count < app.selected_average:
+                        time.sleep(0.20)
                         IntensityTracingButtonsActions.start_button_pressed(app)
                     else:
                         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)     

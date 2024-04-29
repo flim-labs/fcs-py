@@ -2,7 +2,6 @@
 from multiprocessing import Queue
 import os
 import json
-import queue
 import sys
 from functools import partial
 from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer, QThread
@@ -15,7 +14,7 @@ from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import FlimLabsPullValuesWorkerProcess, IntensityTracing
+from components.intensity_tracing_controller import FlimLabsPullValuesWorkerProcess, IntensityTracing, IntensityTracingButtonsActions
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -111,7 +110,7 @@ class FCSWindow(QWidget):
         
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
-        
+       
         #####
         self.last_acquisition_ns = 0
         self.last_cps_update_time = QElapsedTimer() 
