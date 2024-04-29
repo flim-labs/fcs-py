@@ -69,7 +69,7 @@ class FCSPostProcessingPlot:
         exponents_lin_space = np.linspace(0, max(exponents_int))
         exponents_lin_space_int = np.array(exponents_lin_space).astype(int)
         gt_widget.setLabel('left', 'G(τ)', units='')
-        gt_widget.setLabel('bottom', 'τ', units='')
+        gt_widget.setLabel('bottom', 'τ (μs)', units='')
         q_font = QFont("Times New Roman")
         gt_widget.getAxis("bottom").label.setFont(q_font)
         gt_widget.getAxis("left").label.setFont(q_font)
