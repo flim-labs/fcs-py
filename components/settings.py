@@ -23,7 +23,7 @@ SETTINGS_AVERAGES = "averages"
 DEFAULT_AVERAGES = 1
 
 SETTINGS_GT_CALC_MODE = "gt_calc_mode"
-DEFAULT_GT_CALC_MODE = "realtime"
+DEFAULT_GT_CALC_MODE = "post-processing"
 
 SETTINGS_CH_CORRELATIONS = "ch_correlations"
 DEFAULT_CH_CORRELATIONS = "[]"

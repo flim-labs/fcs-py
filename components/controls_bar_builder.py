@@ -215,14 +215,15 @@ class ControlsBarBuilder:
         )
         realtime_button.setObjectName("realtime_btn")
         realtime_button.setStyleSheet(GUIStyles.gt_calc_mode_btn_style())
-        buttons_row_layout.addWidget(realtime_button)
+        #buttons_row_layout.addWidget(realtime_button)
+        
         # post-processing button
         post_processing_button = QPushButton("POST-PROCESSING")
-        post_processing_button.setCheckable(True)
-        post_processing_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        #post_processing_button.setCheckable(True)
+        #post_processing_button.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        post_processing_button.clicked.connect(post_processing_btn_pressed_cb)
-        post_processing_button.setChecked(selected_calc_mode != "realtime")
+        #post_processing_button.clicked.connect(post_processing_btn_pressed_cb)
+        #post_processing_button.setChecked(selected_calc_mode != "realtime")
         post_processing_button.setObjectName("post_processing_btn")
         post_processing_button.setStyleSheet(GUIStyles.gt_calc_mode_btn_style())
         buttons_row_layout.addWidget(post_processing_button)

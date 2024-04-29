@@ -392,9 +392,10 @@ class GUIStyles:
 
             }}
             QPushButton#post_processing_btn{{ 
-                border-top-right-radius: 4px;
-                border-bottom-right-radius: 4px;
-                min-width: 120px;   
+                border-radius: 4px;
+                min-width: 120px; 
+                background-color: #FB8C00;
+                color: white;  
                 
             }}
         """
