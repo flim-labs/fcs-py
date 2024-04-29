@@ -560,7 +560,8 @@ class GUIStyles:
             } 
             QProgressBar {
                 color: transparent;
-                background-color: #3b3b3b;
+                background-color: white;
+                max-height: 30px;
                 padding: 0;
             }
             QProgressBar::chunk {

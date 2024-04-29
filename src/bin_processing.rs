@@ -160,26 +160,31 @@ fn process_files_in_parallel(
 
 #[allow(unused_assignments)]
 fn adjust_channel_data_lengths(channel_data: &Arc<RwLock<HashMap<u8, Vec<Vec<usize>>>>>) -> usize {
-    let mut max_length = 0;
+    let mut min_length = 0;
     {
         let mut data = channel_data.write().unwrap();
-        max_length = calculate_intensities_vector_max_length(&data);
+        min_length = calculate_intensities_vector_min_length(&data);
         for vectors in data.values_mut() {
             for vector in vectors.iter_mut() {
-                vector.resize(max_length, 0);
+                if vector.len() > min_length {
+                    let excess_length = vector.len() - min_length; 
+                    vector.truncate(vector.len() - excess_length);
+                }
             }
         }
     }
-    max_length
+    min_length
 }
 
-fn calculate_intensities_vector_max_length(data: &HashMap<u8, Vec<Vec<usize>>>) -> usize {
+fn calculate_intensities_vector_min_length(data: &HashMap<u8, Vec<Vec<usize>>>) -> usize {
     data.values()
         .flat_map(|v| v.iter())
         .map(Vec::len)
-        .max()
+        .min()
         .unwrap_or(0)
 }
+
+
 
 
 fn delete_files(files:  &Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
