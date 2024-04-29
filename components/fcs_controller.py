@@ -1,5 +1,5 @@
 from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
-from components.settings import GT_PLOTS_GRID, GT_WIDGET_WRAPPER, PLOT_GRIDS_CONTAINER
+from components.settings import GT_PLOTS_GRID, GT_WIDGET_WRAPPER, PLOT_GRIDS_CONTAINER, UNICODE_SUP
 import numpy as np
 import pyqtgraph as pg
 from fcs_flim import fcs_flim
@@ -62,22 +62,31 @@ class FCSPostProcessingPlot:
     def generate_chart(correlation, index, app, lag_index, gt_values):
         lag_index[0] = lag_index[0] + 0.000000001
         gt_widget = pg.PlotWidget()
+        log_x = np.log10(lag_index)
+        log_x[0] = 0
+        exponents = np.floor(log_x)
+        exponents_int = np.array(exponents).astype(int)
+        exponents_lin_space = np.linspace(0, max(exponents_int))
+        exponents_lin_space_int = np.array(exponents_lin_space).astype(int)
         gt_widget.setLabel('left', 'G(τ)', units='')
         gt_widget.setLabel('bottom', 'τ', units='')
         q_font = QFont("Times New Roman")
         gt_widget.getAxis("bottom").label.setFont(q_font)
         gt_widget.getAxis("left").label.setFont(q_font)
         gt_widget.setTitle(f'Channel {correlation[0] + 1} - Channel {correlation[1] + 1}')
-        gt_widget.plotItem.setRange(yRange=[min(gt_values), max(gt_values)])
-        gt_widget.plotItem.setRange(xRange=[min(lag_index), max(lag_index)])
         gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10) 
-        y_range = max(gt_values) - min(gt_values)
-        y_num_ticks = 5 
-        y_step = y_range / (y_num_ticks - 1)
-        y_tick_values = np.arange(min(gt_values), max(gt_values) + y_step, y_step)
-        gt_widget.plotItem.getAxis('left').setTicks([[(tick, f'{tick:.5f}') for tick in y_tick_values]])
-        intensity_plot = gt_widget.plot(lag_index, gt_values, pen='#31c914')
+        intensity_plot = gt_widget.plot(log_x, gt_values, pen='#31c914')
         gt_widget.plotItem.getAxis('left').enableAutoSIPrefix(False)
+        gt_widget.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
+        def format_power_of_ten(i):
+            if i == 0:
+                return "0"
+            else:
+                return "10" + "".join([UNICODE_SUP[c] for c in str(i)])
+ 
+        ticks = [(i, format_power_of_ten(i)) for i in exponents_lin_space_int]
+        axis = gt_widget.getAxis('bottom')
+        axis.setTicks([ticks])
         gt_widget.setBackground("#141414")
         app.gt_lines.append(intensity_plot)
         row, col = divmod(index, 2)
