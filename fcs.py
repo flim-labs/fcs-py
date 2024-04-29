@@ -1,10 +1,11 @@
 
+from multiprocessing import Queue
 import os
 import json
 import queue
 import sys
 from functools import partial
-from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer
+from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer, QThread
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMainWindow
 from components.gui_styles import GUIStyles
 from components.layout_utilities import init_ui
@@ -14,13 +15,13 @@ from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import IntensityTracing
+from components.intensity_tracing_controller import FlimLabsPullValuesWorkerProcess, IntensityTracing
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
 
-class FCSWindow(QMainWindow):
+class FCSWindow(QWidget):
     def __init__(self):
         super().__init__()
         
@@ -97,6 +98,17 @@ class FCSWindow(QMainWindow):
         ######
         self.intensity_connectors = {}
         self.gt_connectors = {}
+        
+        #self.pull_value_worker_queue = Queue()
+        #self.pull_value_worker_thread = QThread()
+        #self.pull_value_worker = FlimLabsPullValuesWorkerProcess(self.pull_value_worker_queue)
+        #self.pull_value_worker.moveToThread(self.pull_value_worker_thread)
+        #self.pull_value_worker_thread.started.connect(self.pull_value_worker.run)
+        #self.pull_value_worker.new_data.connect(partial(IntensityTracing.pull_from_queue, self))
+        #self.pull_value_worker.finished.connect(self.pull_value_worker_thread.quit)
+        #self.pull_value_worker.finished.connect(self.pull_value_worker.deleteLater)
+        #self.pull_value_worker.finished.connect(self.pull_value_worker_thread.deleteLater)
+        
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
         

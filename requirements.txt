@@ -5,3 +5,4 @@ flim-labs==1.0.21
 matplotlib
 pglive
 maturin
+multiprocessing

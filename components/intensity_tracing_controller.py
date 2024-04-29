@@ -1,7 +1,4 @@
-
-import queue
-import threading
-import time
+from multiprocessing import Process, Queue
 import pyqtgraph as pg
 from flim_labs import flim_labs
 from functools import partial
@@ -30,7 +27,24 @@ from PyQt6.QtWidgets import (
    
 )
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import QObject, pyqtSignal
 from components.resource_path import resource_path
+
+
+
+class FlimLabsPullValuesWorkerProcess(QObject):
+    finished = pyqtSignal()
+    new_data = pyqtSignal(object)
+
+    def __init__(self, queue):
+        super().__init__()
+        self.queue = queue
+
+    def run(self):
+        while True:
+            val = flim_labs.pull_from_queue()
+            self.new_data.emit(val)
+
 
 
 class IntensityTracing:
@@ -77,6 +91,17 @@ class IntensityTracing:
                 GUIStyles.set_msg_box_style(),
                 app.test_mode
             )
+            
+            
+    @staticmethod
+    def start_pull_from_queue_worker(app):
+        if not app.pull_value_worker_thread.isRunning():
+            app.pull_value_worker_thread.start()   
+            
+    @staticmethod
+    def stop_pull_from_queue_worker(app):
+        app.pull_value_worker_thread.requestInterruption()
+        app.pull_value_worker_thread.quit()         
 
 
     @staticmethod
@@ -209,7 +234,7 @@ class IntensityTracingButtonsActions:
                    
     @staticmethod    
     def stop_button_pressed(app):
-        app.pull_from_queue_timer.stop()  
+        app.pull_from_queue_timer.stop()   
         try:     
             flim_labs.request_stop()
         except:

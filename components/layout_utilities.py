@@ -62,10 +62,6 @@ def init_ui(self, top_utilities_layout):
     TitlebarIcon.setup(self)
     GUIStyles.customize_theme(self)
     
-    scroll_area = QScrollArea()
-    scroll_area.setWidgetResizable(True)
-    main_widget = QWidget()
-    
     main_layout = QVBoxLayout()
     main_layout.setSpacing(0)
     main_layout.setContentsMargins(0,0,0,0)
@@ -88,10 +84,7 @@ def init_ui(self, top_utilities_layout):
     main_layout.addLayout(progress_bar_layout)
     main_layout.addLayout(plot_grids_container)
     main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-    
-    main_widget.setLayout(main_layout)
-    scroll_area.setWidget(main_widget)
-    self.setCentralWidget(scroll_area)
+    self.setLayout(main_layout)
     
     self.layouts[MAIN_LAYOUT] = main_layout
     self.layouts[PLOT_GRIDS_CONTAINER] = plot_grids_container
