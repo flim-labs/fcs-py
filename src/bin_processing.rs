@@ -14,19 +14,27 @@ pub fn get_intensity_tracing_bin_files(
     let user_profile_path = get_user_profile_path()?;
 
     let channel_data = Arc::new(RwLock::new(HashMap::new()));
-
     let data_folder_path = user_profile_path.join(".flim-labs/data");
     let files = read_data_folder(data_folder_path)?;
-    let sorted_files = sort_files_by_modified_time(files);
+    let intensity_tracing_files: Vec<PathBuf> = files
+        .iter()
+        .filter(|file| {
+            if let Some(file_name) = file.file_name() {
+                if let Some(name) = file_name.to_str() {
+                    return name.starts_with("intensity-tracing");
+                }
+            }
+            false
+        })
+        .cloned()
+        .collect();
 
+    let sorted_files = sort_files_by_modified_time(intensity_tracing_files);
     process_files_in_parallel(&channel_data, &sorted_files, num_files)?;
-
     if let Err(err) = delete_files(&sorted_files) {
         eprintln!("Error during intensity tracing bin files removal: {}", err);
     }
-
     let max_length = adjust_channel_data_lengths(&channel_data);
-
     Ok((channel_data, max_length))
 }
 
@@ -183,8 +191,6 @@ fn calculate_intensities_vector_min_length(data: &HashMap<u8, Vec<Vec<usize>>>) 
         .min()
         .unwrap_or(0)
 }
-
-
 
 
 fn delete_files(files:  &Vec<PathBuf>) -> Result<(), Box<dyn Error>> {

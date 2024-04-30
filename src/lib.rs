@@ -1,6 +1,8 @@
 // File: src/lib.rs
 mod bin_processing;
 mod fcs_post_processing;
+mod export_data;
+mod utils;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use fcs_post_processing::{fluorescence_correlation_spectroscopy, 

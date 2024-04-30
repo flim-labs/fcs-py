@@ -1,5 +1,10 @@
 from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
-from components.settings import GT_PLOTS_GRID, GT_WIDGET_WRAPPER, PLOT_GRIDS_CONTAINER, UNICODE_SUP
+from components.settings import (
+    GT_PLOTS_GRID,
+    GT_WIDGET_WRAPPER,
+    PLOT_GRIDS_CONTAINER,
+    UNICODE_SUP,
+)
 import numpy as np
 import pyqtgraph as pg
 from fcs_flim import fcs_flim
@@ -11,18 +16,37 @@ from PyQt6.QtGui import QFont, QColor
 class FCSPostProcessingWorker(QThread):
     finished = pyqtSignal(object)
 
-    def __init__(self, active_correlations, num_acquisitions):
+    def __init__(
+        self,
+        active_correlations,
+        num_acquisitions,
+        enabled_channels,
+        bin_width,
+        acquisition_time,
+        export_data,
+        notes,
+    ):
         super().__init__()
         self.active_correlations = active_correlations
         self.num_acquisitions = num_acquisitions
+        self.enabled_channels = enabled_channels
+        self.bin_width = bin_width
+        self.acquisition_time = acquisition_time
+        self.export_data = export_data 
+        self.notes = notes
         self.is_running = True
 
     def run(self):
         gt_results = fcs_flim.fluorescence_correlation_spectroscopy(
             num_acquisitions=self.num_acquisitions,
             correlations=self.active_correlations,
-        )  
-        self.finished.emit(gt_results)    
+            enabled_channels = self.enabled_channels,
+            bin_width = self.bin_width,
+            acquisition_time = self.acquisition_time,
+            export_data = self.export_data,
+            notes = self.notes
+        )
+        self.finished.emit(gt_results)
 
     def stop(self):
         self.is_running = False
@@ -31,15 +55,40 @@ class FCSPostProcessingWorker(QThread):
 class FCSPostProcessing:
     @staticmethod
     def get_input(app):
+        notes = "Test comment test comment test comment"
         free_running_mode = app.free_running_acquisition_time
-        correlations = [tuple(item) if isinstance(item, list) else item for item in app.ch_correlations]
-        active_correlations = [(ch1, ch2) for ch1, ch2, active in correlations if active]
+        enabled_channels = app.enabled_channels
+        bin_width = int(app.bin_width_micros)
+        acquisition_time = (
+            app.acquisition_time_millis
+            if not free_running_mode
+            else int(app.last_acquisition_ns / 1000)
+        )
+        export_data = app.write_data
+        correlations = [
+            tuple(item) if isinstance(item, list) else item
+            for item in app.ch_correlations
+        ]
+        active_correlations = [
+            (ch1, ch2) for ch1, ch2, active in correlations if active
+        ]
         num_acquisitions = app.selected_average if free_running_mode == False else 1
-        worker = FCSPostProcessingWorker(active_correlations, num_acquisitions)
+        worker = FCSPostProcessingWorker(
+            active_correlations,
+            num_acquisitions,
+            enabled_channels,
+            bin_width,
+            acquisition_time,
+            export_data,
+            notes,
+        )
         QApplication.processEvents()
-        worker.finished.connect(lambda result: FCSPostProcessing.handle_fcs_post_processing_result(app, result, worker))
+        worker.finished.connect(
+            lambda result: FCSPostProcessing.handle_fcs_post_processing_result(
+                app, result, worker
+            )
+        )
         worker.start()
-        
 
     @staticmethod
     def handle_fcs_post_processing_result(app, gt_results, worker):
@@ -47,15 +96,21 @@ class FCSPostProcessing:
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)
         insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)
-        gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in app.gt_plots_to_show]
+        gt_plot_to_show = [
+            tuple(item) if isinstance(item, list) else item
+            for item in app.gt_plots_to_show
+        ]
         lag_index = gt_results[0]
-        filtered_gt_results = [res for res in gt_results[1] if res[0] in gt_plot_to_show]
+        filtered_gt_results = [
+            res for res in gt_results[1] if res[0] in gt_plot_to_show
+        ]
         for index, res in enumerate(filtered_gt_results):
             correlation = res[0]
             gt_values = res[1]
-            FCSPostProcessingPlot.generate_chart(correlation, index, app, lag_index, gt_values)
-        
-        
+            FCSPostProcessingPlot.generate_chart(
+                correlation, index, app, lag_index, gt_values
+            )
+
 
 class FCSPostProcessingPlot:
     @staticmethod
@@ -68,24 +123,27 @@ class FCSPostProcessingPlot:
         exponents_int = np.array(exponents).astype(int)
         exponents_lin_space = np.linspace(0, max(exponents_int))
         exponents_lin_space_int = np.array(exponents_lin_space).astype(int)
-        gt_widget.setLabel('left', 'G(τ)', units='')
-        gt_widget.setLabel('bottom', 'τ (μs)', units='')
+        gt_widget.setLabel("left", "G(τ)", units="")
+        gt_widget.setLabel("bottom", "τ (μs)", units="")
         q_font = QFont("Times New Roman")
         gt_widget.getAxis("bottom").label.setFont(q_font)
         gt_widget.getAxis("left").label.setFont(q_font)
-        gt_widget.setTitle(f'Channel {correlation[0] + 1} - Channel {correlation[1] + 1}')
-        gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10) 
-        intensity_plot = gt_widget.plot(log_x, gt_values, pen='#31c914')
-        gt_widget.plotItem.getAxis('left').enableAutoSIPrefix(False)
-        gt_widget.plotItem.getAxis('bottom').enableAutoSIPrefix(False)
+        gt_widget.setTitle(
+            f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}"
+        )
+        gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10)
+        intensity_plot = gt_widget.plot(log_x, gt_values, pen="#31c914")
+        gt_widget.plotItem.getAxis("left").enableAutoSIPrefix(False)
+        gt_widget.plotItem.getAxis("bottom").enableAutoSIPrefix(False)
+
         def format_power_of_ten(i):
             if i == 0:
                 return "0"
             else:
                 return "10" + "".join([UNICODE_SUP[c] for c in str(i)])
- 
+
         ticks = [(i, format_power_of_ten(i)) for i in exponents_lin_space_int]
-        axis = gt_widget.getAxis('bottom')
+        axis = gt_widget.getAxis("bottom")
         axis.setTicks([ticks])
         gt_widget.setBackground("#141414")
         app.gt_lines.append(intensity_plot)
