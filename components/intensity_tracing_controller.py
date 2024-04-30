@@ -93,6 +93,7 @@ class IntensityTracing:
                     break       
                     
                 ((time_ns), (intensities)) = v
+                app.last_acquisition_ns = time_ns[0]
                 IntensityTracing.calculate_cps(app, time_ns[0], intensities)
                 
  

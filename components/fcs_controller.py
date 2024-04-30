@@ -62,7 +62,7 @@ class FCSPostProcessing:
         acquisition_time = (
             app.acquisition_time_millis
             if not free_running_mode
-            else int(app.last_acquisition_ns / 1000)
+            else int(app.last_acquisition_ns / 1000000)
         )
         export_data = app.write_data
         correlations = [
