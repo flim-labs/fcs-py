@@ -4,6 +4,7 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 
 
+# Get most recent fcs bin file saved
 def get_recent_fcs_file():
     data_folder = os.path.join(os.environ["USERPROFILE"], ".flim-labs", "data")
     files = [f for f in os.listdir(data_folder) if f.startswith("fcs")]
@@ -11,6 +12,23 @@ def get_recent_fcs_file():
         key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True
     )
     return os.path.join(data_folder, files[0])
+
+# calc G(t) correlations mean
+def calc_g2_correlations_mean(g2):
+    g2_with_mean = []
+    for corr in g2:
+        g2_vector = corr[1]
+        g2_vector_length = len(g2_vector)
+        correlations_length = len(g2_vector[0])
+        average = [0.0] * correlations_length  
+        for i in range(g2_vector_length):
+            for j in range(correlations_length):
+                average[j] += g2_vector[i][j]
+        for k in range(correlations_length):
+            average[k] /= g2_vector_length 
+        g2_with_mean.append((corr[0], average, g2_vector))
+    return g2_with_mean
+
 
 
 file_path = get_recent_fcs_file()
@@ -84,7 +102,7 @@ with open(file_path, "rb") as f:
     # NOTES
     if "notes" in metadata and metadata["notes"] is not None:
         print("Notes: " + str(metadata["notes"]))
-        
+
 
     # Plot G(t) correlations
     num_plots = len(g2_correlations)
@@ -99,17 +117,20 @@ with open(file_path, "rb") as f:
         num_plots_per_row = 6    
     
     num_rows = (num_plots + num_plots_per_row - 1) // num_plots_per_row
+    g2_with_means = calc_g2_correlations_mean(g2_correlations)
 
     fig = plt.figure(figsize=(12, 3*num_rows))
     fig.suptitle("Fluorescence Spectroscopy Correlations")
     gs = GridSpec(num_rows, num_plots_per_row, figure=fig)
 
-    for i, ((channel1, channel2), data_list) in enumerate(g2_correlations):
+    for i, ((channel1, channel2), average, data_list) in enumerate(g2_with_means):
         row = i // num_plots_per_row
         col = i % num_plots_per_row
         ax = fig.add_subplot(gs[row, col])
         for data_index, data in enumerate(data_list):
             ax.plot(lag_index, data, label=f"G(τ) {data_index + 1}")
+        if len(data_list) > 1:
+            ax.plot(lag_index, average, label=f"G(τ) mean")  
         ax.set_xlabel("τ(μs)")
         ax.set_ylabel("G(τ)")
         ax.set_title(f"Channel {channel1 + 1}- Channel {channel2 + 1}")
@@ -119,3 +140,6 @@ with open(file_path, "rb") as f:
 
     plt.tight_layout()
     plt.show()
+    
+    
+    
