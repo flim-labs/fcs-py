@@ -7,6 +7,7 @@ from pglive.sources.live_axis import LiveAxis
 from pglive.sources.live_axis_range import LiveAxisRange
 from pglive.sources.live_plot import LiveLinePlot
 from pglive.sources.live_plot_widget import LivePlotWidget
+from components.data_export_controls import DataExportActions
 from components.fcs_controller import FCSPostProcessing
 from components.box_message import BoxMessage
 from components.format_utilities import FormatUtils
@@ -150,8 +151,8 @@ class IntensityTracingButtonsActions:
         app.acquisition_stopped = False
         app.warning_box = None
         app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
-        #app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        #self.set_download_button_icon()
+        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
+        DataExportActions.set_download_button_icon(app)
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
             app.bin_width_micros,
             app.time_span,

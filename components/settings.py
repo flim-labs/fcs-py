@@ -35,7 +35,9 @@ SETTINGS_GT_PLOTS_TO_SHOW = "gt_plots_to_show"
 DEFAULT_GT_PLOTS_TO_SHOW = "[]"
 
 
-EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/fcs-py/python-flim-labs/fcs-file-format.html"
+EXPORT_DATA_GUIDE_LINK = (
+    "https://flim-labs.github.io/fcs-py/python-flim-labs/fcs-file-format.html"
+)
 GUI_GUIDE_LINK = f"https://flim-labs.github.io/fcs-py/v{APP_VERSION}"
 
 
@@ -101,7 +103,6 @@ REALTIME_BUTTON = "realtime_button"
 POST_PROCESSING_BUTTON = "post_processing_button"
 
 
-
 EXPORTED_DATA_BYTES_UNIT = 12083.2
 
 REALTIME_MS = 10
@@ -126,4 +127,79 @@ UNICODE_SUP = {
     "7": "\u2077",
     "8": "\u2078",
     "9": "\u2079",
+}
+
+COMMENT_FILE_DIMENSION_KB = {
+    5000: 5,
+    4000: 4,
+    3000: 3,
+    2000: 2,
+    500: 1,
+}
+
+CORRELATIONS_FILE_DIMENSION_KB = {
+    1: 3,
+    2: 5,
+    3: 7,
+    4: 9,
+    5: 10,
+    6: 12,
+    7: 14,
+    8: 16,
+    8: 18,
+    10: 18,
+    11: 22,
+    12: 22,
+    13: 26,
+    14: 26,
+    15: 29,
+    16: 29,
+    17: 32,
+    18: 32,
+    19: 35,
+    20: 35,
+    21: 39,
+    22: 39,
+    23: 42,
+    24: 42,
+    25: 46,
+    26: 46,
+    27: 49,
+    28: 49,
+    29: 52,
+    30: 52,
+    31: 56,
+    32: 56,
+    33: 59,
+    34: 59,
+    35: 62,
+    36: 62,
+    37: 65,
+    38: 65,
+    39: 70,
+    40: 70,
+    41: 73,
+    42: 73,
+    43: 77,
+    44: 77,
+    45: 81,
+    46: 81,
+    47: 84,
+    48: 84,
+    59: 88,
+    50: 88,
+    51: 91,
+    52: 91,
+    53: 95,
+    54: 95,
+    55: 98,
+    56: 98,
+    57: 101,
+    58: 101,
+    59: 106,
+    60: 106,
+    61: 108,
+    62: 108,
+    63: 112,
+    64: 112,
 }

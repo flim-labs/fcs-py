@@ -1,5 +1,7 @@
+from components.data_export_controls import DataExportActions
 from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
 from components.settings import (
+    DOWNLOAD_BUTTON,
     GT_PLOTS_GRID,
     GT_WIDGET_WRAPPER,
     PLOT_GRIDS_CONTAINER,
@@ -55,7 +57,7 @@ class FCSPostProcessingWorker(QThread):
 class FCSPostProcessing:
     @staticmethod
     def get_input(app):
-        notes = "Test comment test comment test comment"
+        notes = app.notes
         free_running_mode = app.free_running_acquisition_time
         enabled_channels = app.enabled_channels
         bin_width = int(app.bin_width_micros)
@@ -93,6 +95,9 @@ class FCSPostProcessing:
     @staticmethod
     def handle_fcs_post_processing_result(app, gt_results, worker):
         worker.stop()
+        app.acquisition_stopped = True
+        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
+        DataExportActions.set_download_button_icon(app)
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)
         insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)

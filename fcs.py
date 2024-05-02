@@ -13,7 +13,7 @@ from components.top_bar_builder import TopBarBuilder
 from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
-from components.data_export_controls import ExportDataControl, DownloadDataControl
+from components.data_export_controls import DataExportActions, ExportDataControl, DownloadDataControl
 from components.intensity_tracing_controller import IntensityTracing
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -58,6 +58,8 @@ class FCSWindow(QWidget):
         
         default_gt_plots_to_show = self.settings.value(SETTINGS_GT_PLOTS_TO_SHOW, DEFAULT_GT_PLOTS_TO_SHOW)
         self.gt_plots_to_show = json.loads(default_gt_plots_to_show) if default_gt_plots_to_show is not None else []
+        
+        self.notes = ""
 
         self.acquisitions_count = 0
         
@@ -108,6 +110,8 @@ class FCSWindow(QWidget):
         
         GUIStyles.set_fonts()
         self.init_ui()
+        DataExportActions.calc_exported_file_size(self)
+        self.bin_file_size_label.setVisible(self.write_data)
 
 
     @staticmethod    

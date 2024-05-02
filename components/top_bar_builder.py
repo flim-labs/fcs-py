@@ -43,7 +43,7 @@ class TopBarBuilder:
         header_layout.addStretch(1)
         header_layout.addWidget(export_data_widget)
         header_layout.addSpacing(20)
-        #header_layout.addWidget(download_button)
+        header_layout.addWidget(download_button)
         header_layout.addWidget(app_guide_link_widget)
 
         return header_layout
@@ -109,12 +109,11 @@ class TopBarBuilder:
             write_data,
             acquisition_stopped,
             show_download_options_cb,
-            download_matlab_cb,
             download_python_cb):
         # download button
         download_button = QPushButton("DOWNLOAD ")
         download_button.setEnabled(write_data and acquisition_stopped)
-        download_button.setStyleSheet(GUIStyles.button_style("#8d4ef2", "#8d4ef2", "#a179ff", "#6b3da5", "100px"))
+        download_button.setStyleSheet(GUIStyles.button_style("#31c914", "#57D33D", "#7FE777", "#31c914", "100px"))
         download_button.setIconSize(QSize(16, 16))
         download_button.clicked.connect(show_download_options_cb)
         layout = QVBoxLayout()
@@ -124,12 +123,9 @@ class TopBarBuilder:
         layout.setDirection(QHBoxLayout.Direction.RightToLeft)
         # context menu
         download_menu = QMenu()
-        matlab_action = QAction("MATLAB FORMAT", self)
         python_action = QAction("PYTHON FORMAT", self)
-        download_menu.setStyleSheet(GUIStyles.set_context_menu_style("#8d4ef2", "#a179ff", "#6b3da5"))
-        download_menu.addAction(matlab_action)
+        download_menu.setStyleSheet(GUIStyles.set_context_menu_style("#31c914", "#57D33D", "#7FE777"))
         download_menu.addAction(python_action)
-        matlab_action.triggered.connect(download_matlab_cb)
         python_action.triggered.connect(download_python_cb)
 
         return download_button, download_menu

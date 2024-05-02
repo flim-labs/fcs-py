@@ -110,7 +110,7 @@ class InputParamsControls(QWidget):
         self.app.settings.setValue(
             SETTINGS_ACQUISITION_TIME_MILLIS, self.app.acquisition_time_millis
         )
-        # self.calc_exported_file_size()
+   
 
     def time_span_value_change(self, value):
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
@@ -126,8 +126,6 @@ class InputParamsControls(QWidget):
         value = self.sender().currentText()
         self.app.bin_width_micros = int(value)
         self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, int(value))
-        # self.calc_exported_file_size()
-        
         
     def averages_value_change(self, value):
         value = self.sender().currentText()

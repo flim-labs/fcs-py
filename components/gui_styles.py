@@ -340,7 +340,7 @@ class GUIStyles:
         QMenu {{
             margin: 0;   
             padding: 5px;
-            border-radius: 20px;
+            border-radius: 4px;
             background: #181818;       
         }}
 
@@ -352,10 +352,10 @@ class GUIStyles:
             margin: 5px 0px 5px 0px;
             border-radius: 4px;   
             font-family: "Montserrat";
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             padding:10px 13px 10px 10px;
-            min-width:120px
+            min-width:120px;
         }}
 
         QMenu::item:selected {{

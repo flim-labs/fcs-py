@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHeaderView, QHB
 from PyQt6.QtCore import  QSize, Qt
 from PyQt6.QtGui import QIcon, QColor
 from components.buttons import PlotsConfigPopup
+from components.data_export_controls import DataExportActions
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
 from components.logo_utilities import TitlebarIcon
@@ -203,6 +204,7 @@ class ChCorrelationsPopup(QWidget):
         filtered_gt_to_show = self.filter_gt_plot_to_show_on_correlations_change()
         self.app.gt_plots_to_show = filtered_gt_to_show
         self.app.settings.setValue(SETTINGS_GT_PLOTS_TO_SHOW, json.dumps(filtered_gt_to_show))
+        DataExportActions.calc_exported_file_size(self.app)
 
     def filter_gt_plot_to_show_on_correlations_change(self):
         correlations_tuples = [tuple(item) if isinstance(item, list) else item for item in self.app.ch_correlations]

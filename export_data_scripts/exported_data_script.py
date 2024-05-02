@@ -13,6 +13,10 @@ def get_recent_fcs_file():
     )
     return os.path.join(data_folder, files[0])
 
+
+file_path = get_recent_fcs_file()
+print("Using data file: " + file_path)
+
 # calc G(t) correlations mean
 def calc_g2_correlations_mean(g2):
     g2_with_mean = []
@@ -31,10 +35,7 @@ def calc_g2_correlations_mean(g2):
 
 
 
-file_path = get_recent_fcs_file()
-print("Using data file: " + file_path)
-
-with open(file_path, "rb") as f:
+with open(file_path, "rb", encoding='utf-8') as f:
     # first 4 bytes must be FCS1
     # 'FCS1' is an identifier for fcs bin files
     if f.read(4) != b"FCS1":

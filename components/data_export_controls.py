@@ -5,6 +5,7 @@ from PyQt6.QtGui import QIcon
 from components.resource_path import resource_path
 from components.top_bar_builder import TopBarBuilder
 from components.settings import *
+from export_data_scripts.script_files_utils import PythonScriptUtils
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
@@ -39,15 +40,15 @@ class ExportDataControl(QWidget):
     def toggle_export_data(self, state):        
         if state:
             self.app.write_data = True
-            #self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
-            #self.set_download_button_icon()
+            self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
+            DataExportActions.set_download_button_icon(self.app)
             self.app.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.app.bin_file_size_label.show()
             self.app.calc_exported_file_size()
         else:
             self.app.write_data = False
-            #self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
-            #self.set_download_button_icon()
+            self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
+            DataExportActions.set_download_button_icon(self.app)
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.app.bin_file_size_label.hide()          
 
@@ -69,31 +70,51 @@ class DownloadDataControl(QWidget):
             self.app.write_data,
             self.app.acquisition_stopped,
             self.show_download_options,
-            self.download_matlab,
             self.download_python
         )
         self.app.control_inputs[DOWNLOAD_BUTTON] = download_button
         self.app.control_inputs[DOWNLOAD_MENU] = download_menu
-        self.set_download_button_icon()
+        DataExportActions.set_download_button_icon(self.app)
         return download_button, download_menu 
 
     def show_download_options(self):    
         self.app.control_inputs[DOWNLOAD_MENU].exec(self.app.control_inputs[DOWNLOAD_BUTTON].mapToGlobal(QPoint(0, self.app.control_inputs[DOWNLOAD_BUTTON].height())))
-       
-    def download_matlab(self):    
-        #MatlabScriptUtils.download_matlab(self)
-        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
-        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(True)
 
     def download_python(self):
-        #PythonScriptUtils.download_python(self)
+        PythonScriptUtils.download_python(self)
         self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
         self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(True) 
 
-    def set_download_button_icon(self):
-        if self.app.control_inputs[DOWNLOAD_BUTTON].isEnabled():
+
+
+class DataExportActions: 
+    @staticmethod
+    def calc_exported_file_size(app):
+        filtered_corr = [(x, y) for x, y, boolean in app.ch_correlations if boolean]
+        notes = app.notes
+        if len(filtered_corr) ==0:
+            app.bin_file_size_label.setText("")
+            return
+        file_dimension_kb = CORRELATIONS_FILE_DIMENSION_KB[len(filtered_corr)]
+        if len(notes) == 0:
+            app.bin_file_size_label.setText("File size: " + str(file_dimension_kb) + 'KB')
+            return
+        if(len(notes) <= 5000 and len(notes) > 4000):
+           app.bin_file_size_label.setText("File size: " + str(file_dimension_kb + COMMENT_FILE_DIMENSION_KB[5000]) + 'KB') 
+        if(len(notes) <= 4000 and len(notes) > 3000):
+           app.bin_file_size_label.setText("File size: " + str(file_dimension_kb + COMMENT_FILE_DIMENSION_KB[4000]) + 'KB')    
+        if(len(notes) <= 3000 and len(notes) > 2000):
+           app.bin_file_size_label.setText("File size: " + str(file_dimension_kb + COMMENT_FILE_DIMENSION_KB[3000]) + 'KB')
+        if(len(notes) <= 2000 and len(notes) > 500):
+           app.bin_file_size_label.setText("File size: " + str(file_dimension_kb + COMMENT_FILE_DIMENSION_KB[2000]) + 'KB')
+        if len(notes) <= 500:
+           app.bin_file_size_label.setText("File size: " + str(file_dimension_kb + COMMENT_FILE_DIMENSION_KB[500]) + 'KB')         
+    
+    @staticmethod
+    def set_download_button_icon(app):    
+        if app.control_inputs[DOWNLOAD_BUTTON].isEnabled():
             icon = resource_path("assets/arrow-down-icon-white.png")
-            self.app.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))
+            app.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))
         else:
             icon = resource_path("assets/arrow-down-icon-grey.png")
-            self.app.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))       
+            app.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))                    
