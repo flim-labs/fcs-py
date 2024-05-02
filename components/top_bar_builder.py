@@ -108,7 +108,9 @@ class TopBarBuilder:
             write_data,
             acquisition_stopped,
             show_download_options_cb,
-            download_python_cb):
+            download_python_cb, 
+            download_matlab_cb
+            ):
         # download button
         download_button = QPushButton("DOWNLOAD ")
         download_button.setEnabled(write_data and acquisition_stopped)
@@ -123,8 +125,11 @@ class TopBarBuilder:
         # context menu
         download_menu = QMenu()
         python_action = QAction("PYTHON FORMAT", self)
+        matlab_action = QAction("MATLAB FORMAT", self)
         download_menu.setStyleSheet(GUIStyles.set_context_menu_style("#31c914", "#57D33D", "#7FE777"))
         download_menu.addAction(python_action)
         python_action.triggered.connect(download_python_cb)
+        download_menu.addAction(matlab_action)
+        matlab_action.triggered.connect(download_matlab_cb)
 
         return download_button, download_menu

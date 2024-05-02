@@ -7,7 +7,7 @@ from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
 from components.top_bar_builder import TopBarBuilder
 from components.settings import *
-from export_data_scripts.script_files_utils import PythonScriptUtils
+from export_data_scripts.script_files_utils import MatlabScriptUtils, PythonScriptUtils
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
@@ -92,7 +92,8 @@ class DownloadDataControl(QWidget):
             self.app.write_data,
             self.app.acquisition_stopped,
             self.show_download_options,
-            self.download_python
+            self.download_python,
+            self.download_matlab
         )
         self.app.control_inputs[DOWNLOAD_BUTTON] = download_button
         self.app.control_inputs[DOWNLOAD_MENU] = download_menu
@@ -106,6 +107,11 @@ class DownloadDataControl(QWidget):
         PythonScriptUtils.download_python(self)
         self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
         self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(True) 
+        
+    def download_matlab(self):
+        MatlabScriptUtils.download_matlab(self)
+        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
+        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(True)     
 
 
 
