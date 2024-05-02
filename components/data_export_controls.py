@@ -1,3 +1,4 @@
+from functools import partial
 import os
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QLabel, QPlainTextEdit
 from PyQt6.QtCore import QPoint, Qt
@@ -49,7 +50,7 @@ class ExportDataControl(QWidget):
             self.app.bin_file_size,
             self.app.bin_file_size_label,
             self.app.write_data,
-            self.app.calc_exported_file_size)
+           partial(DataExportActions.calc_exported_file_size, self.app))
         return file_size_info_layout 
     
     
@@ -64,7 +65,7 @@ class ExportDataControl(QWidget):
             DataExportActions.set_download_button_icon(self.app)
             self.app.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.app.bin_file_size_label.show()
-            self.app.calc_exported_file_size()
+            DataExportActions.calc_exported_file_size(self.app)
             self.app.control_inputs[ADD_NOTES_BUTTON].setVisible(True)
         else:
             self.app.write_data = False
@@ -162,6 +163,7 @@ class AddNotesToExportedDataPopup(QWidget):
         desc = QLabel("Add notes to your exported data bin file (max 5000 characters):")
         desc.setStyleSheet("font-family: Montserrat; color: #6e6b6b")
         self.textarea = QPlainTextEdit(self)
+        self.textarea.setPlainText(self.app.notes)
         self.textarea.textChanged.connect(self.limit_characters)
         self.textarea.setStyleSheet(GUIStyles.add_notes_textarea())
         button_row = QHBoxLayout()
@@ -182,6 +184,7 @@ class AddNotesToExportedDataPopup(QWidget):
     
     def save_notes(self):
         self.app.notes = self.textarea.toPlainText() 
+        DataExportActions.calc_exported_file_size(self.app)
         self.close()
         
     def limit_characters(self):
