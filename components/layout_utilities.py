@@ -90,6 +90,9 @@ def init_ui(self, top_utilities_layout):
     self.layouts[PLOT_GRIDS_CONTAINER] = plot_grids_container
     self.layouts[PROGRESS_BAR_LAYOUT] = progress_bar_layout
     self.widgets[PROGRESS_BAR_WIDGET] = progress_bar_widget
+    
+    self.resize(self.settings.value("size", QSize(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT)))
+    self.move(self.settings.value("pos", QApplication.primaryScreen().geometry().center() - self.frameGeometry().center()))
 
 
 def create_intensity_layout(app):    

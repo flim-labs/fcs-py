@@ -86,7 +86,6 @@ class TopBarBuilder:
             active_color="#FB8C00", width=70, height=30, checked=value)
         inp.toggled.connect(change_cb)
         export_data_control.addWidget(export_data_label)
-        export_data_control.addSpacing(8)
         export_data_control.addWidget(inp)
 
         return info_link_widget, export_data_control, inp

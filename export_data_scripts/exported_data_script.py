@@ -35,7 +35,7 @@ def calc_g2_correlations_mean(g2):
 
 
 
-with open(file_path, "rb", encoding='utf-8') as f:
+with open(file_path, "rb") as f:
     # first 4 bytes must be FCS1
     # 'FCS1' is an identifier for fcs bin files
     if f.read(4) != b"FCS1":

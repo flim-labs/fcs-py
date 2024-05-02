@@ -570,5 +570,32 @@ class GUIStyles:
             color: transparent;
             }               
         """
+        
+    
+    @staticmethod       
+    def add_notes_button():
+        return """
+            QPushButton{
+                background-color: transparent;
+                border: 1px solid #FB8C00;
+                border-radius: 5px;
+            } 
+            
+            QPushButton:hover {
+                background-color: #222222;
+                border: 1px solid #FB8C00;
+            }
+        """ 
+        
+    @staticmethod
+    def add_notes_textarea():
+        return """
+            QPlainTextEdit{
+               background-color: transparent;
+               color: white;
+               border:  1px solid #FB8C00;
+               border-radius: 5px;
+            }
+    """         
   
                

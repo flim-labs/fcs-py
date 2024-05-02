@@ -1,7 +1,6 @@
 import os
 import re
 import json
-import flim_labs
 from PyQt6.QtWidgets import  QWidget, QPushButton, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout, QLabel
 from PyQt6.QtCore import QPropertyAnimation, Qt
 from PyQt6.QtGui import QIcon, QPixmap, QColor

@@ -225,7 +225,10 @@ class FCSWindow(QWidget):
             self.widgets[CH_CORRELATIONS_POPUP].close()
         if PLOTS_CONFIG_POPUP in self.widgets:
             self.widgets[PLOTS_CONFIG_POPUP].close()    
-        event.accept()     
+        event.accept() 
+        if ADD_NOTES_POPUP in self.widgets:
+            self.widgets[ADD_NOTES_POPUP].close()    
+        event.accept()         
 
 
 if __name__ == "__main__":
