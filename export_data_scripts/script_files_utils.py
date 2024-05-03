@@ -118,7 +118,7 @@ def calc_g2_correlations_mean(g2):
                     average[j] += g2_vector[i][j]
             for k in range(correlations_length):        
                 average[k] /= g2_vector_length 
-            g2_with_mean.append((corr[0], average, g2_vector))        
+        g2_with_mean.append((corr[0], average, g2_vector))            
     return g2_with_mean            
 
 with open(file_path, "rb") as f:               

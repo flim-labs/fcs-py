@@ -74,9 +74,8 @@ fn read_channels_data(
         .get("channels")
         .and_then(Value::as_array)
         .map_or(0, |channels| channels.len());
-
+                
     let mut channel_lines: Vec<_> = (0..number_of_channels).map(|_| Vec::new()).collect();
-
     let mut buffer = vec![0u8; 8 + 4 * number_of_channels];
     while reader.read_exact(&mut buffer).is_ok() {
         let channel_values: Vec<u32> = buffer[8..]
