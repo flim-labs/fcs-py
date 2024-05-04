@@ -82,6 +82,7 @@ DOWNLOAD_MENU = "download_menu"
 CHECKBOX_CONTROLS = "ch_and_tau_controls"
 CHANNELS_COMPONENT = "channels_component"
 CH_CORRELATIONS_POPUP = "ch_correlations_popup"
+CH_CORRELATIONS_MATRIX = "ch_correlations_matrix"
 PLOTS_CONFIG_POPUP = "plots_config_popup"
 ADD_NOTES_BUTTON = "add_notes_button"
 ADD_NOTES_POPUP = "add_notes_popup"
@@ -148,7 +149,7 @@ CORRELATIONS_FILE_DIMENSION_KB = {
     6: 12,
     7: 14,
     8: 16,
-    8: 18,
+    9: 18,
     10: 18,
     11: 22,
     12: 22,
@@ -188,7 +189,7 @@ CORRELATIONS_FILE_DIMENSION_KB = {
     46: 81,
     47: 84,
     48: 84,
-    59: 88,
+    49: 88,
     50: 88,
     51: 91,
     52: 91,
