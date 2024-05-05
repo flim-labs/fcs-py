@@ -12,7 +12,7 @@ import pyqtgraph as pg
 from fcs_flim import fcs_flim
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QFont, QColor
+from PyQt6.QtGui import QFont
 
 
 class FCSPostProcessingWorker(QThread):

@@ -97,7 +97,7 @@ class IntensityTracing:
                 app.last_acquisition_ns = time_ns[0]
                 IntensityTracing.calculate_cps(app, time_ns[0], intensities)
                 
- 
+                  
                 
     @staticmethod            
     def calculate_cps(app, time_ns, counts):
@@ -123,10 +123,10 @@ class IntensityTracing:
         except Exception as e:
             pass 
         if app.acquisitions_count >= app.selected_average:           
-            app.acquisition_count = 0
+            app.acquisitions_count = 0
         else:    
-            app.acquisitions_count = app.acquisitions_count + 1     
-        app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()      
+            app.acquisitions_count = app.acquisitions_count + 1         
+        app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()     
         app.last_cps_update_time.invalidate()     
         app.notes = ""
         app.control_inputs[STOP_BUTTON].setEnabled(False)
@@ -148,7 +148,7 @@ class IntensityTracing:
 class IntensityTracingButtonsActions:
     @staticmethod    
     def start_button_pressed(app):
-        IntensityTracingButtonsActions.clear_intensity_grid_widgets(app) 
+        IntensityTracingButtonsActions.clear_intensity_widgets(app) 
         app.acquisition_stopped = False
         app.warning_box = None
         app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
@@ -170,24 +170,14 @@ class IntensityTracingButtonsActions:
             return
         app.control_inputs[START_BUTTON].setEnabled(False)
         app.control_inputs[STOP_BUTTON].setEnabled(app.free_running_acquisition_time)   
-        app.intensity_charts.clear()
-        app.intensity_lines.clear()
         app.last_acquisition_ns = 0
         app.gt_charts.clear()
-        app.cps_ch.clear()
-        for chart in app.intensity_charts:
-            chart.setVisible(False)
-        for chart in app.gt_charts:
-            chart.setVisible(False)
-        for channel, curr_conn in app.intensity_connectors.items():    
-            curr_conn.disconnect()
-        remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])      
-        gt_widget = create_gt_wait_layout(app)
-        insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)    
-        app.intensity_connectors.clear()
-        app.gt_lines.clear()         
-        app.intensity_charts_wrappers.clear()
-        QApplication.processEvents()         
+        if app.acquisitions_count == app.selected_average or app.acquisitions_count == 0:    
+            remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])      
+            gt_widget = create_gt_wait_layout(app)
+            insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)    
+        app.gt_lines.clear()    
+        QApplication.processEvents()     
         IntensityTracingButtonsActions.intensity_tracing_start(app)
         if not app.widgets[GT_WIDGET_WRAPPER].isVisible():
             IntensityTracingButtonsActions.show_gt_widget(app, True) 
@@ -200,7 +190,8 @@ class IntensityTracingButtonsActions:
         only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
         for i, channel in enumerate(app.intensity_plots_to_show):
             if i < len(app.intensity_charts):
-                app.intensity_charts[i].show()
+                intensity_chart = app.intensity_charts[i]
+                intensity_chart.show()
             else:
                 IntensityTracingPlot.create_chart_widget(app, i, channel)
         if len(only_cps_widgets) > 0:        
@@ -220,9 +211,10 @@ class IntensityTracingButtonsActions:
         app.widgets[PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)  
-        remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER]) 
-        gt_widget = create_gt_loading_layout(app) 
-        insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)               
+        if app.acquisitions_count == app.selected_average:
+            remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER]) 
+            gt_widget = create_gt_loading_layout(app) 
+            insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)               
         QApplication.processEvents()
         for channel, curr_conn in app.intensity_connectors.items():     
             curr_conn.pause()          
@@ -231,7 +223,7 @@ class IntensityTracingButtonsActions:
                
     @staticmethod    
     def reset_button_pressed(app):
-        app.pull_from_queue_timer.stop()  
+        app.pull_from_queue_timer.stop()
         try:
             flim_labs.request_stop()
         except:
@@ -242,23 +234,32 @@ class IntensityTracingButtonsActions:
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
-        for chart in app.intensity_charts:
-            chart.setParent(None)
-            chart.deleteLater()
-        for wrapper in app.intensity_charts_wrappers:
-            wrapper.setParent(None)
-            wrapper.deleteLater()  
-        app.intensity_connectors.clear()         
-        app.intensity_charts.clear()
-        app.cps_ch.clear()
-        app.intensity_charts_wrappers.clear()
-        IntensityTracingButtonsActions.clear_intensity_grid_widgets(app)  
+        IntensityTracingButtonsActions.clear_intensity_widgets(app)  
         IntensityTracingButtonsActions.show_gt_widget(app, False)
         QApplication.processEvents()  
         
     
     @staticmethod    
-    def clear_intensity_grid_widgets(app):
+    def clear_intensity_widgets(app):
+        for channel, curr_conn in app.intensity_connectors.items():    
+            curr_conn.disconnect()
+        app.intensity_connectors.clear()         
+        app.intensity_charts.clear()
+        app.cps_ch.clear()
+        app.only_cps_widgets.clear()
+        app.intensity_charts_wrappers.clear()
+        for chart in app.intensity_charts:
+            chart.setParent(None)
+            chart.deleteLater()
+            del chart
+        for cps in app.only_cps_widgets:
+            cps.setParent(None)  
+            cps.deleteLater()  
+            del cps
+        for wrapper in app.intensity_charts_wrappers:
+            wrapper.setParent(None)
+            wrapper.deleteLater() 
+            del wrapper 
         for i in reversed(range(app.layouts[INTENSITY_ONLY_CPS_GRID].count())):
             widget = app.layouts[INTENSITY_ONLY_CPS_GRID].itemAt(i).widget()
             if widget is not None:
@@ -356,7 +357,3 @@ class IntensityTracingOnlyCPS:
         row, col = divmod(index, 2)
         app.layouts[INTENSITY_ONLY_CPS_GRID].addWidget(only_cps_widget, row, col)
         app.only_cps_widgets.append(only_cps_widget)
-      
-
-
-

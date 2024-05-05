@@ -182,7 +182,9 @@ def create_gt_layout(app):
 
 def remove_widget(layout, widget):
     layout.removeWidget(widget)
+    widget.setParent(None)
     widget.deleteLater() 
+    del widget
     
     
 def insert_widget(layout, widget, position):

@@ -28,8 +28,10 @@ class PlotsConfigPopup(QWidget):
         scroll_area.setWidgetResizable(True) 
         inner_widget = QWidget()  
         
-        layout = QVBoxLayout(inner_widget)  
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout = QVBoxLayout(inner_widget)  
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
+        self.layouts = {}
 
         corr_matrix_prompt = QLabel("CHANNELS CORRELATIONS:")
         corr_matrix_prompt.setObjectName("prompt_text")
@@ -39,10 +41,10 @@ class PlotsConfigPopup(QWidget):
         desc = QLabel("To avoid cluttering the interface, only a maximum of 4 intensity tracing charts and 4 G(t) curves will be displayed. However, all charts can be reconstructed by exporting the acquired data. Please select the intensity tracing charts and G(t) curves you would like to be shown.")
         desc.setWordWrap(True)
         if start_acquisition:
-            layout.addWidget(corr_matrix_prompt)
-            layout.addWidget(self.correlations_matrix)
-        layout.addWidget(desc)
-        layout.addSpacing(20)
+            self.layout.addWidget(corr_matrix_prompt)
+            self.layout.addWidget(self.correlations_matrix)
+        self.layout.addWidget(desc)
+        self.layout.addSpacing(20)
         intensity_prompt = QLabel("INTENSITY TRACING PLOTS (MAX 4):")
         intensity_prompt.setObjectName("prompt_text")
         gt_prompt = QLabel("G(T) PLOTS (MAX 4):")
@@ -53,19 +55,20 @@ class PlotsConfigPopup(QWidget):
         self.gt_corr_grid = QGridLayout()
         self.gt_checkboxes = []
         self.gt_checkboxes_wrappers = []
-        layout.addWidget(intensity_prompt)
+        self.layout.addWidget(intensity_prompt)
         if len(self.app.enabled_channels) == 0:
-            layout.addLayout(self.set_data_empty_row("No channels enabled."))
+            self.layout.addLayout(self.set_data_empty_row("No channels enabled."))
         else:
             self.init_intensity_grid()
-            layout.addLayout(self.intensity_ch_grid)
-        layout.addSpacing(20)
-        layout.addWidget(gt_prompt)
-        if all(any(value is False for value in sublist) for sublist in self.app.ch_correlations):
-            layout.addLayout(self.set_data_empty_row("No channels correlations configured."))
+            self.layout.addLayout(self.intensity_ch_grid)
+        self.layout.addSpacing(20)
+        self.layout.addWidget(gt_prompt)
+        if all(any(value is False for value in sublist) for sublist in self.app.ch_correlations) and start_acquisition is False:
+            row = self.set_data_empty_row("No channels correlations configured.")
+            self.layout.addLayout(row)
         else:
             self.init_gt_grid(update=False)
-            layout.addLayout(self.gt_corr_grid)
+            self.layout.addLayout(self.gt_corr_grid)
 
         self.start_btn = QPushButton("START")
         self.start_btn.setEnabled(len(self.app.intensity_plots_to_show) > 0 and len(self.app.gt_plots_to_show) > 0)
@@ -74,13 +77,13 @@ class PlotsConfigPopup(QWidget):
         self.start_btn.clicked.connect(self.start_acquisition)
 
         if start_acquisition:
-            layout.addSpacing(20)
+            self.layout.addSpacing(20)
             row_btn = QHBoxLayout()
             row_btn.addStretch(1)
             row_btn.addWidget(self.start_btn)
-            layout.addLayout(row_btn)
+            self.layout.addLayout(row_btn)
 
-        inner_widget.setLayout(layout)
+        inner_widget.setLayout(self.layout)
         scroll_area.setWidget(inner_widget)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll_area)
@@ -99,6 +102,7 @@ class PlotsConfigPopup(QWidget):
             for i in reversed(range(self.gt_corr_grid.count())):
                 widget = self.gt_corr_grid.itemAt(i).widget()
                 if widget is not None:
+                    widget.setParent(None)
                     widget.deleteLater()  
         QApplication.processEvents()            
         corr_data = self.get_cleaned_correlations()

@@ -92,7 +92,6 @@ class FCSWindow(QWidget):
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
         self.gt_charts = []
-        self.intensity_lines = []
         self.gt_lines = []
         self.only_cps_widgets = []
       
@@ -102,7 +101,7 @@ class FCSWindow(QWidget):
       
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
-       
+        
         #####
         self.last_acquisition_ns = 0
         self.last_cps_update_time = QElapsedTimer() 
