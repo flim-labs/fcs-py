@@ -94,6 +94,8 @@ class FCSWindow(QWidget):
         self.gt_charts = []
         self.gt_lines = []
         self.only_cps_widgets = []
+        
+        self.only_cps_shown = False
       
         ######
         self.intensity_connectors = {}

@@ -317,15 +317,26 @@ class GUIStyles:
                 margin-right: 8px;
                 margin-left: 8px;
             }
-            QLabel#cps{
+            QLabel#horizontal_cps{
                 font-weight: 700;
                 font-family: "Montserrat";
                 font-size: 26px;
                 color: #FB8C00;
             }
-            QLabel#ch{
+             QLabel#vertical_cps{
+                font-weight: 700;
+                font-family: "Montserrat";
+                font-size: 34px;
+                color: #FB8C00;
+            }
+            QLabel#horizontal_ch{
                 color: #cecece;
                 margin-left: 8px;
+            }
+            QLabel#vertical_ch{
+                color: #cecece;
+                margin-left: 8px;
+                font-size: 20px;
             }
         """
 

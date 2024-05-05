@@ -27,6 +27,7 @@ from PyQt6.QtWidgets import (
    
 )
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import Qt
 from components.resource_path import resource_path
 
 
@@ -149,6 +150,11 @@ class IntensityTracingButtonsActions:
     @staticmethod    
     def start_button_pressed(app):
         IntensityTracingButtonsActions.clear_intensity_widgets(app) 
+        if app.free_running_acquisition_time is False and app.selected_average > 1:
+            app.intensity_plots_to_show = []
+            app.only_cps_shown = True
+        else:
+            app.only_cps_shown = False    
         app.acquisition_stopped = False
         app.warning_box = None
         app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
@@ -188,6 +194,7 @@ class IntensityTracingButtonsActions:
     @staticmethod    
     def intensity_tracing_start(app):
         only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
+        only_cps_widgets.sort()
         for i, channel in enumerate(app.intensity_plots_to_show):
             if i < len(app.intensity_charts):
                 intensity_chart = app.intensity_charts[i]
@@ -340,20 +347,34 @@ class IntensityTracingOnlyCPS:
     def create_only_cps_widget(app, index, channel):
         only_cps_widget = QWidget()
         only_cps_widget.setObjectName("container")
-        row_cps = QHBoxLayout()
-        cps = IntensityTracingPlot.create_cps_label()
-        cps.setObjectName("cps")
-        channel_label = QLabel(f"Channel {channel + 1}")
-        channel_label.setObjectName("ch")
-        row_cps.addWidget(channel_label)
-        arrow_icon = QLabel()
-        arrow_icon.setPixmap(QPixmap(resource_path("assets/arrow-right-grey.png")).scaledToWidth(30))
-        row_cps.addWidget(arrow_icon)
-        row_cps.addWidget(cps)
-        row_cps.addStretch(1)
-        only_cps_widget.setLayout(row_cps)
+        layout_type = "vertical" if app.only_cps_shown is True else "horizontal"
+        cps_layout = IntensityTracingOnlyCPS.build_cps_layout(app, channel, layout_type)
+        only_cps_widget.setLayout(cps_layout)
         only_cps_widget.setStyleSheet(GUIStyles.only_cps_widget())
-        app.cps_ch[channel] = cps
         row, col = divmod(index, 2)
         app.layouts[INTENSITY_ONLY_CPS_GRID].addWidget(only_cps_widget, row, col)
         app.only_cps_widgets.append(only_cps_widget)
+        
+
+    
+    def build_cps_layout(app, channel, layout):
+        cps_layout = QHBoxLayout() if layout == 'horizontal' else QVBoxLayout()
+        cps = IntensityTracingPlot.create_cps_label()
+        cps.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        cps.setObjectName("vertical_cps" if layout == 'vertical' else "horizontal_cps")
+        channel_label = QLabel(f"Channel {channel + 1}")
+        channel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        channel_label.setObjectName("vertical_ch" if layout == 'vertical' else "horizontal_ch")
+        if layout == 'vertical':
+            cps_layout.addStretch(1)
+        cps_layout.addWidget(channel_label)
+        arrow_icon = QLabel()
+        icon = resource_path("assets/arrow-right-grey.png")
+        arrow_icon.setPixmap(QPixmap(icon).scaledToWidth(30))
+        if layout == 'horizontal':
+            cps_layout.addWidget(arrow_icon)
+        cps_layout.addWidget(cps)
+        cps_layout.addStretch(1)
+        app.cps_ch[channel] = cps
+        return cps_layout
+       

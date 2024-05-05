@@ -66,7 +66,7 @@ class ActionButtons(QWidget):
         return buttons_row_layout 
 
     def start_button_pressed(self):
-        open_popup = len(self.app.intensity_plots_to_show) == 0 or len(self.app.gt_plots_to_show) == 0
+        open_popup = len(self.app.gt_plots_to_show) == 0
         if open_popup: 
             popup = PlotsConfigPopup(self.app, start_acquisition=True)
             popup.show()
