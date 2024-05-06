@@ -65,6 +65,7 @@ class ControlsBarBuilder:
         stop_button = QPushButton("STOP")
         stop_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_stop_btn_style(stop_button)
+        stop_button.setEnabled(False)
        
         stop_button.clicked.connect(stop_btn_pressed_cb)
         buttons_row_layout.addWidget(stop_button)

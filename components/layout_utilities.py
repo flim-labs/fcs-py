@@ -1,6 +1,6 @@
 import os
 
-from components.acquisitions_progress_bar import AcquisitionsProgressBar
+from components.acquisitions_progress_bar import AcquisitionsProgressBar, GtProgressBar
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 from PyQt6.QtWidgets import (
@@ -68,9 +68,13 @@ def init_ui(self, top_utilities_layout):
     
  
     progress_bar_layout = QVBoxLayout()
-    progress_bar_widget = AcquisitionsProgressBar(self)
-    progress_bar_widget.setVisible(False)
-    progress_bar_layout.addWidget(progress_bar_widget)
+    acquisition_progress_bar_widget = AcquisitionsProgressBar(self)
+    acquisition_progress_bar_widget.setVisible(False)
+    progress_bar_layout.addWidget(acquisition_progress_bar_widget)
+    
+    gt_progress_bar_widget = GtProgressBar(self)
+    gt_progress_bar_widget.setVisible(False)
+    progress_bar_layout.addWidget(gt_progress_bar_widget)
     
     plot_grids_container = QHBoxLayout()
     plot_grids_container.setSpacing(0)
@@ -88,7 +92,8 @@ def init_ui(self, top_utilities_layout):
     self.layouts[MAIN_LAYOUT] = main_layout
     self.layouts[PLOT_GRIDS_CONTAINER] = plot_grids_container
     self.layouts[PROGRESS_BAR_LAYOUT] = progress_bar_layout
-    self.widgets[PROGRESS_BAR_WIDGET] = progress_bar_widget
+    self.widgets[ACQUISITION_PROGRESS_BAR_WIDGET] = acquisition_progress_bar_widget
+    self.widgets[GT_PROGRESS_BAR_WIDGET] = gt_progress_bar_widget
     
     self.resize(self.settings.value("size", QSize(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT)))
     self.move(self.settings.value("pos", QApplication.primaryScreen().geometry().center() - self.frameGeometry().center()))

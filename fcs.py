@@ -104,6 +104,8 @@ class FCSWindow(QWidget):
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
         
+        self.fcs_serialization_calls = 0
+        
         #####
         self.last_acquisition_ns = 0
         self.last_cps_update_time = QElapsedTimer() 

@@ -3,6 +3,7 @@ from components.layout_utilities import create_gt_layout, insert_widget, remove_
 from components.settings import (
     DOWNLOAD_BUTTON,
     GT_PLOTS_GRID,
+    GT_PROGRESS_BAR_WIDGET,
     GT_WIDGET_WRAPPER,
     PLOT_GRIDS_CONTAINER,
     UNICODE_SUP,
@@ -15,8 +16,9 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QFont
 
 
-class FCSPostProcessingWorker(QThread):
-    finished = pyqtSignal(object)
+class FCSPostProcessingSingleCalcWorker(QThread):
+    finished = pyqtSignal()
+    single_step_finished = pyqtSignal(object)
 
     def __init__(
         self,
@@ -34,21 +36,24 @@ class FCSPostProcessingWorker(QThread):
         self.enabled_channels = enabled_channels
         self.bin_width = bin_width
         self.acquisition_time = acquisition_time
-        self.export_data = export_data 
+        self.export_data = export_data
         self.notes = notes
         self.is_running = True
 
     def run(self):
-        gt_results = fcs_flim.fluorescence_correlation_spectroscopy(
-            num_acquisitions=self.num_acquisitions,
-            correlations=self.active_correlations,
-            enabled_channels = self.enabled_channels,
-            bin_width = self.bin_width,
-            acquisition_time = self.acquisition_time,
-            export_data = self.export_data,
-            notes = self.notes
-        )
-        self.finished.emit(gt_results)
+        self.single_step_finished.emit(0)
+        for num in range(self.num_acquisitions):
+            fcs_flim.fluorescence_correlation_spectroscopy(
+                num_acquisitions=self.num_acquisitions,
+                correlations=self.active_correlations,
+                enabled_channels=self.enabled_channels,
+                bin_width=self.bin_width,
+                acquisition_time=self.acquisition_time,
+                export_data=self.export_data,
+                notes=self.notes,
+            )
+            self.single_step_finished.emit(num + 1)
+        self.finished.emit()
 
     def stop(self):
         self.is_running = False
@@ -75,7 +80,7 @@ class FCSPostProcessing:
             (ch1, ch2) for ch1, ch2, active in correlations if active
         ]
         num_acquisitions = app.selected_average if free_running_mode == False else 1
-        worker = FCSPostProcessingWorker(
+        worker = FCSPostProcessingSingleCalcWorker(
             active_correlations,
             num_acquisitions,
             enabled_channels,
@@ -85,18 +90,32 @@ class FCSPostProcessing:
             notes,
         )
         QApplication.processEvents()
-        worker.finished.connect(
-            lambda result: FCSPostProcessing.handle_fcs_post_processing_result(
-                app, result, worker
+        worker.single_step_finished.connect(
+            lambda iteration: FCSPostProcessing.update_gt_progress_bar(
+                iteration, app, worker
             )
         )
+        worker.finished.connect(lambda: FCSPostProcessing.gt_averages_calc(app, worker))
         worker.start()
+
+    @staticmethod
+    def update_gt_progress_bar(iteration, app, worker):
+        print(iteration)
+        if iteration == 0:
+            app.widgets[GT_PROGRESS_BAR_WIDGET].setVisible(True)
+        app.widgets[GT_PROGRESS_BAR_WIDGET].update_calculation_count(iteration)
+
+    @staticmethod
+    def gt_averages_calc(app, worker):
+        return
 
     @staticmethod
     def handle_fcs_post_processing_result(app, gt_results, worker):
         worker.stop()
         app.acquisition_stopped = True
-        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
+        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(
+            app.write_data and app.acquisition_stopped
+        )
         DataExportActions.set_download_button_icon(app)
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)

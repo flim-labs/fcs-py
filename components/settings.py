@@ -95,7 +95,9 @@ PLOT_GRIDS_CONTAINER = "plots_grids_container"
 TOP_COLLAPSIBLE_WIDGET = "top_collapsible_widget"
 
 PROGRESS_BAR_LAYOUT = "progress_bar_layout"
-PROGRESS_BAR_WIDGET = "progress_bar_widget"
+ACQUISITION_PROGRESS_BAR_WIDGET = "acquisition_progress_bar_widget"
+
+GT_PROGRESS_BAR_WIDGET = "gt_progress_bar_widget"
 
 INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
 GT_WIDGET_WRAPPER = "gt_widget_wrapper"

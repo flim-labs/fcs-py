@@ -561,24 +561,24 @@ class GUIStyles:
         """
         
     @staticmethod    
-    def set_progress_bar_widget():
-        return """
-            QLabel {
-                color: #FB8C00;
+    def set_progress_bar_widget(color):
+        return f"""
+            QLabel {{
+                color: {color};
                 font-family: "Montserrat";
                 font-size: 18px;
                 font-weight: bold;
                 
-            } 
-            QProgressBar {
+            }} 
+            QProgressBar {{
                 color: transparent;
                 background-color: white;
                 padding: 0;
-            }
-            QProgressBar::chunk {
-            background: #FB8C00;
-            color: transparent;
-            }               
+            }}
+            QProgressBar::chunk {{
+                background: {color};
+                color: transparent;
+            }}               
         """
         
     

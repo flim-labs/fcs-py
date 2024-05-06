@@ -1,5 +1,5 @@
-use crate::bin_processing::get_intensity_tracing_bin_files;
-use crate::export_data::fcs_export_data;
+use crate::bin_processing::get_intensity_tracing_bin_file;
+use crate::export_data::{fcs_export_data, serialize_fcs_calculation};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 use std::sync::{ Arc, Mutex };
@@ -71,8 +71,8 @@ pub fn fluorescence_correlation_spectroscopy(
     export_data: bool,
     notes: &str,
     py: Python
-) -> PyResult<(Vec<i32>, Vec<((usize, usize), Vec<f64>)>)> {
-    let gt_correlations = py.allow_threads(move ||
+) -> PyResult<()> {
+    let _gt_correlations = py.allow_threads(move ||
         fluorescence_correlation_spectroscopy_calc(
             correlations,
             num_acquisitions,
@@ -83,7 +83,7 @@ pub fn fluorescence_correlation_spectroscopy(
             notes
         )
     );
-    Ok(gt_correlations?)
+    Ok(())
 }
 
 fn fluorescence_correlation_spectroscopy_calc(
@@ -94,8 +94,8 @@ fn fluorescence_correlation_spectroscopy_calc(
     acquisition_time: u32,
     export_data: bool,
     notes: &str
-) -> PyResult<(Vec<i32>, Vec<((usize, usize), Vec<f64>)>)> {
-    let intensities_data = get_intensity_tracing_bin_files(num_acquisitions);
+) -> PyResult<()> {
+    let intensities_data = get_intensity_tracing_bin_file();
     let (intensities, intensity_data_length) = match intensities_data {
         Ok(result) => result,
         Err(err) => {
@@ -106,18 +106,15 @@ fn fluorescence_correlation_spectroscopy_calc(
             );
         }
     };
-    let lag_index = calculate_lag_index(intensity_data_length);
+    let lag_index = calculate_lag_index(&intensity_data_length);
     let g2_correlations: Arc<Mutex<Vec<_>>> = Arc::new(Mutex::new(Vec::new()));
-    let g2_correlations_export: Arc<Mutex<Vec<_>>> = Arc::new(Mutex::new(Vec::new()));
 
     correlations.par_iter().for_each(|(channel1, channel2)| {
         let total_channels_couple_correlations: Arc<Mutex<Vec<Vec<f64>>>> = Arc::new(
             Mutex::new(Vec::new())
         );
-     
-        let intensities_lock = intensities.read().unwrap();
-        let data_channel_1 = intensities_lock.get(&(*channel1 as u8)).unwrap();
-        let data_channel_2 = intensities_lock.get(&(*channel2 as u8)).unwrap();
+        let data_channel_1 = intensities.get(&(*channel1 as u8)).unwrap();
+        let data_channel_2 = intensities.get(&(*channel2 as u8)).unwrap();
         data_channel_1
             .par_iter()
             .enumerate()
@@ -132,46 +129,33 @@ fn fluorescence_correlation_spectroscopy_calc(
             });
         let total_channels_couple_correlations = total_channels_couple_correlations.lock().unwrap();
         let total_channels_couple_correlations = total_channels_couple_correlations.to_owned();
-
-        let (correlations_average_vec, total_correlations) = calculate_average_correlation(
-            total_channels_couple_correlations
-        );
-
         let mut g2_correlations = g2_correlations.lock().unwrap();
-        g2_correlations.push(((*channel1, *channel2), correlations_average_vec));
-
-        let mut g2_correlations_export = g2_correlations_export.lock().unwrap();
-        g2_correlations_export.push(((*channel1, *channel2), total_correlations));
+        g2_correlations.push(((*channel1, *channel2), total_channels_couple_correlations));
     });
     let g2_correlations_unwrapped = g2_correlations.lock().unwrap().clone();
-    println!("RESULT: {:?}", (&lag_index, &g2_correlations_unwrapped));
-
-    if export_data {
-        let lag_index_clone = lag_index.clone(); 
-        let notes_clone = notes.to_string();
-        let g2_correlations_export_unwrapped = g2_correlations_export
-            .lock()
-            .unwrap()
-            .clone();
-        rayon::spawn(move ||
-            if let Err(err) = fcs_export_data(
-                correlations,
-                num_acquisitions,
-                enabled_channels,
-                bin_width,
-                acquisition_time,
-                notes_clone,
-                lag_index_clone,
-                g2_correlations_export_unwrapped,
-            ){
-                println!("Error exporting data {:?}", err);
-            } 
-          
-        );
-    }
-
-    Ok((lag_index, g2_correlations_unwrapped))
+    let lag_index_clone = lag_index.clone(); 
+    let notes_clone = notes.to_string();
+    let intensities_length = intensity_data_length.clone();
+    let g2_correlations_for_serialization = g2_correlations_unwrapped.clone() ;
+    rayon::spawn(move ||
+        if let Err(err) = serialize_fcs_calculation(
+            intensities_length,
+            correlations,
+            num_acquisitions,
+            enabled_channels,
+            bin_width,
+            acquisition_time,
+            notes_clone,
+            lag_index_clone,
+            g2_correlations_for_serialization,
+        ){
+            println!("Error saving fcs json calculation {:?}", err);
+        } 
+    );
+    Ok(())
 }
+
+
 
 fn calculate_average_correlation(repetitions: Vec<Vec<f64>>) -> (Vec<f64>, Vec<Vec<f64>>) {
     let repetitions_res = repetitions;
@@ -190,13 +174,13 @@ fn calculate_average_correlation(repetitions: Vec<Vec<f64>>) -> (Vec<f64>, Vec<V
     (averages,repetitions_res)
 }
 
-fn calculate_lag_index(data_length: usize) -> Vec<i32> {
-    let max_tau = (data_length - 1) as i32;
+fn calculate_lag_index(data_length: &u64) -> Vec<i64> {
+    let max_tau = (data_length - 1) as i64;
     let scale_factor = (max_tau as f64) / (3.0f64).powf(8.0 - 2.0);
-    let mut lag_index: Vec<i32> = Vec::new();
+    let mut lag_index: Vec<i64> = Vec::new();
     let mut exponent = 2.0;
     while exponent < 8.0 {
-        let result = (scale_factor * (3.0f64).powf(exponent)).round() as i32;
+        let result = (scale_factor * (3.0f64).powf(exponent)).round() as i64;
         lag_index.push(result);
         exponent += 0.05;
     }
@@ -210,14 +194,13 @@ fn calculate_lag_index(data_length: usize) -> Vec<i32> {
     if lag_index.is_empty() || lag_index[0] != 0 {
         lag_index.insert(0, 0);
     }
-
     lag_index
 }
 
 fn calculate_correlation(
     intensity1: &[usize],
     intensity2: &[usize],
-    lag_index: &[i32]
+    lag_index: &[i64]
 ) -> Vec<f64> {
     let mut g2_values = vec![0.0; lag_index.len()];
     let epsilon = 1e-10;
@@ -236,7 +219,7 @@ fn calculate_correlation(
                 .map(|(&x1, &x2)| ((x1 as f64) - mean1) * ((x2 as f64) - mean2))
                 .sum();
             g2_values[i] = correlation_sum / (mean1 * mean2 * (intensity2.len() as f64));
-        } else if tau < (intensity2.len() as i32) {
+        } else if tau < (intensity2.len() as i64) {
             let correlation_sum: f64 = intensity1
                 .iter()
                 .take(intensity1.len() - (tau as usize))

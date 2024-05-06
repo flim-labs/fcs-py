@@ -58,10 +58,10 @@ class IntensityTracing:
                 firmware_file=app.selected_firmware,
             )
             if app.acquisitions_count >= app.selected_average:           
-                app.widgets[PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)
+                app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)
             if not free_running_mode:
-                app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()
-                app.widgets[PROGRESS_BAR_WIDGET].setVisible(True)
+                app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].update_acquisitions_count()
+                app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].setVisible(True)
             file_bin = result.bin_file
             if file_bin != "":
                 print("File bin written in: " + str(file_bin))
@@ -127,7 +127,7 @@ class IntensityTracing:
             app.acquisitions_count = 0
         else:    
             app.acquisitions_count = app.acquisitions_count + 1         
-        app.widgets[PROGRESS_BAR_WIDGET].update_acquisitions_count()     
+        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].update_acquisitions_count()     
         app.last_cps_update_time.invalidate()     
         app.notes = ""
         app.control_inputs[STOP_BUTTON].setEnabled(False)
@@ -215,7 +215,7 @@ class IntensityTracingButtonsActions:
         except:
             pass    
         app.last_cps_update_time.invalidate() 
-        app.widgets[PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
+        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)  
         if app.acquisitions_count == app.selected_average:
@@ -237,7 +237,7 @@ class IntensityTracingButtonsActions:
             pass    
         app.last_cps_update_time.invalidate() 
         app.last_acquisition_ns = 0  
-        app.widgets[PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
+        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)

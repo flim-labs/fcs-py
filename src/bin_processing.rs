@@ -1,19 +1,15 @@
-use std::io::{ self, BufReader, Read };
-use std::path::{ Path, PathBuf };
+use std::io::{self, BufReader, Read};
+use std::path::{PathBuf};
 use std::error::Error;
-use std::sync::{ Arc, RwLock };
-use std::collections::{ HashMap, VecDeque };
+use std::collections::{HashMap, VecDeque};
 use serde_json::Value;
 use serde_json::json;
 use std::fs::{self, File};
-use rayon::prelude::*;
 
-pub fn get_intensity_tracing_bin_files(
-    num_files: usize
-) -> Result<(Arc<RwLock<HashMap<u8, Vec<Vec<usize>>>>>, usize), Box<dyn Error>> {
+pub fn get_intensity_tracing_bin_file() -> Result<(HashMap<u8, Vec<Vec<usize>>>, u64), Box<dyn Error>> {
     let user_profile_path = get_user_profile_path()?;
 
-    let channel_data = Arc::new(RwLock::new(HashMap::new()));
+    let mut channel_data = HashMap::new();
     let data_folder_path = user_profile_path.join(".flim-labs/data");
     let files = read_data_folder(data_folder_path)?;
     let intensity_tracing_files: Vec<PathBuf> = files
@@ -29,33 +25,38 @@ pub fn get_intensity_tracing_bin_files(
         .cloned()
         .collect();
 
-    let sorted_files = sort_files_by_modified_time(intensity_tracing_files);
-    process_files_in_parallel(&channel_data, &sorted_files, num_files)?;
-    if let Err(err) = delete_files(&sorted_files) {
-        eprintln!("Error during intensity tracing bin files removal: {}", err);
+    let sorted_files = sort_files_by_modified_time(&intensity_tracing_files);
+
+    if let Some(last_file) = sorted_files.first() {
+        process_bin_file(last_file, &mut channel_data)?;
+        if let Err(err) = delete_file(last_file) {
+            eprintln!("Error during intensity tracing bin file removal: {}", err);
+        }
     }
-    let max_length = adjust_channel_data_lengths(&channel_data);
-    Ok((channel_data, max_length))
+
+    let max_length = calculate_first_vector_length(&channel_data);
+    let length = max_length.unwrap_or(0);
+    Ok((channel_data, length))
 }
 
 fn process_bin_file(
-    file_path: &Path,
-    channel_data: &Arc<RwLock<HashMap<u8, Vec<Vec<usize>>>>>
+    file_path: &PathBuf,
+    channel_data: &mut HashMap<u8, Vec<Vec<usize>>>
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = BufReader::new(File::open(file_path)?);
     let metadata = read_bin_metadata(&mut reader)?;
-    let channel_lines = read_channels_data(&mut reader, metadata.clone())?; 
+    let channel_lines = read_channels_data(&mut reader, metadata.clone())?;
     let data_to_insert = prepare_data_to_insert(metadata, channel_lines)?;
     insert_data_into_channel_data(channel_data, data_to_insert)?;
     Ok(())
 }
 
-fn read_bin_metadata(reader: &mut BufReader<File>) -> Result<Arc<Value>, Box<dyn Error>> {
+fn read_bin_metadata(reader: &mut BufReader<File>) -> Result<Value, Box<dyn Error>> {
     let mut magic = [0u8; 4];
     reader.read_exact(&mut magic)?;
     if magic.as_ref() != b"IT02" {
         println!("Invalid data file");
-        return Ok(Arc::new(json!({})));
+        return Ok(json!({}));
     }
     let mut json_length_bytes = [0u8; 4];
     reader.read_exact(&mut json_length_bytes)?;
@@ -63,18 +64,18 @@ fn read_bin_metadata(reader: &mut BufReader<File>) -> Result<Arc<Value>, Box<dyn
 
     let mut metadata_bytes = vec![0u8; json_length];
     reader.read_exact(&mut metadata_bytes)?;
-    Ok(Arc::new(serde_json::from_slice(&metadata_bytes)?))
+    Ok(serde_json::from_slice(&metadata_bytes)?)
 }
 
 fn read_channels_data(
     reader: &mut BufReader<File>,
-    metadata: Arc<Value>
+    metadata: Value
 ) -> Result<Vec<Vec<usize>>, Box<dyn Error>> {
     let number_of_channels = metadata
         .get("channels")
         .and_then(Value::as_array)
         .map_or(0, |channels| channels.len());
-                
+
     let mut channel_lines: Vec<_> = (0..number_of_channels).map(|_| Vec::new()).collect();
     let mut buffer = vec![0u8; 8 + 4 * number_of_channels];
     while reader.read_exact(&mut buffer).is_ok() {
@@ -92,7 +93,7 @@ fn read_channels_data(
 }
 
 fn prepare_data_to_insert(
-    metadata: Arc<Value>,
+    metadata: Value,
     channel_lines: Vec<Vec<usize>>
 ) -> Result<HashMap<u8, VecDeque<Vec<usize>>>, Box<dyn Error>> {
     let mut data_to_insert: HashMap<u8, VecDeque<Vec<usize>>> = HashMap::new();
@@ -115,10 +116,9 @@ fn prepare_data_to_insert(
 }
 
 fn insert_data_into_channel_data(
-    channel_data: &Arc<RwLock<HashMap<u8, Vec<Vec<usize>>>>>,
+    channel_data: &mut HashMap<u8, Vec<Vec<usize>>>,
     data_to_insert: HashMap<u8, VecDeque<Vec<usize>>>
 ) -> Result<(), Box<dyn Error>> {
-    let mut channel_data = channel_data.write().unwrap();
     for (enabled_channel, data) in data_to_insert {
         channel_data.entry(enabled_channel).or_insert_with(Vec::new).extend(data);
     }
@@ -141,62 +141,25 @@ fn read_data_folder(data_folder_path: PathBuf) -> Result<Vec<PathBuf>, io::Error
 
     Ok(files)
 }
-fn sort_files_by_modified_time(files: Vec<PathBuf>) -> Vec<PathBuf> {
-    let mut sorted_files = files;
+
+fn sort_files_by_modified_time(files: &Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut sorted_files = files.clone();
     sorted_files.sort_by(|a, b|
         b.metadata().unwrap().modified().unwrap().cmp(&a.metadata().unwrap().modified().unwrap())
     );
     sorted_files
 }
 
-fn process_files_in_parallel(
-    channel_data: &Arc<RwLock<HashMap<u8, Vec<Vec<usize>>>>>,
-    files: &Vec<PathBuf>,
-    num_files: usize
-) -> Result<(), Box<dyn Error>> {
-    files
-        .into_par_iter()
-        .take(num_files)
-        .for_each(|file_path| {
-            if let Err(err) = process_bin_file(&file_path, channel_data) {
-                eprintln!("Error processing file {:?}: {}", file_path, err);
-            }
-        });
-    Ok(())
-}
-
-#[allow(unused_assignments)]
-fn adjust_channel_data_lengths(channel_data: &Arc<RwLock<HashMap<u8, Vec<Vec<usize>>>>>) -> usize {
-    let mut min_length = 0;
-    {
-        let mut data = channel_data.write().unwrap();
-        min_length = calculate_intensities_vector_min_length(&data);
-        for vectors in data.values_mut() {
-            for vector in vectors.iter_mut() {
-                if vector.len() > min_length {
-                    let excess_length = vector.len() - min_length; 
-                    vector.truncate(vector.len() - excess_length);
-                }
-            }
+fn calculate_first_vector_length(channel_data: &HashMap<u8, Vec<Vec<usize>>>) -> Option<u64> {
+    if let Some((_key, vectors)) = channel_data.iter().next() {
+        if let Some(first_vector) = vectors.first() {
+            return Some(first_vector.len() as u64);
         }
     }
-    min_length
+    None
 }
 
-fn calculate_intensities_vector_min_length(data: &HashMap<u8, Vec<Vec<usize>>>) -> usize {
-    data.values()
-        .flat_map(|v| v.iter())
-        .map(Vec::len)
-        .min()
-        .unwrap_or(0)
-}
-
-
-fn delete_files(files:  &Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
-    files.par_iter().for_each(|file_path| {
-        if let Err(err) = fs::remove_file(&file_path) {
-            eprintln!("Error during intensity tracing bin files removal {}: {}", file_path.display(), err);
-        }
-    });
+fn delete_file(file_path: &PathBuf) -> Result<(), Box<dyn Error>> {
+    fs::remove_file(file_path)?;
     Ok(())
 }
