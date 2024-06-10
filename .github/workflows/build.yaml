@@ -1,4 +1,4 @@
-name: Build Flim-Labs exe
+name: Build Flim-Labs .exe
 
 on:
   push:
