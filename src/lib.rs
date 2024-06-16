@@ -1,5 +1,6 @@
 // File: src/lib.rs
-mod bin_processing;
+mod models;
+mod file_processing;
 mod fcs_post_processing;
 mod export_data;
 mod utils;

@@ -100,7 +100,6 @@ class FCSPostProcessing:
 
     @staticmethod
     def update_gt_progress_bar(iteration, app, worker):
-        print(iteration)
         if iteration == 0:
             app.widgets[GT_PROGRESS_BAR_WIDGET].setVisible(True)
         app.widgets[GT_PROGRESS_BAR_WIDGET].update_calculation_count(iteration)

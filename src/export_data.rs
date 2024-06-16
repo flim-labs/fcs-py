@@ -1,4 +1,5 @@
 use crate::utils::{ get_flim_sub_folder, create_flim_file };
+use crate::models::{ FcsCalculationData };
 use std::fs::{ File };
 use std::io::{ self, Write };
 use std::path::{ PathBuf };
@@ -7,19 +8,6 @@ use serde_derive::Serialize;
 use byteorder::{ LittleEndian, WriteBytesExt };
 use rand::prelude::*;
 use uuid::Uuid;
-
-#[derive(Serialize)]
-struct FcsCalculationData {
-    intensities_length: u64,
-    correlations: Vec<(usize, usize)>,
-    num_acquisitions: usize,
-    enabled_channels: Vec<usize>,
-    bin_width: u32,
-    acquisition_time: u32,
-    notes: String,
-    lag_index: Vec<i64>,
-    g2_correlations: Vec<((usize, usize), Vec<Vec<f64>>)>,
-}
 
 pub fn fcs_export_data(
     correlations: Vec<(usize, usize)>,
@@ -70,6 +58,7 @@ pub fn serialize_fcs_calculation(
     bin_width: u32,
     acquisition_time: u32,
     notes: String,
+    export_data: bool,
     lag_index: Vec<i64>,
     g2_correlations: Vec<((usize, usize), Vec<Vec<f64>>)>
 ) -> Result<(), io::Error> {
@@ -89,8 +78,10 @@ pub fn serialize_fcs_calculation(
         bin_width,
         acquisition_time,
         notes,
+        export_data,
         lag_index,
         g2_correlations,
+        
     };
 
     let json_data = serde_json::to_string(&fcs_data)?;

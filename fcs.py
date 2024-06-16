@@ -14,7 +14,7 @@ from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
 from components.data_export_controls import DataExportActions, ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import IntensityTracing
+from components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -33,6 +33,7 @@ class FCSWindow(QWidget):
         self.conn_channels = CONN_CHANNELS
         self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
         self.time_span = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
+        self.cached_time_span_seconds = 3
         default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
         self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
         self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) in ['true', True]    
@@ -92,17 +93,21 @@ class FCSWindow(QWidget):
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
         self.gt_charts = []
+        self.intensity_lines = {}
         self.gt_lines = []
         self.only_cps_widgets = []
+        
         
         self.only_cps_shown = False
       
         ######
-        self.intensity_connectors = {}
         self.gt_connectors = {}
       
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
+        
+        self.timer_update_intensity_plots = QTimer()
+        self.timer_update_intensity_plots.timeout.connect(partial(IntensityTracingPlot.update_plots, self))
         
         self.fcs_serialization_calls = 0
         

@@ -1,4 +1,4 @@
-use crate::bin_processing::get_intensity_tracing_bin_file;
+use crate::file_processing::get_intensity_tracing_bin_file;
 use crate::export_data::{fcs_export_data, serialize_fcs_calculation};
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -146,6 +146,7 @@ fn fluorescence_correlation_spectroscopy_calc(
             bin_width,
             acquisition_time,
             notes_clone,
+            export_data,
             lag_index_clone,
             g2_correlations_for_serialization,
         ){
