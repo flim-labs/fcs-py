@@ -270,6 +270,50 @@ class GUIStyles:
             selection-background-color: #31c914;
             }   
         """
+    @staticmethod    
+    def set_input_text_style():
+        return """
+        QLineEdit  {
+                color: #31c914;
+                font-family: "Montserrat";
+                font-size: 14px;
+                padding: 8px;
+                min-width: 60px;
+                border: 1px solid #31c914;
+                border-radius: 5px;
+                background-color: transparent;
+            }
+            QLineEdit:disabled, QLineEdit:disabled {
+            color: #404040;  
+            border-color: #3c3c3c;
+            }        
+        """    
+        
+    @staticmethod        
+    def set_simple_checkbox_style(color):
+        return f"""
+            QCheckBox {{
+                spacing: 5px;
+                color: #f8f8f8;
+                font-family: "Montserrat";
+                font-size: 14px;
+                letter-spacing: 0.1em;
+                border-radius: 5px;
+            }}
+            QCheckBox::indicator {{
+                width: 14px;
+                height: 14px;
+                border-radius: 7px;  
+            }}
+
+            QCheckBox::indicator:unchecked {{
+                background-color: #6b6a6a;
+            }}
+
+            QCheckBox::indicator:checked {{
+                background-color: {color};
+            }}
+        """                   
 
     @staticmethod
     def set_msg_box_style():
@@ -646,5 +690,27 @@ class GUIStyles:
                 border-top: 1px solid #50b3d7;
             }
     
-    """                             
+    """     
+    
+    @staticmethod   
+    def acquire_read_btn_style():
+        return f"""
+            QPushButton {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;;
+                min-width: 60px;
+            }}
+            QPushButton#acquire_btn{{ 
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;   
+            }}
+            QPushButton#read_btn{{  
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+                
+            }}
+        """                             
                            

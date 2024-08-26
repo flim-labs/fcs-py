@@ -3,7 +3,6 @@ import numpy as np
 import pyqtgraph as pg
 from flim_labs import flim_labs
 from components.animations import VibrantAnimation
-from components.data_export_controls import DataExportActions
 from components.fcs_controller import FCSPostProcessing
 from components.box_message import BoxMessage
 from components.format_utilities import FormatUtils
@@ -196,6 +195,11 @@ class IntensityTracingButtonsActions:
     @staticmethod    
     def start_button_pressed(app):
         IntensityTracingButtonsActions.clear_intensity_widgets(app)  
+        if app.free_running_acquisition_time is False and app.selected_average > 1:
+            app.intensity_plots_to_show = []
+            app.only_cps_shown = True
+        else:
+            app.only_cps_shown = False          
         app.acquisition_stopped = False
         app.warning_box = None
         app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
@@ -282,7 +286,6 @@ class IntensityTracingButtonsActions:
     def reset_button_pressed(app):
         app.pull_from_queue_timer.stop()
         time.sleep(0.1)
-       
         try:
             flim_labs.request_stop()
         except:
@@ -292,10 +295,13 @@ class IntensityTracingButtonsActions:
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
-        IntensityTracingButtonsActions.clear_intensity_widgets(app)  
-        IntensityTracingButtonsActions.show_gt_widget(app, False)
+        IntensityTracingButtonsActions.clear_plots(app)
         QApplication.processEvents()  
         
+    @staticmethod    
+    def clear_plots(app):
+        IntensityTracingButtonsActions.clear_intensity_widgets(app) 
+        IntensityTracingButtonsActions.show_gt_widget(app, False)
     
     @staticmethod    
     def clear_intensity_widgets(app):

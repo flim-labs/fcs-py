@@ -9,11 +9,11 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLa
 from components.gui_styles import GUIStyles
 from components.layout_utilities import init_ui
 from components.channels_control import ChannelsControl
+from components.read_data import ReadDataControls
 from components.top_bar_builder import TopBarBuilder
 from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
-from components.data_export_controls import DataExportActions, ExportDataControl
 from components.intensity_tracing_controller import IntensityTracing
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -26,6 +26,12 @@ class FCSWindow(QWidget):
         
         # Initialize settings config
         self.settings = self.init_settings()
+        
+        # Acquire/Read mode
+        self.reader_data = READER_DATA
+        self.acquire_read_mode = self.settings.value(
+            SETTINGS_ACQUIRE_READ_MODE, DEFAULT_ACQUIRE_READ_MODE
+        )
 
         ##### GUI PARAMS #####
         self.firmwares = FIRMWARES
@@ -100,8 +106,6 @@ class FCSWindow(QWidget):
         self.intensity_lines = {}
         self.gt_lines = []
         self.only_cps_widgets = []
-        
-        
         self.only_cps_shown = False
       
         ######
@@ -117,8 +121,9 @@ class FCSWindow(QWidget):
         
         GUIStyles.set_fonts()
         self.init_ui()
-        DataExportActions.calc_exported_file_size(self)
         self.bin_file_size_label.setVisible(self.write_data)
+        ReadDataControls.handle_widgets_visibility(
+                self, self.acquire_read_mode == "read")        
 
 
     @staticmethod    
@@ -127,13 +132,14 @@ class FCSWindow(QWidget):
         return settings    
 
     def init_ui(self):
+        from components.data_export_controls import DataExportActions
         self.create_top_utilities_layout()
         init_ui(self, self.top_utilities_layout)
+        DataExportActions.calc_exported_file_size(self)
        
 
     def create_top_utilities_layout(self): 
         top_collapsible_widget = QWidget()
-        self.widgets[TOP_COLLAPSIBLE_WIDGET] = top_collapsible_widget
         qv_box = QVBoxLayout() 
         qv_box.setSpacing(0)
         qv_box.setContentsMargins(0,0,0,0)
@@ -142,6 +148,7 @@ class FCSWindow(QWidget):
         self.top_utilities_layout.setContentsMargins(0,0,0,0)
         header_layout = self.create_header_layout()
         channels_component = self.create_channels_grid()
+        self.widgets[TOP_COLLAPSIBLE_WIDGET] = channels_component
         self.widgets[CHANNELS_COMPONENT] = channels_component
         ch_and_tau_widget = QWidget()
         ch_and_tau_box = QVBoxLayout()
@@ -161,14 +168,16 @@ class FCSWindow(QWidget):
         self.top_utilities_layout.addLayout(qv_box_2)
         self.top_utilities_layout.addWidget(self.blank_space, 0, Qt.AlignmentFlag.AlignTop)  
 
-    def create_header_layout(self):   
+    def create_header_layout(self):  
+        from components.data_export_controls import ExportDataControl 
         title_row = self.create_logo_and_title()
         gt_calc_mode_buttons_row_layout = self.create_gt_calc_mode_buttons()
         export_data_widget = ExportDataControl(self)
         header_layout = TopBarBuilder.create_header_layout(
             title_row,
             export_data_widget,
-            gt_calc_mode_buttons_row_layout
+            gt_calc_mode_buttons_row_layout,
+            self
         )
         return header_layout 
 
@@ -189,6 +198,7 @@ class FCSWindow(QWidget):
         buttons_row_layout.addStretch(1)
         buttons_row_layout.addWidget(buttons_widget)
         collapse_button = CollapseButton(self.widgets[TOP_COLLAPSIBLE_WIDGET])
+        self.widgets[COLLAPSE_BUTTON] = collapse_button
         buttons_row_layout.addWidget(collapse_button)
         blank_space, controls_layout = ControlsBarBuilder.init_gui_controls_layout(controls_row, buttons_row_layout)
         self.blank_space = blank_space
@@ -207,11 +217,27 @@ class FCSWindow(QWidget):
     def create_gt_calc_mode_buttons(self):        
         buttons_row_layout = GTModeButtons(self)
         return buttons_row_layout    
-
-
-    def calc_exported_file_size(self):
-        return
-
+    
+    def controls_set_enabled(self, enabled: bool):
+            for key in self.control_inputs:
+                excluded = [
+                    START_BUTTON,
+                    STOP_BUTTON,
+                    RESET_BUTTON,
+                    ACQUIRE_BUTTON,
+                    READ_BUTTON,
+                    EXPORT_PLOT_IMG_BUTTON,
+                    READ_FILE_BUTTON,
+                    BIN_METADATA_BUTTON  
+                ]
+                if key not in excluded:
+                    widget = self.control_inputs[key]
+                    if isinstance(widget, QWidget):
+                        widget.setEnabled(enabled)
+            if enabled:
+                self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(
+                    not self.free_running_acquisition_time
+                )
 
     def resizeEvent(self, event):  
         super(FCSWindow, self).resizeEvent(event)
@@ -229,6 +255,10 @@ class FCSWindow(QWidget):
         event.accept() 
         if ADD_NOTES_POPUP in self.widgets:
             self.widgets[ADD_NOTES_POPUP].close()    
+        if READER_POPUP in self.widgets:
+            self.widgets[READER_POPUP].close()        
+        if READER_METADATA_POPUP in self.widgets:
+            self.widgets[READER_METADATA_POPUP].close()                  
         event.accept()         
 
 

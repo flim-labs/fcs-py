@@ -1,5 +1,4 @@
 from functools import partial
-from components.data_export_controls import ExportData
 from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
 from components.settings import (
     GT_PLOTS_GRID,
@@ -133,6 +132,7 @@ class FCSPostProcessing:
 
     @staticmethod
     def handle_fcs_post_processing_result(gt_results, app, worker):
+        from components.data_export_controls import ExportData
         worker.stop()
         app.acquisition_stopped = True
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])

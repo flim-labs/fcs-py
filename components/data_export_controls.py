@@ -1,7 +1,6 @@
 from functools import partial
 import os
 import shutil
-import sys
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -21,6 +20,7 @@ from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
 from components.top_bar_builder import TopBarBuilder
 from components.settings import *
+from export_data_scripts.script_files_utils import ScriptFileUtils
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -250,17 +250,16 @@ class ExportData:
                 "fcs": new_fcs_file_path,
             }
 
-            # ExportData.download_scripts(file_paths, save_name, save_dir, "fcs")
+            ExportData.download_scripts(file_paths, save_name, save_dir, "fcs")
         except Exception as e:
-            print(e)
-            # ScriptFileUtils.show_error_message(e)
+            ScriptFileUtils.show_error_message(e)
 
-    # @staticmethod
-    # def download_scripts(bin_file_paths, file_name, directory, script_type):
-    #     ScriptFileUtils.export_scripts(
-    #         bin_file_paths, file_name, directory, script_type
-    #     )
-    #
+    @staticmethod
+    def download_scripts(bin_file_paths, file_name, directory, script_type):
+        ScriptFileUtils.export_scripts(
+            bin_file_paths, file_name, directory, script_type
+        )
+    
 
     @staticmethod
     def rename_and_move_file(original_file_path, file_dialog_prompt, app):

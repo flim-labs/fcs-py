@@ -35,7 +35,7 @@ SETTINGS_CH_CORRELATIONS = "ch_correlations"
 DEFAULT_CH_CORRELATIONS = "[]"
 
 SETTINGS_INTENSITY_PLOTS_TO_SHOW = "intensity_plots_to_show"
-DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[]"
+DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[0]"
 
 SETTINGS_GT_PLOTS_TO_SHOW = "gt_plots_to_show"
 DEFAULT_GT_PLOTS_TO_SHOW = "[]"
@@ -104,6 +104,7 @@ GT_PLOTS_GRID = "gt_plots_grid"
 PLOT_GRIDS_CONTAINER = "plots_grids_container"
 
 TOP_COLLAPSIBLE_WIDGET = "top_collapsible_widget"
+COLLAPSE_BUTTON = "collapse_button"
 
 PROGRESS_BAR_LAYOUT = "progress_bar_layout"
 ACQUISITION_PROGRESS_BAR_WIDGET = "acquisition_progress_bar_widget"

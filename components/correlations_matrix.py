@@ -4,7 +4,6 @@ import functools
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHeaderView, QHBoxLayout, QTableWidget, QAbstractItemView, QTableWidgetItem, QCheckBox, QApplication
 from PyQt6.QtCore import  QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QColor
-from components.data_export_controls import DataExportActions
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
 from components.logo_utilities import TitlebarIcon
@@ -134,6 +133,7 @@ class ChCorrelationsMatrix(QWidget):
             
 
     def save_correlations(self):
+        from components.data_export_controls import DataExportActions
         correlations = []
         enabled_channels = self.app.enabled_channels
         enabled_channels.sort()

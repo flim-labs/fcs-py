@@ -125,6 +125,10 @@ class ChannelsControl(QWidget):
         if state:
             if index not in self.app.enabled_channels:
                 self.app.enabled_channels.append(index)
+                if not(index in self.app.intensity_plots_to_show) and len(self.app.intensity_plots_to_show) < 4:
+                    self.app.intensity_plots_to_show.append(index)
+                    self.app.intensity_plots_to_show.sort()
+                    self.app.settings.setValue(SETTINGS_INTENSITY_PLOTS_TO_SHOW, json.dumps(self.app.intensity_plots_to_show))                
         else:
             if index in self.app.enabled_channels:
                 self.app.enabled_channels.remove(index)

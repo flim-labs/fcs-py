@@ -1,5 +1,6 @@
 import os
 from PyQt6.QtCore import Qt, QSize
+from components.buttons import ReadAcquireModeButton
 from components.resource_path import resource_path
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
@@ -28,7 +29,8 @@ class TopBarBuilder:
     def create_header_layout(
             logo_and_title,
             export_data_widget,
-            gt_calc_mode_buttons_row_layout
+            gt_calc_mode_buttons_row_layout,
+            app
     ):
         header_layout = QHBoxLayout()
         # Header row: Link to User Guide
@@ -40,6 +42,8 @@ class TopBarBuilder:
         header_layout.addSpacing(10)
         header_layout.addWidget(gt_calc_mode_buttons_row_layout)
         header_layout.addStretch(1)
+        read_acquire_button = ReadAcquireModeButton(app=app)
+        header_layout.addWidget(read_acquire_button)
         header_layout.addWidget(export_data_widget)
         header_layout.addWidget(app_guide_link_widget)
 

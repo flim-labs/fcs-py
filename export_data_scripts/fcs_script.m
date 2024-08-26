@@ -1,12 +1,6 @@
-% Get most recent fcs .bin file from your local computer
-data_folder = fullfile(getenv('USERPROFILE'), '.flim-labs', 'data');
-files = dir(fullfile(data_folder, 'fcs*'));
+file_path = '<FILE-PATH>';
 
-[~, idx] = sort([files.datenum], 'descend');
-most_recent_file = files(idx(1)).name;
-
-file_path = fullfile(data_folder, most_recent_file);
-
+% Open the file
 metadata = struct('enabled_channels', [], 'correlations', [], 'num_acquisitions', [], 'acquisition_time', [], 'bin_width', [], 'notes', []);
 
 fid = fopen(file_path, 'rb');

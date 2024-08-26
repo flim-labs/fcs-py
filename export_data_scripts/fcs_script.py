@@ -1,22 +1,10 @@
-import os
 import struct
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 
 
-# Get most recent fcs bin file saved
-def get_recent_fcs_file():
-    data_folder = os.path.join(os.environ["USERPROFILE"], ".flim-labs", "data")
-    files = [f for f in os.listdir(data_folder) if f.startswith("fcs")]
-    files.sort(
-        key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True
-    )
-    return os.path.join(data_folder, files[0])
-
-
-file_path = get_recent_fcs_file()
+file_path = "<FILE-PATH>"
 print("Using data file: " + file_path)
-
 
 # calc G(t) correlations mean
 def calc_g2_correlations_mean(g2):
@@ -119,20 +107,19 @@ with open(file_path, "rb") as f:
         num_plots_per_row = 6    
     
     num_rows = (num_plots + num_plots_per_row - 1) // num_plots_per_row
-    g2_with_means = calc_g2_correlations_mean(g2_correlations)
+    g2_with_means = g2_correlations
 
     fig = plt.figure(figsize=(12, 3*num_rows))
     fig.suptitle("Fluorescence Spectroscopy Correlations")
     gs = GridSpec(num_rows, num_plots_per_row, figure=fig)
 
-    for i, ((channel1, channel2), average, data_list) in enumerate(g2_with_means):
+    for i, ((channel1, channel2), data_list) in enumerate(g2_with_means):
         row = i // num_plots_per_row
         col = i % num_plots_per_row
         ax = fig.add_subplot(gs[row, col])
         for data_index, data in enumerate(data_list):
-            ax.plot(lag_index, data, label=f"G(τ) {data_index + 1}")
-        if len(data_list) > 1:
-            ax.plot(lag_index, average, label=f"G(τ) mean")  
+            label = f"G(τ) {data_index + 1}" if data_index != 0 else f"G(τ) mean"
+            ax.plot(lag_index, data, label=label)
         ax.set_xlabel("τ(μs)")
         ax.set_ylabel("G(τ)")
         ax.set_title(f"Channel {channel1 + 1}- Channel {channel2 + 1}")
