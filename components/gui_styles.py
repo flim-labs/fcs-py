@@ -53,10 +53,9 @@ class GUIStyles:
                 font-family: "Montserrat";
                 color: white;
                 letter-spacing: 0.1em;
-                min-width: {min_width};
-                padding: 10px;
+                padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
                 font-weight: bold;
             }}
 
@@ -219,12 +218,13 @@ class GUIStyles:
                 font-family: "Montserrat";
                 font-size: 12px;
                 padding: 8px;
+                height: 22px;
                 min-width: 120px;
                 border-radius: 5px;
                 background-color: transparent;
             }
             QDoubleSpinBox, QSpinBox {
-                border: 1px solid #31c914;
+                border: 1px solid #3b3b3b;
 
             }
             QLineEdit {
@@ -246,7 +246,8 @@ class GUIStyles:
                 font-size: 12px;
                 padding: 8px;
                 min-width: 120px;
-                border: 1px solid #31c914;
+                height: 22px;
+                border: 1px solid #3b3b3b;
                 border-radius: 5px;
                 background-color: transparent;
             }
@@ -261,7 +262,7 @@ class GUIStyles:
 
            QComboBox QAbstractItemView {
             font-family: "Montserrat";
-            border: 1px solid #31c914;
+            border: 1px solid #3b3b3b;
             border-bottom-left-radius: 5px;
             border-bottom-right-radius: 5px;
             background-color: #181818;
@@ -343,18 +344,15 @@ class GUIStyles:
     @staticmethod
     def set_context_menu_style(base, selected, pressed):
         return f"""
-
         QWidget {{
             background-color: #181818;  
         }}
-        
         QMenu {{
             margin: 0;   
             padding: 5px;
             border-radius: 4px;
             background: #181818;       
         }}
-
         QMenu::item {{
             background-color: {base}; 
             color: white; 
@@ -418,7 +416,7 @@ class GUIStyles:
                 font-family: "Montserrat";
                 letter-spacing: 0.1em;
                 padding: 10px 12px;
-                font-size: 11px;
+                font-size: 14px;
                 font-weight: bold;
                 border-radius: 4px;
                 background-color: {base};
@@ -609,3 +607,44 @@ class GUIStyles:
     """         
   
                
+    @staticmethod   
+    def acquire_read_btn_style():
+        return f"""
+            QPushButton {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;;
+                min-width: 60px;
+            }}
+            QPushButton#acquire_btn{{ 
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;   
+            }}
+            QPushButton#read_btn{{  
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+                
+            }}
+        """ 
+        
+    @staticmethod
+    def acquisition_time_countdown_style():
+        return """
+            QLabel {
+                color: #31c914;
+                font-size: 18px;
+            }
+        """       
+        
+    @staticmethod
+    def set_loading_widget_style():
+        return """
+            QWidget#loading_widget {
+                background-color: black;
+                border-top: 1px solid #50b3d7;
+            }
+    
+    """                             
+                           

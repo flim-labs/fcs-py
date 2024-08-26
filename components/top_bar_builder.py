@@ -28,7 +28,6 @@ class TopBarBuilder:
     def create_header_layout(
             logo_and_title,
             export_data_widget,
-            download_button,
             gt_calc_mode_buttons_row_layout
     ):
         header_layout = QHBoxLayout()
@@ -42,8 +41,6 @@ class TopBarBuilder:
         header_layout.addWidget(gt_calc_mode_buttons_row_layout)
         header_layout.addStretch(1)
         header_layout.addWidget(export_data_widget)
-        header_layout.addSpacing(20)
-        header_layout.addWidget(download_button)
         header_layout.addWidget(app_guide_link_widget)
 
         return header_layout
@@ -91,9 +88,9 @@ class TopBarBuilder:
         return info_link_widget, export_data_control, inp
 
     @staticmethod
-    def create_file_size_info_row(bin_file_size, bin_file_size_label, write_data, cb_calc_file_size):
+    def create_file_size_info_row(app, bin_file_size, bin_file_size_label, write_data, cb_calc_file_size):
         file_size_info_layout = QHBoxLayout()
-        bin_file_size_label.setText("File size: " + str(bin_file_size))
+        bin_file_size_label.setText("")
         bin_file_size_label.setStyleSheet("QLabel { color : #FFA726; }")
 
         file_size_info_layout.addWidget(bin_file_size_label)

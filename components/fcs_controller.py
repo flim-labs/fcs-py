@@ -1,7 +1,7 @@
-from components.data_export_controls import DataExportActions
+from functools import partial
+from components.data_export_controls import ExportData
 from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
 from components.settings import (
-    DOWNLOAD_BUTTON,
     GT_PLOTS_GRID,
     GT_PROGRESS_BAR_WIDGET,
     GT_WIDGET_WRAPPER,
@@ -11,7 +11,7 @@ from components.settings import (
 import numpy as np
 import pyqtgraph as pg
 from fcs_flim import fcs_flim
-from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QFont
 
@@ -54,6 +54,24 @@ class FCSPostProcessingSingleCalcWorker(QThread):
             )
             self.single_step_finished.emit(num + 1)
         self.finished.emit()
+
+    def stop(self):
+        self.is_running = False
+
+
+class FCSPostProcessingAverageCalcWorker(QThread):
+    success = pyqtSignal(object)
+
+    def __init__(self, num_acquisitions):
+        super().__init__()
+        self.num_acquisitions = num_acquisitions
+        self.is_running = True
+
+    def run(self):
+        result = fcs_flim.average_fluorescence_correlation_spectroscopy(
+            num_acquisitions=self.num_acquisitions,
+        )
+        self.success.emit(result)
 
     def stop(self):
         self.is_running = False
@@ -106,16 +124,17 @@ class FCSPostProcessing:
 
     @staticmethod
     def gt_averages_calc(app, worker):
-        return
+        worker.stop()
+        num_acquisitions = app.selected_average if app.free_running_acquisition_time == False else 1
+        worker = FCSPostProcessingAverageCalcWorker(num_acquisitions)
+        worker.success.connect(lambda result: FCSPostProcessing.handle_fcs_post_processing_result(result, app, worker))
+        worker.start()        
+    
 
     @staticmethod
-    def handle_fcs_post_processing_result(app, gt_results, worker):
+    def handle_fcs_post_processing_result(gt_results, app, worker):
         worker.stop()
         app.acquisition_stopped = True
-        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(
-            app.write_data and app.acquisition_stopped
-        )
-        DataExportActions.set_download_button_icon(app)
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)
         insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)
@@ -123,17 +142,20 @@ class FCSPostProcessing:
             tuple(item) if isinstance(item, list) else item
             for item in app.gt_plots_to_show
         ]
-        lag_index = gt_results[0]
+        lag_index = gt_results.lag_index
         filtered_gt_results = [
-            res for res in gt_results[1] if res[0] in gt_plot_to_show
+            res for res in gt_results.g2_correlations if res[0] in gt_plot_to_show
         ]
         for index, res in enumerate(filtered_gt_results):
             correlation = res[0]
-            gt_values = res[1]
+            gt_values = res[1][0]
             FCSPostProcessingPlot.generate_chart(
                 correlation, index, app, lag_index, gt_values
             )
-
+        QTimer.singleShot(
+            300,
+            partial(ExportData.save_fcs_data, app),
+        )
 
 class FCSPostProcessingPlot:
     @staticmethod
@@ -155,7 +177,9 @@ class FCSPostProcessingPlot:
             f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}"
         )
         gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10)
-        intensity_plot = gt_widget.plot(log_x, gt_values, pen="#31c914")
+        intensity_plot = gt_widget.plot(
+            log_x, gt_values, pen=pg.mkPen(color="#31c914", width=2)
+        )
         gt_widget.plotItem.getAxis("left").enableAutoSIPrefix(False)
         gt_widget.plotItem.getAxis("bottom").enableAutoSIPrefix(False)
 

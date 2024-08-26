@@ -1,17 +1,15 @@
-use std::io::{self, BufReader, Read};
-use std::path::{PathBuf};
+use std::io::{ self, BufReader, Read };
+use std::path::{ PathBuf };
 use std::error::Error;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{ HashMap, VecDeque };
 use serde_json::Value;
 use serde_json::json;
-use std::fs::{self, File};
-use crate::models::{ FcsCalculationData, FcsSerializedCalculationData};
+use std::fs::{ self, File };
+use crate::models::{ FcsCalculationData, FcsAverageCalculationInput };
 
-
-
-/*
-
-pub fn get_gt_serialized_calculation_files(num_acquisitions: usize) -> Result<FcsSerializedCalculationData, Box<dyn Error>> {
+pub fn get_gt_serialized_calculation_files(
+    num_acquisitions: usize
+) -> Result<FcsAverageCalculationInput, Box<dyn Error>> {
     let user_profile_path = get_user_profile_path()?;
     let data_folder_path = user_profile_path.join(".flim-labs/data");
     let files = read_data_folder(data_folder_path)?;
@@ -29,32 +27,49 @@ pub fn get_gt_serialized_calculation_files(num_acquisitions: usize) -> Result<Fc
         .collect();
 
     let sorted_files = sort_files_by_modified_time(&fcs_calc_files);
-    let parsed_data = get_gt_serializes_calculation_data(&num_acquisitions, sorted_files);
-
+    let input_data = get_gt_serializes_calculation_data(&num_acquisitions, sorted_files);
+    Ok(input_data?)
 }
 
-
- fn get_gt_serializes_calculation_data(num_acquisitions: &usize, files: Vec<PathBuf>) -> Result<FcsSerializedCalculationData, Box<dyn Error>> {
-    let shared_data =  read_json_file(files[0])?;
+fn get_gt_serializes_calculation_data(
+    num_acquisitions: &usize,
+    files: Vec<PathBuf>
+) -> Result<FcsAverageCalculationInput, Box<dyn Error>> {
+    let shared_data = read_json_file(&files[0])?;
     let acquisitions_number = num_acquisitions.clone();
-    let export_data = shared_data.export_data;
-    let correlations =  shared_data.correlations;
-    let enabled_channels = shared_data.enabled_channels;
+    let export_data = shared_data.export_data.clone();
+    let correlations = shared_data.correlations.clone();
+    let enabled_channels = shared_data.enabled_channels.clone();
     let bin_width = shared_data.bin_width;
     let acquisition_time = shared_data.acquisition_time;
-    let notes = shared_data.notes;
-    let mut lags_vectors: Vec<Vec<i64>> = Vec::with_capacity(*num_acquisitions);
-    let intensities_lengths = Vec<u64> = Vec::with_capacity(*num_acquisitions);
-    for file in files.iter().take(num_acquisitions) {
+    let lag_index = shared_data.lag_index;
+    let notes = shared_data.notes.clone();
+    let intensity_length = shared_data.intensities_length;
+    let mut g2_correlations: HashMap<(usize, usize), Vec<Vec<f64>>> = HashMap::new();
+    for file in files.iter().take(acquisitions_number) {
         let data = read_json_file(file)?;
-        lags_vectors.push(*data.lag_index);
-        intensities_lengths.push(*data.intensities_length);
-        
+        for (channels, correlation_values) in data.g2_correlations.iter() {
+            if let Some(existing_values) = g2_correlations.get_mut(channels) {
+                existing_values.push(correlation_values[0].clone());
+            } else {
+                g2_correlations.insert(*channels, vec![correlation_values[0].clone()]);
+            }
+        }
     }
-    let min_intensity_length = *intensities_lengths.iter().min().unwrap();
-
+    let g2_correlations: Vec<((usize, usize), Vec<Vec<f64>>)> = g2_correlations.into_iter().collect(); 
+    Ok(FcsAverageCalculationInput {
+        export_data,
+        num_acquisitions: *num_acquisitions, 
+        correlations,
+        enabled_channels,
+        bin_width,
+        acquisition_time,
+        lag_index,
+        notes,
+        intensities_length: intensity_length,
+        g2_correlations,
+    })
 }
-
 
 fn read_json_file(file_path: &PathBuf) -> Result<FcsCalculationData, Box<dyn Error>> {
     let mut file = File::open(file_path)?;
@@ -64,16 +79,14 @@ fn read_json_file(file_path: &PathBuf) -> Result<FcsCalculationData, Box<dyn Err
     Ok(data)
 }
 
-
-*/
-
-
-pub fn get_intensity_tracing_bin_file() -> Result<(HashMap<u8, Vec<Vec<usize>>>, u64), Box<dyn Error>> {
+pub fn get_intensity_tracing_bin_file(bin_width: u32, acquisition_time: u32) -> Result<
+    (HashMap<u8, Vec<Vec<usize>>>, u64),
+    Box<dyn Error>
+> {
     let user_profile_path = get_user_profile_path()?;
-
     let mut channel_data = HashMap::new();
     let data_folder_path = user_profile_path.join(".flim-labs/data");
-    let files = read_data_folder(data_folder_path)?;
+    let files = read_data_folder(data_folder_path.clone())?;
     let intensity_tracing_files: Vec<PathBuf> = files
         .iter()
         .filter(|file| {
@@ -91,14 +104,12 @@ pub fn get_intensity_tracing_bin_file() -> Result<(HashMap<u8, Vec<Vec<usize>>>,
 
     if let Some(last_file) = sorted_files.first() {
         process_bin_file(last_file, &mut channel_data)?;
-        if let Err(err) = delete_file(last_file) {
+        if let Err(err) = move_and_delete_intensity_file(last_file, &data_folder_path) {
             eprintln!("Error during intensity tracing bin file removal: {}", err);
         }
     }
-
-    let max_length = calculate_first_vector_length(&channel_data);
-    let length = max_length.unwrap_or(0);
-    Ok((channel_data, length))
+    let max_length = calculate_intensity_entries_num(acquisition_time, bin_width);
+    Ok((channel_data, max_length))
 }
 
 fn process_bin_file(
@@ -212,16 +223,24 @@ fn sort_files_by_modified_time(files: &Vec<PathBuf>) -> Vec<PathBuf> {
     sorted_files
 }
 
-fn calculate_first_vector_length(channel_data: &HashMap<u8, Vec<Vec<usize>>>) -> Option<u64> {
-    if let Some((_key, vectors)) = channel_data.iter().next() {
-        if let Some(first_vector) = vectors.first() {
-            return Some(first_vector.len() as u64);
-        }
-    }
-    None
+fn calculate_intensity_entries_num(acquisition_time: u32, bin_width: u32) -> u64 {
+    let acquisition_time_u64 = acquisition_time as u64;
+    let bin_width_u64 = bin_width as u64;
+    let expected_entries = (acquisition_time_u64 * 1000) / bin_width_u64;
+    expected_entries
 }
 
-fn delete_file(file_path: &PathBuf) -> Result<(), Box<dyn Error>> {
-    fs::remove_file(file_path)?;
+fn move_and_delete_intensity_file(
+    file: &PathBuf,
+    data_folder_path: &PathBuf
+) -> Result<(), Box<dyn Error>> {
+    let fcs_intensity_folder = data_folder_path.join("fcs-intensity");
+    if !fcs_intensity_folder.exists() {
+        fs::create_dir(&fcs_intensity_folder)?;
+    }
+    let file_name = file.file_name().ok_or("Missing file name")?;
+    let destination = fcs_intensity_folder.join(file_name);
+    fs::copy(file, &destination)?;
+    fs::remove_file(file)?;
     Ok(())
 }

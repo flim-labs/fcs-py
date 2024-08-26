@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 APP_VERSION = "1.0"
 APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
@@ -17,6 +20,9 @@ DEFAULT_TAU = 100
 BIN_WIDTH_INPUTS = [1, 10, 100, 1000]
 SETTINGS_BIN_WIDTH_MICROS = "bin_width_micros"
 DEFAULT_BIN_WIDTH_MICROS = 10
+
+SETTINGS_CPS_THRESHOLD = "cps_threshold"
+DEFAULT_CPS_THRESHOLD = 0
 
 AVERAGES_INPUTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 SETTINGS_AVERAGES = "averages"
@@ -77,6 +83,11 @@ MAIN_LAYOUT = "main_layout"
 START_BUTTON = "start_button"
 STOP_BUTTON = "stop_button"
 RESET_BUTTON = "reset_button"
+ACQUIRE_BUTTON = "acquire_button"
+READ_BUTTON = "read_button"
+EXPORT_PLOT_IMG_BUTTON = "export_plot_img_button"
+BIN_METADATA_BUTTON = "bin_metadata_button"
+READ_FILE_BUTTON = "read_file_button"
 DOWNLOAD_BUTTON = "download_button"
 DOWNLOAD_MENU = "download_menu"
 CHECKBOX_CONTROLS = "ch_and_tau_controls"
@@ -108,15 +119,13 @@ REALTIME_BUTTON = "realtime_button"
 POST_PROCESSING_BUTTON = "post_processing_button"
 
 
-EXPORTED_DATA_BYTES_UNIT = 12083.2
 
-REALTIME_MS = 10
+REALTIME_MS = 50
 REALTIME_ADJUSTMENT = REALTIME_MS * 1000
 REALTIME_HZ = 1000 / REALTIME_MS
 REALTIME_SECS = REALTIME_MS / 1000
 
 NS_IN_S = 1_000_000_000
-NS_IN_MS = 1_000_000
 
 EXPORTED_DATA_BYTES_UNIT = 12083.2
 
@@ -208,3 +217,25 @@ CORRELATIONS_FILE_DIMENSION_KB = {
     63: 112,
     64: 112,
 }
+
+
+
+READER_POPUP = "reader_popup"
+READER_METADATA_POPUP = "reader_metadata_popup"
+SETTINGS_ACQUIRE_READ_MODE = "acquire_read_mode"
+DEFAULT_ACQUIRE_READ_MODE = "acquire"
+
+
+
+READER_DATA = {
+    "fcs": {
+        "files": {"fcs": ""},
+        "plots": [],
+        "metadata": {},
+        "data": {},
+    },
+}
+
+DEFAULT_READER_DATA = deepcopy(READER_DATA)
+
+LOADING_OVERLAY = "loading_overlay"

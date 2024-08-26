@@ -47,8 +47,6 @@ class PlotsConfigPopup(QWidget):
         self.layout.addSpacing(20)
         intensity_prompt = QLabel("INTENSITY TRACING PLOTS (MAX 4):")
         intensity_prompt.setObjectName("prompt_text")
-        intensity_prompt_note = QLabel("Note: For optimization purposes, if multiple acquisitions are chosen to be executed, the layout will be automatically reconfigured to display only CPS per channel, regardless of the selected number of graphs to be shown.")
-        intensity_prompt_note.setWordWrap(True)
         gt_prompt = QLabel("G(T) PLOTS (MAX 4):")
         gt_prompt.setObjectName("prompt_text")
         self.intensity_ch_grid = QGridLayout()
@@ -58,7 +56,6 @@ class PlotsConfigPopup(QWidget):
         self.gt_checkboxes = []
         self.gt_checkboxes_wrappers = []
         self.layout.addWidget(intensity_prompt)
-        self.layout.addWidget(intensity_prompt_note)
         if len(self.app.enabled_channels) == 0:
             self.layout.addLayout(self.set_data_empty_row("No channels enabled."))
         else:

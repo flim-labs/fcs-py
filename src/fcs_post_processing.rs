@@ -1,5 +1,6 @@
-use crate::file_processing::get_intensity_tracing_bin_file;
-use crate::export_data::{fcs_export_data, serialize_fcs_calculation};
+use crate::file_processing::{ get_intensity_tracing_bin_file, get_gt_serialized_calculation_files };
+use crate::export_data::{ fcs_export_data, serialize_fcs_calculation };
+use crate::models::{ FcsAverageCalculationInput };
 use pyo3::prelude::*;
 use rayon::prelude::*;
 use std::sync::{ Arc, Mutex };
@@ -53,6 +54,78 @@ pub struct GtCorrelationResult {
     g2_correlations: Vec<(Correlation, Vec<f64>)>,
 }
 
+#[pyclass]
+#[derive(Clone)]
+pub struct PostProcessingFCSOutput {
+    #[pyo3(get)]
+    pub export_data: bool,
+    #[pyo3(get)]
+    pub num_acquisitions: usize,
+    #[pyo3(get)]
+    pub correlations: Vec<(usize, usize)>,
+    #[pyo3(get)]
+    pub enabled_channels: Vec<usize>,
+    #[pyo3(get)]
+    pub bin_width: u32,
+    #[pyo3(get)]
+    pub acquisition_time: u32,
+    #[pyo3(get)]
+    pub lag_index: Vec<i64>,
+    #[pyo3(get)]
+    pub notes: String,
+    #[pyo3(get)]
+    pub intensities_length: u64,
+    #[pyo3(get)]
+    pub g2_correlations: Vec<((usize, usize), Vec<Vec<f64>>)>,
+}
+
+#[pymethods]
+impl PostProcessingFCSOutput {
+    #[new]
+    pub fn new(
+        export_data: bool,
+        num_acquisitions: usize,
+        correlations: Vec<(usize, usize)>,
+        enabled_channels: Vec<usize>,
+        bin_width: u32,
+        acquisition_time: u32,
+        lag_index: Vec<i64>,
+        notes: String,
+        intensities_length: u64,
+        g2_correlations: Vec<((usize, usize), Vec<Vec<f64>>)>,
+    ) -> Self {
+        PostProcessingFCSOutput {
+            export_data,
+            num_acquisitions,
+            correlations,
+            enabled_channels,
+            bin_width,
+            acquisition_time,
+            lag_index,
+            notes,
+            intensities_length,
+            g2_correlations,
+        }
+    }
+}
+
+impl From<FcsAverageCalculationInput> for PostProcessingFCSOutput {
+    fn from(input: FcsAverageCalculationInput) -> Self {
+        PostProcessingFCSOutput {
+            export_data: input.export_data,
+            num_acquisitions: input.num_acquisitions,
+            correlations: input.correlations,
+            enabled_channels: input.enabled_channels,
+            bin_width: input.bin_width,
+            acquisition_time: input.acquisition_time,
+            lag_index: input.lag_index,
+            notes: input.notes,
+            intensities_length: input.intensities_length,
+            g2_correlations: input.g2_correlations,
+        }
+    }
+}
+
 #[pymethods]
 impl GtCorrelationResult {
     #[new]
@@ -86,6 +159,76 @@ pub fn fluorescence_correlation_spectroscopy(
     Ok(())
 }
 
+#[pyfunction]
+pub fn average_fluorescence_correlation_spectroscopy(
+    num_acquisitions: usize,
+    py: Python
+) -> PyResult<PostProcessingFCSOutput> {
+    let result = py.allow_threads(move || {
+        fluorescence_average_correlation_spectroscopy_calc(num_acquisitions)
+    })?;
+    
+    Ok(PostProcessingFCSOutput::from(result))
+}
+
+fn fluorescence_average_correlation_spectroscopy_calc(
+    num_acquisitions: usize
+) -> PyResult<FcsAverageCalculationInput> {
+    let calc_input = match get_gt_serialized_calculation_files(num_acquisitions) {
+        Ok(result) => result,
+        Err(err) => {
+            return Err(
+                pyo3::exceptions::PyValueError::new_err(
+                    format!("Error retrieving FCS calculations data: {}", err)
+                )
+            );
+        }
+    };
+    let g2_correlations_with_averages: Vec<((usize, usize), Vec<Vec<f64>>)> = calc_input.g2_correlations
+        .into_iter()
+        .map(|(channels, repetitions)| {
+            let (average, mut updated_repetitions) = calculate_average_correlation(repetitions);
+            updated_repetitions.insert(0, average);
+            (channels, updated_repetitions)
+        })
+        .collect();
+    if calc_input.export_data {
+        let lag_index_clone = calc_input.lag_index.clone();
+        let notes_clone = calc_input.notes.clone();
+        let correlations_clone = calc_input.correlations.clone();
+        let enabled_channels_clone = calc_input.enabled_channels.clone();
+        let g2_correlations_clone = g2_correlations_with_averages.clone(); 
+
+        rayon::spawn(move || {
+            if let Err(err) = fcs_export_data(
+                correlations_clone,
+                calc_input.num_acquisitions,
+                enabled_channels_clone,
+                calc_input.bin_width,
+                calc_input.acquisition_time,
+                notes_clone,
+                lag_index_clone,
+                g2_correlations_clone
+            ) {
+                println!("Error exporting data {:?}", err);
+            }
+        });
+    }
+    let output_with_average = FcsAverageCalculationInput {
+        export_data: calc_input.export_data,
+        num_acquisitions: calc_input.num_acquisitions,
+        correlations: calc_input.correlations,
+        enabled_channels: calc_input.enabled_channels,
+        bin_width: calc_input.bin_width,
+        acquisition_time: calc_input.acquisition_time,
+        lag_index: calc_input.lag_index,
+        notes: calc_input.notes,
+        intensities_length: calc_input.intensities_length,
+        g2_correlations: g2_correlations_with_averages,
+    };
+    Ok(output_with_average)
+}
+
 fn fluorescence_correlation_spectroscopy_calc(
     correlations: Vec<(usize, usize)>,
     num_acquisitions: usize,
@@ -95,7 +238,9 @@ fn fluorescence_correlation_spectroscopy_calc(
     export_data: bool,
     notes: &str
 ) -> PyResult<()> {
-    let intensities_data = get_intensity_tracing_bin_file();
+    let bin_width_clone = bin_width.clone();
+    let acquisition_time_clone = acquisition_time.clone();
+    let intensities_data = get_intensity_tracing_bin_file(bin_width_clone, acquisition_time_clone);
     let (intensities, intensity_data_length) = match intensities_data {
         Ok(result) => result,
         Err(err) => {
@@ -133,30 +278,30 @@ fn fluorescence_correlation_spectroscopy_calc(
         g2_correlations.push(((*channel1, *channel2), total_channels_couple_correlations));
     });
     let g2_correlations_unwrapped = g2_correlations.lock().unwrap().clone();
-    let lag_index_clone = lag_index.clone(); 
+    let lag_index_clone = lag_index.clone();
     let notes_clone = notes.to_string();
     let intensities_length = intensity_data_length.clone();
-    let g2_correlations_for_serialization = g2_correlations_unwrapped.clone() ;
-    rayon::spawn(move ||
-        if let Err(err) = serialize_fcs_calculation(
-            intensities_length,
-            correlations,
-            num_acquisitions,
-            enabled_channels,
-            bin_width,
-            acquisition_time,
-            notes_clone,
-            export_data,
-            lag_index_clone,
-            g2_correlations_for_serialization,
-        ){
+    let g2_correlations_for_serialization = g2_correlations_unwrapped.clone();
+    rayon::spawn(move || (
+        if
+            let Err(err) = serialize_fcs_calculation(
+                intensities_length,
+                correlations,
+                num_acquisitions,
+                enabled_channels,
+                bin_width,
+                acquisition_time,
+                notes_clone,
+                export_data,
+                lag_index_clone,
+                g2_correlations_for_serialization
+            )
+        {
             println!("Error saving fcs json calculation {:?}", err);
-        } 
-    );
+        }
+    ));
     Ok(())
 }
-
-
 
 fn calculate_average_correlation(repetitions: Vec<Vec<f64>>) -> (Vec<f64>, Vec<Vec<f64>>) {
     let repetitions_res = repetitions;
@@ -172,7 +317,7 @@ fn calculate_average_correlation(repetitions: Vec<Vec<f64>>) -> (Vec<f64>, Vec<V
         *average /= repetitions_num as f64;
     }
 
-    (averages,repetitions_res)
+    (averages, repetitions_res)
 }
 
 fn calculate_lag_index(data_length: &u64) -> Vec<i64> {

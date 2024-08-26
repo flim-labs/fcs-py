@@ -26,16 +26,16 @@ class ControlsBarBuilder:
         layout_container.setContentsMargins(0,0,0,0)
 
         controls_layout = QHBoxLayout()
-        controls_layout.addSpacing(10)
+        controls_layout.setContentsMargins(0,0,0,0)
+        controls_layout.setSpacing(0)
         blank_space = QWidget()
         blank_space.setMinimumHeight(1)
         blank_space.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         buttons_qv_box = QVBoxLayout()
         buttons_qv_box.setSpacing(0)
         buttons_qv_box.setContentsMargins(0,0,0,0)
-        buttons_qv_box.addSpacing(20)
         buttons_qv_box.addLayout(buttons_row)
-        controls_layout.addWidget(controls_row)
+        controls_layout.addWidget(controls_row, alignment=Qt.AlignmentFlag.AlignTop)
         controls_layout.addLayout(buttons_qv_box)
         controls_layout.addSpacing(10)
         layout_container.addLayout(controls_layout)
@@ -56,6 +56,9 @@ class ControlsBarBuilder:
         start_button = QPushButton("START")
         start_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_start_btn_style(start_button)
+        start_button.setFlat(True)
+        start_button.setFixedHeight(55)
+        start_button.setFixedWidth(110)
         start_button.clicked.connect(start_btn_pressed_cb)
         start_button.setEnabled(
             len(enabled_channels) > 0
@@ -65,6 +68,9 @@ class ControlsBarBuilder:
         stop_button = QPushButton("STOP")
         stop_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_stop_btn_style(stop_button)
+        stop_button.setFlat(True)
+        stop_button.setFixedHeight(55)
+        stop_button.setFixedWidth(110)
         stop_button.setEnabled(False)
        
         stop_button.clicked.connect(stop_btn_pressed_cb)
@@ -73,7 +79,9 @@ class ControlsBarBuilder:
         reset_button = QPushButton("RESET")
         reset_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_reset_btn_style(reset_button)
-        
+        reset_button.setFlat(True)
+        reset_button.setFixedHeight(55)
+        reset_button.setFixedWidth(110)
         reset_button.clicked.connect(reset_btn_pressed_cb)
         buttons_row_layout.addWidget(reset_button)
 
@@ -88,6 +96,7 @@ class ControlsBarBuilder:
             controls_row,
             options,
             change_cb,
+            spacing=None
         )
         inp.setStyleSheet(GUIStyles.set_input_select_style())
         return inp
@@ -102,9 +111,9 @@ class ControlsBarBuilder:
             controls_row,
             options,
             change_cb,
-            20,
             "vertical",
             "font-family: Times New Roman; color: #f8f8f8; font-size: 18px;"
+            
             
         )
         inp.setStyleSheet(GUIStyles.set_input_select_style())
@@ -174,6 +183,24 @@ class ControlsBarBuilder:
         )
         inp.setStyleSheet(GUIStyles.set_input_number_style())
         return inp
+    
+ 
+    @staticmethod
+    def create_cps_threshold_control(controls_row, value, change_cb, show_cps):
+        # CPS threshold control
+        _, inp = InputNumberControl.setup(
+            "Pile-up threshold (CPS):",
+            0,
+            100000000,
+            value,
+            controls_row,
+            change_cb,
+        )
+        inp.setStyleSheet(GUIStyles.set_input_number_style())
+        inp.setEnabled(
+            show_cps
+        )
+        return inp    
 
     @staticmethod
     def create_acquisition_time_control(controls_row, value, change_cb, free_running):

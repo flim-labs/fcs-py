@@ -1,6 +1,7 @@
 import os
 from PyQt6.QtWidgets import QWidget, QHBoxLayout
 from components.controls_bar_builder import ControlsBarBuilder
+from components.data_export_controls import DataExportActions
 from components.settings import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +14,6 @@ class InputParamsControls(QWidget):
         self.app = window
         layout = QHBoxLayout()
         self.setLayout(layout)
-        self.create_channel_type_control(layout)
         self.create_bin_width_control(layout)
         running_mode_control = self.create_running_mode_control()
         layout.addLayout(running_mode_control)
@@ -21,15 +21,8 @@ class InputParamsControls(QWidget):
         self.create_time_span_control(layout)
         self.create_acquisition_time_control(layout)
         self.create_averages_control(layout)
+        self.create_cps_threshold_control(layout)
 
-    def create_channel_type_control(self, layout):
-        inp = ControlsBarBuilder.create_channel_type_control(
-            layout,
-            self.app.selected_conn_channel,
-            self.conn_channel_type_value_change,
-            self.app.conn_channels,
-        )
-        self.app.control_inputs[SETTINGS_CONN_CHANNEL] = inp
 
     def create_tau_control(self, layout):
         inp = ControlsBarBuilder.create_tau_control(
@@ -92,17 +85,18 @@ class InputParamsControls(QWidget):
             self.app.control_inputs[SETTINGS_AVERAGES].setEnabled(True)
             self.app.free_running_acquisition_time = False
             self.app.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
-
-    def conn_channel_type_value_change(self, index):
-        self.app.selected_conn_channel = self.sender().currentText()
-        if self.app.selected_conn_channel == "USB":
-            self.app.selected_firmware = self.app.firmwares[0]
-        else:
-            self.app.selected_firmware = self.app.firmwares[1]
-        self.app.settings.setValue(SETTINGS_FIRMWARE, self.app.selected_firmware)
-        self.app.settings.setValue(
-            SETTINGS_CONN_CHANNEL, self.app.selected_conn_channel
-        )
+        DataExportActions.calc_exported_file_size(self.app)    
+            
+    def create_cps_threshold_control(self, layout):
+            value = int(self.app.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
+            inp = ControlsBarBuilder.create_cps_threshold_control(
+                layout,
+                value,
+                self.cps_threshold_value_change,
+                self.app.show_cps  
+            )
+            self.app.control_inputs[SETTINGS_CPS_THRESHOLD] = inp            
+            
 
     def acquisition_time_value_change(self, value):
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
@@ -110,12 +104,16 @@ class InputParamsControls(QWidget):
         self.app.settings.setValue(
             SETTINGS_ACQUISITION_TIME_MILLIS, self.app.acquisition_time_millis
         )
-   
+        DataExportActions.calc_exported_file_size(self.app)
 
     def time_span_value_change(self, value):
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.time_span = value
         self.app.settings.setValue(SETTINGS_TIME_SPAN, value)
+        
+    def cps_threshold_value_change(self, value):
+        self.app.cps_threshold = value
+        self.app.settings.setValue(SETTINGS_CPS_THRESHOLD, value)          
 
     def tau_value_change(self, index):
         value = self.sender().currentText()
@@ -126,10 +124,12 @@ class InputParamsControls(QWidget):
         value = self.sender().currentText()
         self.app.bin_width_micros = int(value)
         self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, int(value))
+        DataExportActions.calc_exported_file_size(self.app)
         
     def averages_value_change(self, value):
         value = self.sender().currentText()
         self.app.selected_average = int(value)
         self.app.settings.setValue(SETTINGS_AVERAGES, int(value))
         self.app.acquisitions_count = 0
+        DataExportActions.calc_exported_file_size(self.app)
         

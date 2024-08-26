@@ -4,7 +4,6 @@ use std::fs::{ File };
 use std::io::{ self, Write };
 use std::path::{ PathBuf };
 use serde_json::json;
-use serde_derive::Serialize;
 use byteorder::{ LittleEndian, WriteBytesExt };
 use rand::prelude::*;
 use uuid::Uuid;

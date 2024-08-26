@@ -4,7 +4,7 @@ import os
 import json
 import sys
 from functools import partial
-from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer
+from PyQt6.QtCore import QTimer, QSettings, Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from components.gui_styles import GUIStyles
 from components.layout_utilities import init_ui
@@ -13,8 +13,8 @@ from components.top_bar_builder import TopBarBuilder
 from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
-from components.data_export_controls import DataExportActions, ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
+from components.data_export_controls import DataExportActions, ExportDataControl
+from components.intensity_tracing_controller import IntensityTracing
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -38,6 +38,7 @@ class FCSWindow(QWidget):
         self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
         self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) in ['true', True]    
         self.show_cps = True
+        self.cps_threshold = int(self.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
         default_enabled_channels = self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)
         self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
@@ -89,6 +90,9 @@ class FCSWindow(QWidget):
         self.acquisition_stopped = False
         
         self.cps_ch = {}
+        self.cps_counts = {}
+        self.cps_widgets_animation = {}
+        self.acquisition_time_countdown_widget = QWidget()
 
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
@@ -106,15 +110,10 @@ class FCSWindow(QWidget):
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
         
-        self.timer_update_intensity_plots = QTimer()
-        self.timer_update_intensity_plots.timeout.connect(partial(IntensityTracingPlot.update_plots, self))
-        
         self.fcs_serialization_calls = 0
         
         #####
         self.last_acquisition_ns = 0
-        self.last_cps_update_time = QElapsedTimer() 
-        self.cps_update_interval = 400  
         
         GUIStyles.set_fonts()
         self.init_ui()
@@ -166,11 +165,9 @@ class FCSWindow(QWidget):
         title_row = self.create_logo_and_title()
         gt_calc_mode_buttons_row_layout = self.create_gt_calc_mode_buttons()
         export_data_widget = ExportDataControl(self)
-        download_button = self.create_download_files_menu()
         header_layout = TopBarBuilder.create_header_layout(
             title_row,
             export_data_widget,
-            download_button,
             gt_calc_mode_buttons_row_layout
         )
         return header_layout 
@@ -179,10 +176,6 @@ class FCSWindow(QWidget):
         title_row = TopBarBuilder.create_logo_and_title(self)
         return title_row    
 
-
-    def create_download_files_menu(self):
-        download_button = DownloadDataControl(self)
-        return download_button
         
     def create_channels_grid(self):          
         channels_component = ChannelsControl(self)
