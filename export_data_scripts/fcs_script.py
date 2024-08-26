@@ -6,24 +6,7 @@ import matplotlib.pyplot as plt
 file_path = "<FILE-PATH>"
 print("Using data file: " + file_path)
 
-# calc G(t) correlations mean
-def calc_g2_correlations_mean(g2):
-    g2_with_mean = []
-    for corr in g2:
-        g2_vector = corr[1]
-        g2_vector_length = len(g2_vector)
-        correlations_length = len(g2_vector[0])
-        average = [0.0] * correlations_length  
-        for i in range(g2_vector_length):
-            for j in range(correlations_length):
-                average[j] += g2_vector[i][j]
-        for k in range(correlations_length):
-            average[k] /= g2_vector_length 
-        g2_with_mean.append((corr[0], average, g2_vector))
-    return g2_with_mean
-
-
-
+# Read bin data
 with open(file_path, "rb") as f:
     # first 4 bytes must be FCS1
     # 'FCS1' is an identifier for fcs bin files
@@ -93,7 +76,6 @@ with open(file_path, "rb") as f:
     if "notes" in metadata and metadata["notes"] is not None:
         print("Notes: " + str(metadata["notes"]))
 
-
     # Plot G(t) correlations
     num_plots = len(g2_correlations)
     num_plots_per_row = 1
@@ -101,19 +83,18 @@ with open(file_path, "rb") as f:
         num_plots_per_row = 1
     if num_plots > 1 and num_plots < 4:
         num_plots_per_row = 2
-    if num_plots >=4:
+    if num_plots >= 4:
         num_plots_per_row = 4
     if num_plots >= 12:
-        num_plots_per_row = 6    
-    
-    num_rows = (num_plots + num_plots_per_row - 1) // num_plots_per_row
-    g2_with_means = g2_correlations
+        num_plots_per_row = 6
 
-    fig = plt.figure(figsize=(12, 3*num_rows))
+    num_rows = (num_plots + num_plots_per_row - 1) // num_plots_per_row
+
+    fig = plt.figure(figsize=(12, 3 * num_rows))
     fig.suptitle("Fluorescence Spectroscopy Correlations")
     gs = GridSpec(num_rows, num_plots_per_row, figure=fig)
 
-    for i, ((channel1, channel2), data_list) in enumerate(g2_with_means):
+    for i, ((channel1, channel2), data_list) in enumerate(g2_correlations):
         row = i // num_plots_per_row
         col = i % num_plots_per_row
         ax = fig.add_subplot(gs[row, col])
@@ -123,12 +104,9 @@ with open(file_path, "rb") as f:
         ax.set_xlabel("τ(μs)")
         ax.set_ylabel("G(τ)")
         ax.set_title(f"Channel {channel1 + 1}- Channel {channel2 + 1}")
-        ax.set_xscale('log')
+        ax.set_xscale("log")
         ax.grid(True)
         ax.legend()
 
     plt.tight_layout()
     plt.show()
-    
-    
-    

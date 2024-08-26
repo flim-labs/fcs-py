@@ -49,8 +49,8 @@ class ScriptFileUtils:
         python_modifier = {
             "source_file": fcs_py_script_path,
             "skip_pattern": "def get_recent_spectroscopy_file():",
-            "end_pattern": "# calc G(t) correlations mean",
-            "replace_pattern": "# calc G(t) correlations mean",
+            "end_pattern": "# Read bin data",
+            "replace_pattern": "# Read bin data",
             "requirements": ["matplotlib", "numpy"],
         }
         matlab_modifier = {

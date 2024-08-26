@@ -77,24 +77,14 @@ if ~isempty(metadata.notes)
 end
 
 
-% Calc G(t) correlations mean
+% Parse correlations data
 g2_with_mean = cell(size(g2_correlations, 1), 1);
 for idx = 1:size(g2_correlations, 1)
     corr = g2_correlations{idx};
-    g2_vector = corr{2};
-    g2_vector_length = size(g2_vector, 1);
-    correlations_length = size(g2_vector, 2);
-    average = zeros(1, correlations_length);
-    for i = 1:g2_vector_length
-        for j = 1:correlations_length
-            average(j) = average(j) + g2_vector(i, j);
-        end
-    end
-    for k = 1:correlations_length
-        average(k) = average(k) / g2_vector_length;
-    end
-    g2_vector_cells = num2cell(g2_vector, 2);
-    g2_with_mean{idx} = {corr{1}, average, g2_vector_cells};
+    correlations_mean = corr{2}(1, :);
+    g2_vectors = corr{2}(2:end, :); 
+    g2_vector_cells = num2cell(g2_vectors, 2);
+    g2_with_mean{idx} = {corr{1}, correlations_mean, g2_vector_cells}; 
 end
 
 % Plot G(t) correlations
@@ -102,11 +92,9 @@ num_plots = numel(g2_with_mean);
 num_plots_per_row = 1;
 if num_plots < 2
     num_plots_per_row = 1;
-end
-if num_plots > 1 && num_plots < 4
+elseif num_plots > 1 && num_plots < 4
     num_plots_per_row = 2;
-end
-if num_plots >= 4
+elseif num_plots >= 4
     num_plots_per_row = 4;
 end
 if num_plots >= 12
@@ -118,27 +106,30 @@ num_rows = ceil(num_plots / num_plots_per_row);
 fig = figure('Name', 'Fluorescence Spectroscopy Correlations');
 lag_index_plot = lag_index + 1e-6;
 
-
 for i = 1:num_plots
     corr = g2_with_mean{i};
     channel_info = corr{1};
     channel1 = channel_info(1);
     channel2 = channel_info(2);
-    average = corr{2};
-    data_list = corr{3};
+    correlations_mean = corr{2};  
+    single_gt_correlations = corr{3};  
+
     ax = subplot(num_rows, num_plots_per_row, i);
-    for data_index = 1:numel(data_list)
-        current_data = data_list{data_index};
+    
+    % Plot correlations mean
+    plot(lag_index_plot, correlations_mean, 'DisplayName', 'G(\tau) mean');
+    hold on;
+
+    % Plot single gt correlations vectors
+    for data_index = 1:numel(single_gt_correlations)
+        current_data = single_gt_correlations{data_index};
         plot(lag_index_plot, current_data, 'DisplayName', ['G(\tau) ' num2str(data_index)]);
-        hold on;
     end
-    if numel(data_list) > 1
-        plot(lag_index_plot, average, 'DisplayName', 'G(\tau) mean');
-    end    
+   
     hold off;
     set(gca, 'XScale', 'log');
     xlim([1, max(lag_index_plot)]);
-    xlabel('\tau(\mus)');
+    xlabel('\tau (\mus)');
     ylabel('G(\tau)');
     title(['Channel ' num2str(channel1 + 1) ' - Channel ' num2str(channel2 + 1)]);
     grid on;
