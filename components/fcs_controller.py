@@ -1,4 +1,6 @@
 from functools import partial
+from components.box_message import BoxMessage
+from components.gui_styles import GUIStyles
 from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
 from components.settings import (
     GT_PLOTS_GRID,
@@ -11,7 +13,7 @@ import numpy as np
 import pyqtgraph as pg
 from fcs_flim import fcs_flim
 from PyQt6.QtCore import QThread, pyqtSignal, QTimer
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtGui import QFont
 
 
@@ -60,6 +62,7 @@ class FCSPostProcessingSingleCalcWorker(QThread):
 
 class FCSPostProcessingAverageCalcWorker(QThread):
     success = pyqtSignal(object)
+    error = pyqtSignal(str) 
 
     def __init__(self, num_acquisitions):
         super().__init__()
@@ -67,10 +70,13 @@ class FCSPostProcessingAverageCalcWorker(QThread):
         self.is_running = True
 
     def run(self):
-        result = fcs_flim.average_fluorescence_correlation_spectroscopy(
-            num_acquisitions=self.num_acquisitions,
-        )
-        self.success.emit(result)
+        try:
+            result = fcs_flim.average_fluorescence_correlation_spectroscopy(
+                num_acquisitions=self.num_acquisitions,
+            )
+            self.success.emit(result)
+        except ValueError as e:  
+            self.error.emit(str(e)) 
 
     def stop(self):
         self.is_running = False
@@ -127,7 +133,16 @@ class FCSPostProcessing:
         num_acquisitions = app.selected_average if app.free_running_acquisition_time == False else 1
         worker = FCSPostProcessingAverageCalcWorker(num_acquisitions)
         worker.success.connect(lambda result: FCSPostProcessing.handle_fcs_post_processing_result(result, app, worker))
-        worker.start()        
+        worker.error.connect(lambda error_message: display_error_message(error_message))
+        def display_error_message(error_message):
+            BoxMessage.setup(
+            "FCS Processing Error",
+            error_message,
+            QMessageBox.Icon.Critical,
+            GUIStyles.set_msg_box_style(),
+        )
+        worker.start()  
+              
     
 
     @staticmethod

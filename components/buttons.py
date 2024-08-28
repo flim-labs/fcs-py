@@ -1,14 +1,16 @@
+import json
 import os
 from PyQt6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout
 from PyQt6.QtCore import QPropertyAnimation, Qt, QSize
 from PyQt6.QtGui import QIcon
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.plots_config_widget import PlotsConfigPopup
-from components.read_data import ReadDataControls, ReaderMetadataPopup, ReaderPopup
+from components.read_data import ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
 from components.controls_bar_builder import ControlsBarBuilder
 from components.settings import *
+from load_data import plot_fcs_data
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -247,6 +249,8 @@ class ReadAcquireModeButton(QWidget):
         ReadDataControls.handle_widgets_visibility(
             self.app, self.app.acquire_read_mode == "read"
         )
+        self.app.gt_plots_to_show = []        
+        self.app.settings.setValue(SETTINGS_GT_PLOTS_TO_SHOW, json.dumps(self.app.gt_plots_to_show))         
 
     def on_read_btn_pressed(self, checked):
         from components.intensity_tracing_controller import IntensityTracingButtonsActions 
@@ -292,5 +296,8 @@ class ExportPlotImageButton(QWidget):
     
     
     def on_export_plot_image(self):
-        pass
+        g2_correlations, lag_index = ReadData.prepare_fcs_data_for_export_img(self.app)
+        plot = plot_fcs_data(g2_correlations, lag_index, show_plot=False)
+        ReadData.save_plot_image(plot)        
+  
    

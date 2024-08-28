@@ -171,7 +171,6 @@ class IntensityTracing:
         else:    
             app.acquisitions_count = app.acquisitions_count + 1         
         app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].update_acquisitions_count()        
-        app.notes = ""
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         app.cps_counts.clear()
         free_running = app.free_running_acquisition_time
