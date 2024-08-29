@@ -167,10 +167,11 @@ class FCSPostProcessing:
             FCSPostProcessingPlot.generate_chart(
                 correlation, index, app, lag_index, gt_values
             )
-        QTimer.singleShot(
-            300,
-            partial(ExportData.save_fcs_data, app),
-        )
+        if app.write_data:    
+            QTimer.singleShot(
+                300,
+                partial(ExportData.save_fcs_data, app),
+            )
 
 class FCSPostProcessingPlot:
     @staticmethod

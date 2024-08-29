@@ -132,6 +132,7 @@ class ControlsBarBuilder:
             "Channel type:", value, controls_row, options, change_cb, spacing=None
         )
         inp.setStyleSheet(GUIStyles.set_input_select_style())
+        inp.setFixedWidth(100)
         return inp
 
     @staticmethod

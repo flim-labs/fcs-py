@@ -122,13 +122,14 @@ class DataExportActions:
         num_acquisition = app.selected_average if not free_running else 1
         chunk_bytes = 8 + (4 * len(app.enabled_channels))
         chunk_bytes_in_us = (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
-        if free_running is True or app.acquisition_time_millis is None:
+        acquisition_time = 0 if app.acquisition_time_millis is None else app.acquisition_time_millis
+        if free_running is True:
             file_size_bytes = int(chunk_bytes_in_us)
             bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
             return bin_file_size, "per_second"
         else:
             file_size_bytes = int(
-                chunk_bytes_in_us * (app.acquisition_time_millis / 1000)
+                chunk_bytes_in_us * (acquisition_time / 1000)
             )
             bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
             return bin_file_size, "total"
@@ -137,7 +138,7 @@ class DataExportActions:
     @staticmethod
     def calc_fcs_file_size(app, filtered_corr):
         bin_width = app.bin_width_micros
-        acquisition_time = app.acquisition_time_millis
+        acquisition_time = 0 if app.acquisition_time_millis is None else app.acquisition_time_millis 
         free_running = app.free_running_acquisition_time
         num_acquisition = app.selected_average if not free_running else 1
         expected_intensity_entries = calculate_expected_intensity_entries(acquisition_time, bin_width) if not free_running else None

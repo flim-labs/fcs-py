@@ -33,7 +33,7 @@ class ChannelsControl(QWidget):
         self.correlations_btn.setIcon(
             QIcon(resource_path("assets/edit-matrix-icon.png"))
         )
-        self.correlations_btn.setFixedWidth(180)
+        self.correlations_btn.setFixedWidth(160)
         self.correlations_btn.setStyleSheet(
             GUIStyles.channels_btn_style(
                 base="#31c914", hover="#57D33D", pressed="#7FE777"
@@ -48,7 +48,7 @@ class ChannelsControl(QWidget):
         )
         self.plots_config_btn = QPushButton("PLOTS CONFIG")
         self.plots_config_btn.setIcon(QIcon(resource_path("assets/chart-icon.png")))
-        self.plots_config_btn.setFixedWidth(180)
+        self.plots_config_btn.setFixedWidth(160)
         self.plots_config_btn.setStyleSheet(
             GUIStyles.channels_btn_style(
                 base="#FB8C00", hover="#FFA726", pressed="#FB8C00", text="white"
