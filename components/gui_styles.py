@@ -53,10 +53,9 @@ class GUIStyles:
                 font-family: "Montserrat";
                 color: white;
                 letter-spacing: 0.1em;
-                min-width: {min_width};
-                padding: 10px;
+                padding: 8px;
                 border-radius: 4px;
-                font-size: 12px;
+                font-size: 14px;
                 font-weight: bold;
             }}
 
@@ -219,12 +218,13 @@ class GUIStyles:
                 font-family: "Montserrat";
                 font-size: 12px;
                 padding: 8px;
+                height: 22px;
                 min-width: 120px;
                 border-radius: 5px;
                 background-color: transparent;
             }
             QDoubleSpinBox, QSpinBox {
-                border: 1px solid #31c914;
+                border: 1px solid #3b3b3b;
 
             }
             QLineEdit {
@@ -245,8 +245,8 @@ class GUIStyles:
                 font-family: "Montserrat";
                 font-size: 12px;
                 padding: 8px;
-                min-width: 120px;
-                border: 1px solid #31c914;
+                height: 22px;
+                border: 1px solid #3b3b3b;
                 border-radius: 5px;
                 background-color: transparent;
             }
@@ -261,7 +261,7 @@ class GUIStyles:
 
            QComboBox QAbstractItemView {
             font-family: "Montserrat";
-            border: 1px solid #31c914;
+            border: 1px solid #3b3b3b;
             border-bottom-left-radius: 5px;
             border-bottom-right-radius: 5px;
             background-color: #181818;
@@ -269,6 +269,50 @@ class GUIStyles:
             selection-background-color: #31c914;
             }   
         """
+    @staticmethod    
+    def set_input_text_style():
+        return """
+        QLineEdit  {
+                color: #31c914;
+                font-family: "Montserrat";
+                font-size: 14px;
+                padding: 8px;
+                min-width: 60px;
+                border: 1px solid #31c914;
+                border-radius: 5px;
+                background-color: transparent;
+            }
+            QLineEdit:disabled, QLineEdit:disabled {
+            color: #404040;  
+            border-color: #3c3c3c;
+            }        
+        """    
+        
+    @staticmethod        
+    def set_simple_checkbox_style(color):
+        return f"""
+            QCheckBox {{
+                spacing: 5px;
+                color: #f8f8f8;
+                font-family: "Montserrat";
+                font-size: 14px;
+                letter-spacing: 0.1em;
+                border-radius: 5px;
+            }}
+            QCheckBox::indicator {{
+                width: 14px;
+                height: 14px;
+                border-radius: 7px;  
+            }}
+
+            QCheckBox::indicator:unchecked {{
+                background-color: #6b6a6a;
+            }}
+
+            QCheckBox::indicator:checked {{
+                background-color: {color};
+            }}
+        """                   
 
     @staticmethod
     def set_msg_box_style():
@@ -317,33 +361,41 @@ class GUIStyles:
                 margin-right: 8px;
                 margin-left: 8px;
             }
-            QLabel#cps{
+            QLabel#horizontal_cps{
                 font-weight: 700;
                 font-family: "Montserrat";
                 font-size: 26px;
                 color: #FB8C00;
             }
-            QLabel#ch{
+             QLabel#vertical_cps{
+                font-weight: 700;
+                font-family: "Montserrat";
+                font-size: 34px;
+                color: #FB8C00;
+            }
+            QLabel#horizontal_ch{
                 color: #cecece;
                 margin-left: 8px;
+            }
+            QLabel#vertical_ch{
+                color: #cecece;
+                margin-left: 8px;
+                font-size: 20px;
             }
         """
 
     @staticmethod
     def set_context_menu_style(base, selected, pressed):
         return f"""
-
         QWidget {{
             background-color: #181818;  
         }}
-        
         QMenu {{
             margin: 0;   
             padding: 5px;
-            border-radius: 20px;
+            border-radius: 4px;
             background: #181818;       
         }}
-
         QMenu::item {{
             background-color: {base}; 
             color: white; 
@@ -352,10 +404,10 @@ class GUIStyles:
             margin: 5px 0px 5px 0px;
             border-radius: 4px;   
             font-family: "Montserrat";
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             padding:10px 13px 10px 10px;
-            min-width:120px
+            min-width:120px;
         }}
 
         QMenu::item:selected {{
@@ -392,9 +444,10 @@ class GUIStyles:
 
             }}
             QPushButton#post_processing_btn{{ 
-                border-top-right-radius: 4px;
-                border-bottom-right-radius: 4px;
-                min-width: 120px;   
+                border-radius: 4px;
+                min-width: 120px; 
+                background-color: #FB8C00;
+                color: white;  
                 
             }}
         """
@@ -406,7 +459,7 @@ class GUIStyles:
                 font-family: "Montserrat";
                 letter-spacing: 0.1em;
                 padding: 10px 12px;
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: bold;
                 border-radius: 4px;
                 background-color: {base};
@@ -549,25 +602,114 @@ class GUIStyles:
         """
         
     @staticmethod    
-    def set_progress_bar_widget():
-        return """
-            QLabel {
-                color: #FB8C00;
+    def set_progress_bar_widget(color):
+        return f"""
+            QLabel {{
+                color: {color};
                 font-family: "Montserrat";
                 font-size: 18px;
                 font-weight: bold;
                 
-            } 
-            QProgressBar {
+            }} 
+            QProgressBar {{
                 color: transparent;
                 background-color: white;
-                max-height: 30px;
                 padding: 0;
-            }
-            QProgressBar::chunk {
-            background: #FB8C00;
-            color: transparent;
-            }               
+            }}
+            QProgressBar::chunk {{
+                background: {color};
+                color: transparent;
+            }}               
         """
+        
+    
+    @staticmethod       
+    def add_notes_button():
+        return """
+            QPushButton{
+                background-color: transparent;
+                border: 1px solid #FB8C00;
+                border-radius: 5px;
+            } 
+            
+            QPushButton:hover {
+                background-color: #222222;
+                border: 1px solid #FB8C00;
+            }
+        """ 
+        
+    @staticmethod
+    def add_notes_textarea():
+        return """
+            QPlainTextEdit{
+               background-color: transparent;
+               color: white;
+               border:  1px solid #FB8C00;
+               border-radius: 5px;
+            }
+    """         
   
                
+    @staticmethod   
+    def acquire_read_btn_style():
+        return f"""
+            QPushButton {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;;
+                min-width: 60px;
+            }}
+            QPushButton#acquire_btn{{ 
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;   
+            }}
+            QPushButton#read_btn{{  
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+                
+            }}
+        """ 
+        
+    @staticmethod
+    def acquisition_time_countdown_style():
+        return """
+            QLabel {
+                color: #31c914;
+                font-size: 18px;
+            }
+        """       
+        
+    @staticmethod
+    def set_loading_widget_style():
+        return """
+            QWidget#loading_widget {
+                background-color: black;
+                border-top: 1px solid #50b3d7;
+            }
+    
+    """     
+    
+    @staticmethod   
+    def acquire_read_btn_style():
+        return f"""
+            QPushButton {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;;
+                min-width: 60px;
+            }}
+            QPushButton#acquire_btn{{ 
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;   
+            }}
+            QPushButton#read_btn{{  
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+                
+            }}
+        """                             
+                           

@@ -1,8 +1,6 @@
 ﻿numpy==1.26.4
 pyqt6==6.6.1
 pyqtgraph==0.13.4
-flim-labs==1.0.21
+flim-labs==1.0.59
 matplotlib
-pglive
-maturin
 

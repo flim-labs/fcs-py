@@ -1,20 +1,20 @@
 
-from multiprocessing import Queue
+
 import os
 import json
 import sys
 from functools import partial
-from PyQt6.QtCore import QTimer, QSettings, Qt, QElapsedTimer, QThread
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMainWindow
+from PyQt6.QtCore import QTimer, QSettings, Qt
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from components.gui_styles import GUIStyles
 from components.layout_utilities import init_ui
 from components.channels_control import ChannelsControl
+from components.read_data import ReadDataControls
 from components.top_bar_builder import TopBarBuilder
 from components.controls_bar_builder import ControlsBarBuilder
 from components.buttons import CollapseButton, ActionButtons, GTModeButtons
 from components.input_params_controls import InputParamsControls
-from components.data_export_controls import ExportDataControl, DownloadDataControl
-from components.intensity_tracing_controller import FlimLabsPullValuesWorkerProcess, IntensityTracing, IntensityTracingButtonsActions
+from components.intensity_tracing_controller import IntensityTracing
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -26,6 +26,12 @@ class FCSWindow(QWidget):
         
         # Initialize settings config
         self.settings = self.init_settings()
+        
+        # Acquire/Read mode
+        self.reader_data = READER_DATA
+        self.acquire_read_mode = self.settings.value(
+            SETTINGS_ACQUIRE_READ_MODE, DEFAULT_ACQUIRE_READ_MODE
+        )
 
         ##### GUI PARAMS #####
         self.firmwares = FIRMWARES
@@ -33,10 +39,12 @@ class FCSWindow(QWidget):
         self.conn_channels = CONN_CHANNELS
         self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
         self.time_span = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
+        self.cached_time_span_seconds = 3
         default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
         self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
         self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) in ['true', True]    
         self.show_cps = True
+        self.cps_threshold = int(self.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
         default_enabled_channels = self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)
         self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
@@ -58,6 +66,8 @@ class FCSWindow(QWidget):
         
         default_gt_plots_to_show = self.settings.value(SETTINGS_GT_PLOTS_TO_SHOW, DEFAULT_GT_PLOTS_TO_SHOW)
         self.gt_plots_to_show = json.loads(default_gt_plots_to_show) if default_gt_plots_to_show is not None else []
+        
+        self.notes = ""
 
         self.acquisitions_count = 0
         
@@ -86,38 +96,34 @@ class FCSWindow(QWidget):
         self.acquisition_stopped = False
         
         self.cps_ch = {}
+        self.cps_counts = {}
+        self.cps_widgets_animation = {}
+        self.acquisition_time_countdown_widget = QWidget()
 
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
         self.gt_charts = []
-        self.intensity_lines = []
+        self.intensity_lines = {}
         self.gt_lines = []
         self.only_cps_widgets = []
+        self.only_cps_shown = False
       
         ######
-        self.intensity_connectors = {}
         self.gt_connectors = {}
-        
-        #self.pull_value_worker_queue = Queue()
-        #self.pull_value_worker_thread = QThread()
-        #self.pull_value_worker = FlimLabsPullValuesWorkerProcess(self.pull_value_worker_queue)
-        #self.pull_value_worker.moveToThread(self.pull_value_worker_thread)
-        #self.pull_value_worker_thread.started.connect(self.pull_value_worker.run)
-        #self.pull_value_worker.new_data.connect(partial(IntensityTracing.pull_from_queue, self))
-        #self.pull_value_worker.finished.connect(self.pull_value_worker_thread.quit)
-        #self.pull_value_worker.finished.connect(self.pull_value_worker.deleteLater)
-        #self.pull_value_worker.finished.connect(self.pull_value_worker_thread.deleteLater)
-        
+      
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
-       
+        
+        self.fcs_serialization_calls = 0
+        
         #####
         self.last_acquisition_ns = 0
-        self.last_cps_update_time = QElapsedTimer() 
-        self.cps_update_interval = 400  
         
         GUIStyles.set_fonts()
         self.init_ui()
+        self.bin_file_size_label.setVisible(self.write_data)
+        ReadDataControls.handle_widgets_visibility(
+                self, self.acquire_read_mode == "read")        
 
 
     @staticmethod    
@@ -126,13 +132,14 @@ class FCSWindow(QWidget):
         return settings    
 
     def init_ui(self):
+        from components.data_export_controls import DataExportActions
         self.create_top_utilities_layout()
         init_ui(self, self.top_utilities_layout)
+        DataExportActions.calc_exported_file_size(self)
        
 
     def create_top_utilities_layout(self): 
         top_collapsible_widget = QWidget()
-        self.widgets[TOP_COLLAPSIBLE_WIDGET] = top_collapsible_widget
         qv_box = QVBoxLayout() 
         qv_box.setSpacing(0)
         qv_box.setContentsMargins(0,0,0,0)
@@ -141,6 +148,7 @@ class FCSWindow(QWidget):
         self.top_utilities_layout.setContentsMargins(0,0,0,0)
         header_layout = self.create_header_layout()
         channels_component = self.create_channels_grid()
+        self.widgets[TOP_COLLAPSIBLE_WIDGET] = channels_component
         self.widgets[CHANNELS_COMPONENT] = channels_component
         ch_and_tau_widget = QWidget()
         ch_and_tau_box = QVBoxLayout()
@@ -160,16 +168,16 @@ class FCSWindow(QWidget):
         self.top_utilities_layout.addLayout(qv_box_2)
         self.top_utilities_layout.addWidget(self.blank_space, 0, Qt.AlignmentFlag.AlignTop)  
 
-    def create_header_layout(self):   
+    def create_header_layout(self):  
+        from components.data_export_controls import ExportDataControl 
         title_row = self.create_logo_and_title()
         gt_calc_mode_buttons_row_layout = self.create_gt_calc_mode_buttons()
         export_data_widget = ExportDataControl(self)
-        download_button = self.create_download_files_menu()
         header_layout = TopBarBuilder.create_header_layout(
             title_row,
             export_data_widget,
-            download_button,
-            gt_calc_mode_buttons_row_layout
+            gt_calc_mode_buttons_row_layout,
+            self
         )
         return header_layout 
 
@@ -177,10 +185,6 @@ class FCSWindow(QWidget):
         title_row = TopBarBuilder.create_logo_and_title(self)
         return title_row    
 
-
-    def create_download_files_menu(self):
-        download_button = DownloadDataControl(self)
-        return download_button
         
     def create_channels_grid(self):          
         channels_component = ChannelsControl(self)
@@ -194,6 +198,7 @@ class FCSWindow(QWidget):
         buttons_row_layout.addStretch(1)
         buttons_row_layout.addWidget(buttons_widget)
         collapse_button = CollapseButton(self.widgets[TOP_COLLAPSIBLE_WIDGET])
+        self.widgets[COLLAPSE_BUTTON] = collapse_button
         buttons_row_layout.addWidget(collapse_button)
         blank_space, controls_layout = ControlsBarBuilder.init_gui_controls_layout(controls_row, buttons_row_layout)
         self.blank_space = blank_space
@@ -212,11 +217,27 @@ class FCSWindow(QWidget):
     def create_gt_calc_mode_buttons(self):        
         buttons_row_layout = GTModeButtons(self)
         return buttons_row_layout    
-
-
-    def calc_exported_file_size(self):
-        return
-
+    
+    def controls_set_enabled(self, enabled: bool):
+            for key in self.control_inputs:
+                excluded = [
+                    START_BUTTON,
+                    STOP_BUTTON,
+                    RESET_BUTTON,
+                    ACQUIRE_BUTTON,
+                    READ_BUTTON,
+                    EXPORT_PLOT_IMG_BUTTON,
+                    READ_FILE_BUTTON,
+                    BIN_METADATA_BUTTON  
+                ]
+                if key not in excluded:
+                    widget = self.control_inputs[key]
+                    if isinstance(widget, QWidget):
+                        widget.setEnabled(enabled)
+            if enabled:
+                self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(
+                    not self.free_running_acquisition_time
+                )
 
     def resizeEvent(self, event):  
         super(FCSWindow, self).resizeEvent(event)
@@ -231,7 +252,14 @@ class FCSWindow(QWidget):
             self.widgets[CH_CORRELATIONS_POPUP].close()
         if PLOTS_CONFIG_POPUP in self.widgets:
             self.widgets[PLOTS_CONFIG_POPUP].close()    
-        event.accept()     
+        event.accept() 
+        if ADD_NOTES_POPUP in self.widgets:
+            self.widgets[ADD_NOTES_POPUP].close()    
+        if READER_POPUP in self.widgets:
+            self.widgets[READER_POPUP].close()        
+        if READER_METADATA_POPUP in self.widgets:
+            self.widgets[READER_METADATA_POPUP].close()                  
+        event.accept()         
 
 
 if __name__ == "__main__":

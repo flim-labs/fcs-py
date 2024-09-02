@@ -1,13 +1,12 @@
 import os
-
-from components.acquisitions_progress_bar import AcquisitionsProgressBar
+import flim_labs
+from components.acquisitions_progress_bar import AcquisitionsProgressBar, GtProgressBar
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QScrollArea,
     QGridLayout,
     QFrame,
     QSizePolicy,
@@ -58,7 +57,8 @@ def create_logo_overlay(self):
 
 
 def init_ui(self, top_utilities_layout):
-    self.setWindowTitle("FlimLabs - FCS v" + APP_VERSION)
+    title = "FlimLabs - FCS v" + APP_VERSION + " - API v" + flim_labs.get_version()
+    self.setWindowTitle(title)
     TitlebarIcon.setup(self)
     GUIStyles.customize_theme(self)
     
@@ -69,9 +69,13 @@ def init_ui(self, top_utilities_layout):
     
  
     progress_bar_layout = QVBoxLayout()
-    progress_bar_widget = AcquisitionsProgressBar(self)
-    progress_bar_widget.setVisible(False)
-    progress_bar_layout.addWidget(progress_bar_widget)
+    acquisition_progress_bar_widget = AcquisitionsProgressBar(self)
+    acquisition_progress_bar_widget.setVisible(False)
+    progress_bar_layout.addWidget(acquisition_progress_bar_widget)
+    
+    gt_progress_bar_widget = GtProgressBar(self)
+    gt_progress_bar_widget.setVisible(False)
+    progress_bar_layout.addWidget(gt_progress_bar_widget)
     
     plot_grids_container = QHBoxLayout()
     plot_grids_container.setSpacing(0)
@@ -89,7 +93,11 @@ def init_ui(self, top_utilities_layout):
     self.layouts[MAIN_LAYOUT] = main_layout
     self.layouts[PLOT_GRIDS_CONTAINER] = plot_grids_container
     self.layouts[PROGRESS_BAR_LAYOUT] = progress_bar_layout
-    self.widgets[PROGRESS_BAR_WIDGET] = progress_bar_widget
+    self.widgets[ACQUISITION_PROGRESS_BAR_WIDGET] = acquisition_progress_bar_widget
+    self.widgets[GT_PROGRESS_BAR_WIDGET] = gt_progress_bar_widget
+    
+    self.resize(self.settings.value("size", QSize(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT)))
+    self.move(self.settings.value("pos", QApplication.primaryScreen().geometry().center() - self.frameGeometry().center()))
 
 
 def create_intensity_layout(app):    
@@ -180,11 +188,55 @@ def create_gt_layout(app):
 
 def remove_widget(layout, widget):
     layout.removeWidget(widget)
+    widget.setParent(None)
     widget.deleteLater() 
+    del widget
     
     
 def insert_widget(layout, widget, position):
     layout.insertWidget(position, widget)
+        
+        
+def hide_layout(layout):
+    for i in range(layout.count()):
+        item = layout.itemAt(i)
+        if item.widget():
+            item.widget().hide()
+        elif item.layout():
+            hide_layout(item.layout())
+
+def show_layout(layout):
+    for i in range(layout.count()):
+        item = layout.itemAt(i)
+        if item.widget():
+            item.widget().show()
+        elif item.layout():
+            show_layout(item.layout())
+            
+            
+def clear_layout(layout):
+    if layout is not None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+            else:
+                sub_layout = item.layout()
+                if sub_layout is not None:
+                    clear_layout(sub_layout)
+        layout.deleteLater()
+        
+        
+def clear_layout_widgets(layout):
+    while layout.count():
+        item = layout.takeAt(0)
+        widget = item.widget()
+        if widget is not None:
+            widget.setParent(None)
+            widget.deleteLater()      
+            
+            
         
 
 
