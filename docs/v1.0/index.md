@@ -27,8 +27,8 @@
     <li><a href="#acquisition-time">Acquisition time</a></li>
     <li><a href="#averages">Averages</a></li>
     <li><a href="#time-span">Time span</a></li>
+    <li><a href="#cps-threshold">CPS Threshold</a></li>
     <li><a href="#export-data">Export data</a></li>
-    <li><a href="#download-scripts-and-data-files">Download scripts and data files</a></li>
     <li><a href="#parameters-table-summary">Parameters table summary</a></li>
     </ul>
     </li>
@@ -119,6 +119,12 @@ _Note: individual G(<span style="font-family: Times New Roman">τ</span>) functi
 
 <hr>
 
+#### CPS threshold
+
+Users can set a numeric value for the **Pile-up threshold (CPS)** input to highlight it in red with a vibrant effect when the CPS for a specific channel _exceeds that threshold_.
+
+<hr>
+
 #### Time span
 
 **Time span** set the time interval, in seconds, for the _last visible data range on the duration x-axis_. For instance, if this value is set to 5s, the x-axis will scroll to continuously display the latest 5 seconds of real-time data on the chart.
@@ -137,18 +143,6 @@ Refers to this sections for more details:
 
 <hr>
 
-#### Download scripts and data files
-
-If the _Export data_ option is enabled, the **download** button allows users to download, in a single action, the _.bin file_ containing the FCS post-processing information and two scripts (_Python_ and _Matlab_) for manipulating and displaying G(<span style="font-family: Times New Roman">τ</span>) vectors in graphical form.
-
-Note: If the user chooses to download the "Python" script, a _requirements.txt_ file - indicating the dependencies to install for running the script - will be automatically downloaded as well.
-
-Refers to this sections for more details:
-
-- [Download Acquired Data](#download-acquired-data)
-- [FCS Data Export guide ](../python-flim-labs/fcs-file-format.md)
-
-<hr>
 
 #### Parameters table summary
 
@@ -165,6 +159,7 @@ Here a table summary of the configurable parameters:
 | `acquisition_time_millis`       | number/None | Set the data acquisition duration. Range: _1-1800s_                                                                        | None      | The acquisition duration is indeterminate (None) if _free_running_acquisition_time_ is set to True.                                                 |
 | `write_data`                    | boolean     | Set export data option to True/False                                                                                       | False     | if set to _True_, the FCS post-processing raw data will be exported locally to the computer                                                                    |
 | `#averages`                      | number     | Set the number of acquisitions                                             | 1     | Configurable only if free running mode is deactivated   |
+| `cps_threshold`                      | number     | Set the CPS threshold                                                                                          | 0     |   If set to a value greater than 0, the user will see the CPS for each channel highlighted in red with a vibrant effect when they exceed the set threshold   | 
 
 
 <br/>
@@ -188,6 +183,7 @@ The configurable parameters which can be stored in the settings file include:
 - `ch_correlation`
 - `gt_plots_to_show`
 - `intensity_plots_to_show`
+- `cps_threshold`
 
 
 On application restart, the saved configuration is automatically loaded. If the `settings.ini` file is not found, or a specific parameter has not been configured yet, a default configuration will be set.
@@ -204,6 +200,7 @@ bin_width_micros=10
 free_running_mode=false
 acquisition_time_millis=4000
 averages=2
+cps_threshold=250000
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -232,8 +229,6 @@ _Note: the graphs of all calculated G(<span style="font-family: Times New Roman"
 The application GUI allows the user to export the FCS post-processing data in `binary file format`.
 
 The user can also preview the approximate final file size on the GUI.
-The final size depends on the **number of activated correlations** (and so on the correlations functions vectors calculated ) and on the **length of user notes** added to the .bin header. 
-
 For a detailed guide about data export and binary file structure see:
 
 - [FCS Data Export guide ](../python-flim-labs/fcs-file-format.md)
@@ -242,13 +237,11 @@ For a detailed guide about data export and binary file structure see:
 
 ## Download Acquired Data
 
-Besides the [Exported Data Visualization](#exported-data-visualization) feature, users can download FCS post-processing data and its reader file by clicking the `DOWNLOAD` button in the top-right corner of the GUI.
+If the _Export data_ option is enabled, the acquisition .bin file and the **Python** and **Matlab** scripts for manipulating and displaying the acquired data are automatically downloaded at the end of the acquisition, after the user selects a name for the files.
 
-During the download, users need to choose the preferred reader file format (`MATLAB` (.m) or `Python` (.py)) and specify a directory for saving both the `.bin` file and its corresponding reader file. It's important to provide a specific name before completing the save operation.
+Note: a requirements.txt file — indicating the dependencies needed to run the Python script -  will also be automatically downloaded.
 
-After downloading, visualize the raw data by running the saved script (reader file). This script reads binary data from the locally stored file and uses the [matplotlib](https://matplotlib.org/) library to create a graphical representation of the G(<span style="font-family: Times New Roman">τ</span>) vectors.
-
-For more details on how to run the saved script. data export and binary file structure and refer to: [FCS Data Export guide ](../python-flim-labs/fcs-file-format.md)
+For more details on how to run the saved script, data export and binary file structure refer to: [FCS Data Export guide ](../python-flim-labs/fcs-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

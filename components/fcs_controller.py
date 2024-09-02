@@ -11,7 +11,7 @@ from components.settings import (
 )
 import numpy as np
 import pyqtgraph as pg
-from fcs_flim import fcs_flim
+import flim_labs 
 from PyQt6.QtCore import QThread, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtGui import QFont
@@ -44,7 +44,7 @@ class FCSPostProcessingSingleCalcWorker(QThread):
     def run(self):
         self.single_step_finished.emit(0)
         for num in range(self.num_acquisitions):
-            fcs_flim.fluorescence_correlation_spectroscopy(
+            flim_labs.fluorescence_correlation_spectroscopy(
                 num_acquisitions=self.num_acquisitions,
                 correlations=self.active_correlations,
                 enabled_channels=self.enabled_channels,
@@ -71,7 +71,7 @@ class FCSPostProcessingAverageCalcWorker(QThread):
 
     def run(self):
         try:
-            result = fcs_flim.average_fluorescence_correlation_spectroscopy(
+            result = flim_labs.average_fluorescence_correlation_spectroscopy(
                 num_acquisitions=self.num_acquisitions,
             )
             self.success.emit(result)

@@ -53,7 +53,7 @@ Welcome to [FCS (Fluorescence Correlation Spectroscopy)](https://github.com/flim
 
 * [Python](https://www.python.org/)
 * [PyQt6](https://pypi.org/project/PyQt6/)
-* [pglive](https://pypi.org/project/pglive/)
+* [pyqtgraph](https://www.pyqtgraph.org/)
 * [matplotlib](https://pypi.org/project/matplotlib/)
 * [flim-labs](https://pypi.org/project/flim-labs/)
 
@@ -96,11 +96,7 @@ To be able to run this project locally on your machine you need to satisfy these
    ```sh
    pip install -r requirements.txt
    ```
-5. Build Pyo3 executable
-   ```sh
-   maturin develop --release
-   ```   
-6. Run the project
+5. Run the project
    ```sh
    python fcs.py
    ```  
