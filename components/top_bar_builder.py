@@ -1,6 +1,7 @@
 import os
 from PyQt6.QtCore import Qt, QSize
 from components.buttons import ReadAcquireModeButton
+from components.check_card import CheckCard
 from components.resource_path import resource_path
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
@@ -33,14 +34,19 @@ class TopBarBuilder:
             app
     ):
         header_layout = QHBoxLayout()
+        
+        #Check card connection
+        check_card_widget = CheckCard(app)
+                  
         # Header row: Link to User Guide
         app_guide_link_widget = LinkWidget(
             icon_filename=resource_path("assets/info-icon.png"), text="User Guide", link=GUI_GUIDE_LINK
         )
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         header_layout.addLayout(logo_and_title)
-        header_layout.addSpacing(10)
         header_layout.addWidget(gt_calc_mode_buttons_row_layout)
+        header_layout.addSpacing(10)
+        header_layout.addWidget(check_card_widget)
         header_layout.addStretch(1)
         read_acquire_button = ReadAcquireModeButton(app=app)
         header_layout.addWidget(read_acquire_button)

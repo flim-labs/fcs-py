@@ -3,6 +3,7 @@ import numpy as np
 import pyqtgraph as pg
 from flim_labs import flim_labs
 from components.animations import VibrantAnimation
+from components.check_card import CheckCard
 from components.fcs_controller import FCSPostProcessing
 from components.box_message import BoxMessage
 from components.format_utilities import FormatUtils
@@ -32,6 +33,7 @@ class IntensityTracing:
     @staticmethod
     def start_photons_tracing(app):
         try:
+            CheckCard.check_card_connection(app)
             free_running_mode = app.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()
             acquisition_time_millis = (
                 None if app.acquisition_time_millis in (0, None) or
@@ -66,6 +68,7 @@ class IntensityTracing:
             app.blank_space.hide()
             app.pull_from_queue_timer.start(1)
         except Exception as e:
+            CheckCard.check_card_connection(app)
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
             BoxMessage.setup(
                 error_title,

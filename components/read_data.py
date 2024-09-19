@@ -34,6 +34,7 @@ from components.messages_utilities import MessagesUtilities
 from components.resource_path import resource_path
 from components.settings import (
     BIN_METADATA_BUTTON,
+    CHECK_CARD_WIDGET,
     COLLAPSE_BUTTON,
     EXPORT_PLOT_IMG_BUTTON,
     GT_WIDGET_WRAPPER,
@@ -74,18 +75,24 @@ class ReadData:
         app.reader_data["fcs"]["data"]["g2_correlations"] = g2_correlations
 
     @staticmethod
-    def read_fcs_bin(window, app):
+    def read_fcs_bin(window, app, filter_string = "fcs"):
         dialog = QFileDialog()
         dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        dialog.setNameFilter("Bin files (*.bin)")
+        if filter_string:
+            filter_pattern = f"Bin files (*{filter_string}*.bin)"
+        else:
+            filter_pattern = "Bin files (*.bin)"
+        dialog.setNameFilter(filter_pattern)         
         file_name, _ = dialog.getOpenFileName(
             window,
             f"Load FCS file",
             "",
-            "Bin files (*.bin)",
+            filter_pattern,
             options=QFileDialog.Option.DontUseNativeDialog,
         )
-        if not file_name or not file_name.endswith(".bin"):
+        if not file_name:
+            return None
+        if file_name is not None and not file_name.endswith(".bin"):   
             ReadData.show_warning_message(
                 "Invalid extension", "Invalid extension. File should be a .bin"
             )
@@ -222,6 +229,8 @@ class ReadDataControls:
         app.control_inputs[SETTINGS_FREE_RUNNING_MODE].setEnabled(not read_mode)
         app.control_inputs[SETTINGS_CPS_THRESHOLD].setEnabled(not read_mode)
         app.control_inputs[SETTINGS_TIME_SPAN].setEnabled(not read_mode)
+        if CHECK_CARD_WIDGET in app.widgets:
+            app.widgets[CHECK_CARD_WIDGET].setVisible(not read_mode)        
 
     @staticmethod
     def read_bin_metadata_enabled(app):
