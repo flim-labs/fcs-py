@@ -119,6 +119,9 @@ CHANNELS_CHECKBOXES = "channels_checkboxes"
 REALTIME_BUTTON = "realtime_button"
 POST_PROCESSING_BUTTON = "post_processing_button"
 
+CHECK_CARD_BUTTON = "check_card_button"
+CHECK_CARD_MESSAGE = "check_card_message"
+CHECK_CARD_WIDGET = "check_card_widget"
 
 
 REALTIME_MS = 50

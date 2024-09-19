@@ -6,6 +6,7 @@ import sys
 from functools import partial
 from PyQt6.QtCore import QTimer, QSettings, Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
+from components.check_card import CheckCard
 from components.gui_styles import GUIStyles
 from components.layout_utilities import init_ui
 from components.channels_control import ChannelsControl
@@ -123,7 +124,10 @@ class FCSWindow(QWidget):
         self.init_ui()
         self.bin_file_size_label.setVisible(self.write_data)
         ReadDataControls.handle_widgets_visibility(
-                self, self.acquire_read_mode == "read")        
+                self, self.acquire_read_mode == "read")    
+        
+        # Check card connection
+        CheckCard.check_card_connection(self)    
 
 
     @staticmethod    

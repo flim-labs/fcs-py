@@ -25,8 +25,8 @@ class ChannelsControl(QWidget):
 
         self.channels_grid = QHBoxLayout()
         layout.addLayout(self.channels_grid)
-
         self.setLayout(layout)
+             
         self.ch_checkboxes = []
         self.create_channel_type_control(self.channels_grid)
         self.correlations_btn = QPushButton("CORRELATIONS")
