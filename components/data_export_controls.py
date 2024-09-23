@@ -14,8 +14,12 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QColor
 from components.file_utilities import FileUtils
 from components.format_utilities import FormatUtils
-from components.general_utilities import calculate_expected_intensity_entries, calculate_lag_index_length
+from components.general_utilities import (
+    calculate_expected_intensity_entries,
+    calculate_lag_index_length,
+)
 from components.gui_styles import GUIStyles
+from components.helpers import calc_timestamp
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
 from components.top_bar_builder import TopBarBuilder
@@ -122,49 +126,56 @@ class DataExportActions:
         num_acquisition = app.selected_average if not free_running else 1
         chunk_bytes = 8 + (4 * len(app.enabled_channels))
         chunk_bytes_in_us = (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
-        acquisition_time = 0 if app.acquisition_time_millis is None else app.acquisition_time_millis
+        acquisition_time = (
+            0 if app.acquisition_time_millis is None else app.acquisition_time_millis
+        )
         if free_running is True:
             file_size_bytes = int(chunk_bytes_in_us)
             bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
             return bin_file_size, "per_second"
         else:
-            file_size_bytes = int(
-                chunk_bytes_in_us * (acquisition_time / 1000)
-            )
+            file_size_bytes = int(chunk_bytes_in_us * (acquisition_time / 1000))
             bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
             return bin_file_size, "total"
-        
-        
+
     @staticmethod
     def calc_fcs_file_size(app, filtered_corr):
         bin_width = app.bin_width_micros
-        acquisition_time = 0 if app.acquisition_time_millis is None else app.acquisition_time_millis 
+        acquisition_time = (
+            0 if app.acquisition_time_millis is None else app.acquisition_time_millis
+        )
         free_running = app.free_running_acquisition_time
         num_acquisition = app.selected_average if not free_running else 1
-        expected_intensity_entries = calculate_expected_intensity_entries(acquisition_time, bin_width) if not free_running else None
+        expected_intensity_entries = (
+            calculate_expected_intensity_entries(acquisition_time, bin_width)
+            if not free_running
+            else None
+        )
         n_correlations = len(filtered_corr)
         n_channels = len(app.enabled_channels)
-        notes_length = len(app.notes.encode('utf-8'))  
-        n_lag_index = 120 if expected_intensity_entries is None else calculate_lag_index_length(expected_intensity_entries)
-        header_size = 4 
-        u32_size = 4   
-        usize_size = 8  
-        f64_size = 8    
+        notes_length = len(app.notes.encode("utf-8"))
+        n_lag_index = (
+            120
+            if expected_intensity_entries is None
+            else calculate_lag_index_length(expected_intensity_entries)
+        )
+        header_size = 4
+        u32_size = 4
+        usize_size = 8
+        f64_size = 8
         correlations_size = n_correlations * (2 * usize_size)
         channels_size = n_channels * usize_size
-        metadata_json_size = correlations_size + channels_size + notes_length  
+        metadata_json_size = correlations_size + channels_size + notes_length
         lag_index_size = n_lag_index * usize_size
         g2_correlations_size = n_correlations * (
             2 * usize_size + (num_acquisition + 1) * n_lag_index * f64_size
         )
-        g2_json_size = lag_index_size + g2_correlations_size  
+        g2_json_size = lag_index_size + g2_correlations_size
         total_estimated_size_bytes = (
             header_size + 2 * u32_size + metadata_json_size + g2_json_size
         )
         total_estimated_size_kb = round(total_estimated_size_bytes / 1024, 2)
         return int(round(total_estimated_size_kb * 2.5, 2))
-
-
 
 
 class AddNotesToExportedDataPopup(QWidget):
@@ -225,6 +236,7 @@ class ExportData:
     @staticmethod
     def save_fcs_data(app):
         try:
+            timestamp = calc_timestamp()
             num_acquisitions = (
                 app.selected_average
                 if app.free_running_acquisition_time == False
@@ -235,35 +247,45 @@ class ExportData:
                 num_acquisitions
             )
             new_fcs_file_path, save_dir, save_name = ExportData.rename_and_move_file(
-                fcs_file, "Save FCS files", app
+                fcs_file, "fcs", "Save FCS files", timestamp, app
             )
             if not new_fcs_file_path:
                 return
-            for file in intensity_files:
-                original_intensity_file_name = os.path.basename(file)
-                new_intensity_file_name = f"{save_name}_{original_intensity_file_name}"
-                new_spectroscopy_ref_path = os.path.join(
-                    save_dir, new_intensity_file_name
+            for index, file in enumerate(intensity_files):
+                file_name = FileUtils.clean_filename(save_name)
+                new_intensity_file_name = (
+                    f"{file_name}_{timestamp}_intensity_tracing_{index + 1}.bin"
                 )
-                shutil.copyfile(file, new_spectroscopy_ref_path)
+                new_intensity_ref_path = os.path.join(save_dir, new_intensity_file_name)
+                shutil.copyfile(file, new_intensity_ref_path)
 
             file_paths = {
                 "fcs": new_fcs_file_path,
             }
 
-            ExportData.download_scripts(file_paths, save_name, save_dir, "fcs")
+            ExportData.download_scripts(
+                file_paths, save_name, save_dir, "fcs", timestamp
+            )
         except Exception as e:
             ScriptFileUtils.show_error_message(e)
 
     @staticmethod
-    def download_scripts(bin_file_paths, file_name, directory, script_type):
+    def download_scripts(bin_file_paths, file_name, directory, script_type, timestamp):
+        file_name = FileUtils.clean_filename(file_name)
+        file_name = f"{file_name}_{timestamp}"
         ScriptFileUtils.export_scripts(
             bin_file_paths, file_name, directory, script_type
         )
-    
 
     @staticmethod
-    def rename_and_move_file(original_file_path, file_dialog_prompt, app):
+    def rename_and_move_file(
+        original_file_path,
+        file_type,
+        file_dialog_prompt,
+        timestamp,
+        app,
+        file_extension="bin",
+    ):
         dialog = QFileDialog()
         save_path, _ = dialog.getSaveFileName(
             app,
@@ -275,8 +297,8 @@ class ExportData:
         if save_path:
             save_dir = os.path.dirname(save_path)
             save_name = os.path.basename(save_path)
-            original_filename = os.path.basename(original_file_path)
-            new_filename = f"{save_name}_{original_filename}"
+            new_filename = f"{save_name}_{timestamp}_{file_type}"
+            new_filename = f"{FileUtils.clean_filename(new_filename)}.{file_extension}"
             new_file_path = os.path.join(save_dir, new_filename)
             shutil.copyfile(original_file_path, new_file_path)
             return new_file_path, save_dir, save_name
