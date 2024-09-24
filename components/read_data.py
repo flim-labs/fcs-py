@@ -75,7 +75,7 @@ class ReadData:
         app.reader_data["fcs"]["data"]["g2_correlations"] = g2_correlations
 
     @staticmethod
-    def read_fcs_bin(window, app, filter_string = "fcs"):
+    def read_fcs_bin(window, app, filter_string = None):
         dialog = QFileDialog()
         dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         if filter_string:
