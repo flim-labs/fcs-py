@@ -6,8 +6,9 @@ from PyQt6.QtGui import QDesktopServices
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, '..'))
 
+        
 class LinkWidget(QWidget):
-    def __init__(self, icon_filename=None, text=None, parent=None, icon_dimensions=25, icon_hover_dimensions=28,
+    def __init__(self, icon_filename=None, text=None, parent=None, icon_dimensions=30, icon_hover_dimensions=36,
                  link=''):
         super(LinkWidget, self).__init__(parent)
 
@@ -15,23 +16,23 @@ class LinkWidget(QWidget):
 
         if text:
             text_label = QLabel(text)
+            text_label.setStyleSheet("color: #f8f8f8;")
             layout.addWidget(text_label)
-            text_label.mousePressEvent = self.open_link
-
-        layout.addSpacing(10)
-
+            layout.addSpacing(10)
         self.link_label = QLabel()
         self.link = link
-
         if icon_filename:
-            icon_path = icon_filename
-            original_icon_pixmap = QPixmap(icon_path).scaled(icon_dimensions, icon_dimensions,Qt.AspectRatioMode.KeepAspectRatio)
+            original_icon_pixmap = QPixmap(icon_filename).scaled(icon_dimensions, icon_dimensions, 
+                                                                Qt.AspectRatioMode.KeepAspectRatio,
+                                                                Qt.TransformationMode.SmoothTransformation)
             self.link_label.setPixmap(original_icon_pixmap)
 
         layout.addWidget(self.link_label)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setLayout(layout)
 
+        if text:
+            text_label.mousePressEvent = self.open_link
         self.link_label.mousePressEvent = self.open_link
 
     def open_link(self, event):

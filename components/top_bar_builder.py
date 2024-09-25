@@ -40,7 +40,7 @@ class TopBarBuilder:
                   
         # Header row: Link to User Guide
         app_guide_link_widget = LinkWidget(
-            icon_filename=resource_path("assets/info-icon.png"), text="User Guide", link=GUI_GUIDE_LINK
+            icon_filename=resource_path("assets/user-guide-icon.png"), text="", link=GUI_GUIDE_LINK
         )
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         header_layout.addLayout(logo_and_title)
