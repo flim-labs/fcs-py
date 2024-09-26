@@ -16,6 +16,14 @@ class GUIStyles:
         palette.setColor(QPalette.ColorRole.Window, background_color)
         palette.setColor(QPalette.ColorRole.WindowText, fg)
         window.setPalette(palette)
+        window.setStyleSheet(
+            """
+        QLabel {
+            color: #f8f8f8;
+            font-family: "Montserrat";
+        }
+        """
+        )  
 
     @staticmethod
     def set_fonts():

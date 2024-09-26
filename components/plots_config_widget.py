@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import  QWidget, QPushButton, QCheckBox, QHBoxLayout, QGrid
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QColor
 from components.correlations_matrix import ChCorrelationsMatrix
+from components.helpers import extract_channel_from_label
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
@@ -175,7 +176,7 @@ class PlotsConfigPopup(QWidget):
 
     def on_ch_intensity_toggled(self, state, checkbox):
         label_text = checkbox.text() 
-        ch_num_index = self.extract_channel_from_label(label_text) 
+        ch_num_index = extract_channel_from_label(label_text) 
         if state:
             if ch_num_index not in self.app.intensity_plots_to_show:
                 self.app.intensity_plots_to_show.append(ch_num_index)
@@ -227,12 +228,6 @@ class PlotsConfigPopup(QWidget):
         IntensityTracingButtonsActions.start_button_pressed(self.app)
        
 
-
-    def extract_channel_from_label(self,text):
-        ch = re.search(r'\d+', text).group()  
-        ch_num = int(ch) 
-        ch_num_index = ch_num - 1 
-        return ch_num_index
 
     def extract_correlation_from_label(self, text):
         numbers = re.findall(r'\d+', text)

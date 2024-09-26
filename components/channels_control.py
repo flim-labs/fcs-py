@@ -4,6 +4,7 @@ import json
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
+from components.channels_detection import DetectChannelsButton
 from components.controls_bar_builder import ControlsBarBuilder
 from components.data_export_controls import DataExportActions
 from components.plots_config_widget import PlotsConfigPopup
@@ -26,6 +27,10 @@ class ChannelsControl(QWidget):
         self.channels_grid = QHBoxLayout()
         layout.addLayout(self.channels_grid)
         self.setLayout(layout)
+        
+        # Detect channels button
+        self.detect_channels_btn =  DetectChannelsButton(self.app)
+        self.channels_grid.addWidget(self.detect_channels_btn)
              
         self.ch_checkboxes = []
         self.create_channel_type_control(self.channels_grid)
@@ -109,6 +114,7 @@ class ChannelsControl(QWidget):
             ch_checkbox_wrapper.setStyleSheet(GUIStyles.checkbox_wrapper_style())
             ch_checkbox_wrapper.setFixedHeight(40)
             self.ch_checkboxes.append(ch_checkbox_wrapper)
+            self.app.channel_checkboxes.append(checkbox)
             self.widgets = self.ch_checkboxes + [
                 self.correlations_btn,
                 self.plots_config_btn,

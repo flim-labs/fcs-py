@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
 APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
@@ -123,6 +123,7 @@ CHECK_CARD_BUTTON = "check_card_button"
 CHECK_CARD_MESSAGE = "check_card_message"
 CHECK_CARD_WIDGET = "check_card_widget"
 
+CHANNELS_DETECTION_BUTTON = "channels_detection_button"
 
 REALTIME_MS = 50
 REALTIME_ADJUSTMENT = REALTIME_MS * 1000

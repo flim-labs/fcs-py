@@ -63,7 +63,7 @@ Welcome to [FCS (Fluorescence Correlation Spectroscopy)](https://github.com/flim
 
 <!-- GETTING STARTED -->
 ## Getting Started
-To directly test the application, skipping the installation requirements you can download an installer at this [link](https://github.com/flim-labs/fcs-py/releases/tag/v1.1) (_Note: you still need to have the FLIM LABS Data Acquisition Card_). 
+To directly test the application, skipping the installation requirements you can download an installer at this [link](https://github.com/flim-labs/fcs-py/releases/tag/v1.2) (_Note: you still need to have the FLIM LABS Data Acquisition Card_). 
 
 To get a local copy up and running follow these steps.
 
@@ -110,7 +110,7 @@ To be able to run this project locally on your machine you need to satisfy these
 
 Navigate to the following links to view detailed application usage guides:
 
-- [FCS GUI guide](./docs/v1.1/index.md)
+- [FCS GUI guide](./docs/v1.2/index.md)
 - [FCS Data export guide](./docs/python-flim-labs/fcs-file-format.md)
 
 

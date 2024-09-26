@@ -4,7 +4,7 @@ import os
 import json
 import sys
 from functools import partial
-from PyQt6.QtCore import QTimer, QSettings, Qt
+from PyQt6.QtCore import QTimer, QSettings, Qt,  QtMsgType, qInstallMessageHandler
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from components.check_card import CheckCard
 from components.gui_styles import GUIStyles
@@ -271,6 +271,12 @@ if __name__ == "__main__":
     window = FCSWindow()
     window.showMaximized()
     window.show()
+    def custom_message_handler(msg_type, context, message):
+        if msg_type == QtMsgType.QtWarningMsg:
+            if "QWindowsWindow::setGeometry" in message:
+                return  
+        print(message)   
+    qInstallMessageHandler(custom_message_handler)      
     exit_code = app.exec()
     IntensityTracing.stop_button_pressed(window, app_close=True)
     sys.exit(exit_code)
