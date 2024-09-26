@@ -1,5 +1,8 @@
 # FCS Changelog
 
+## Version 1.2
+- Add automatic channels connections detection
+
 ## Version 1.1
 - Add automatic card connection detection
 - Improvements/simplification on exported data naming system
