@@ -3,7 +3,7 @@ from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QMouseEvent, QIcon
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 
 SELECTED_COLOR = "#31c914"
-SELECTED_HOVER_COLOR = "#0053a4"
+SELECTED_HOVER_COLOR = "#57D33D"
 DISABLED_SELECTED_COLOR = "#2E2E2E"
 UNSELECTED_COLOR = "#000000"
 DISABLED_COLOR = "lightgrey"
@@ -13,7 +13,7 @@ TEXT_COLOR = "#FFFFFF"
 CHECKED_COLOR = "#31c914"
 UNCHECKED_COLOR = "lightgrey"
 
-SELECTED_COLOR_BUTTON = "#0078D7"
+SELECTED_COLOR_BUTTON = "#31c914"
 
 
 
@@ -127,8 +127,8 @@ class FancyButton(QPushButton):
         if not self.isEnabled():
             bg_color = "#3c3c3c" if self.selected else "#000000"
             color = "lightgrey"
-        hover_color = SELECTED_HOVER_COLOR
-        pressed_color = "#003d7a"
+        hover_color = "#31c914"
+        pressed_color = "#7FE777"
 
         self.setStyleSheet(f"""
             QPushButton {{

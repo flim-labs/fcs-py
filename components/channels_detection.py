@@ -45,7 +45,7 @@ class DetectChannelsDialog(QDialog):
         self.app = app
         self.setWindowTitle("Detect Channels")
         self.setWindowIcon(QIcon(resource_path("assets/channel-icon-green.png")))
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
@@ -212,7 +212,7 @@ class DetectChannelsDialog(QDialog):
                         result_label = QLabel(result_text)
                         if connection_type != "Not Detected":
                             result_label.setStyleSheet(
-                                "font-family: Montserrat; font-size: 14px; font-weight: bold; color: #0096FF;"
+                                "font-family: Montserrat; font-size: 14px; font-weight: bold; color: #31c914;"
                             )
                         else:
                             result_label.setStyleSheet(
