@@ -33,7 +33,17 @@ class IntensityTracing:
     @staticmethod
     def start_photons_tracing(app):
         try:
-            CheckCard.check_card_connection(app)
+            # Check card connection
+            try:
+                 CheckCard.check_card_connection(app, start_experiment = True)
+            except Exception as e:
+                BoxMessage.setup(
+                        "Error",
+                        "Error starting experiment: " + str(e),
+                        QMessageBox.Icon.Warning,
+                        GUIStyles.set_msg_box_style(),
+                    )  
+                return                 
             free_running_mode = app.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()
             acquisition_time_millis = (
                 None if app.acquisition_time_millis in (0, None) or
