@@ -43,6 +43,8 @@ class IntensityTracing:
                         QMessageBox.Icon.Warning,
                         GUIStyles.set_msg_box_style(),
                     )  
+                app.control_inputs[START_BUTTON].setEnabled(True)
+                app.control_inputs[STOP_BUTTON].setEnabled(False)   
                 return                 
             free_running_mode = app.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()
             acquisition_time_millis = (
