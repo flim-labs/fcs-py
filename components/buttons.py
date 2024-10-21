@@ -1,8 +1,8 @@
 import json
 import os
-from PyQt6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel
 from PyQt6.QtCore import QPropertyAnimation, Qt, QSize
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QPixmap
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.plots_config_widget import PlotsConfigPopup
 from components.read_data import ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
@@ -301,3 +301,42 @@ class ExportPlotImageButton(QWidget):
         ReadData.save_plot_image(plot)        
   
    
+
+class TimeTaggerWidget(QWidget):
+    def __init__(self, app, parent=None):
+        super().__init__(parent)
+        self.app = app
+        write_data = self.app.write_data
+        time_tagger_container = QWidget()
+        time_tagger_container.setObjectName("container")
+        time_tagger_container.setStyleSheet(GUIStyles.time_tagger_style())
+        time_tagger_container.setFixedHeight(48)
+        time_tagger_container.setContentsMargins(0, 0, 0, 0)
+        time_tagget_layout = QHBoxLayout()
+        time_tagget_layout.setSpacing(0)
+        # time tagger icon
+        pixmap = QPixmap(resource_path("assets/time-tagger-icon.png")).scaledToWidth(25)
+        icon = QLabel(pixmap=pixmap)
+        # time tagger checkbox
+        time_tagger_checkbox = QCheckBox("TIME TAGGER")
+        time_tagger_checkbox.setChecked(self.app.time_tagger)
+        time_tagger_checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        time_tagger_checkbox.toggled.connect(
+            lambda checked: self.on_time_tagger_state_changed(
+                checked
+            )
+        )        
+        time_tagget_layout.addWidget(time_tagger_checkbox)
+        time_tagget_layout.addWidget(icon)
+        time_tagger_container.setLayout(time_tagget_layout)
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        main_layout.addWidget(time_tagger_container)
+        self.app.widgets[TIME_TAGGER_WIDGET] = self
+        self.setLayout(main_layout)
+        self.setVisible(write_data)
+        
+    def on_time_tagger_state_changed(self, checked):
+        self.app.time_tagger = checked        
+        

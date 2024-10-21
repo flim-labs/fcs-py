@@ -70,6 +70,9 @@ DEFAULT_FREE_RUNNING_MODE = True
 SETTINGS_WRITE_DATA = "write_data"
 DEFAULT_WRITE_DATA = True
 
+SETTINGS_TIME_TAGGER = "time_tagger"
+DEFAULT_TIME_TAGGER = False
+
 MAX_CHANNELS = 8
 
 SETTINGS_ENABLED_CHANNELS = "enabled_channels"
@@ -110,6 +113,9 @@ PROGRESS_BAR_LAYOUT = "progress_bar_layout"
 ACQUISITION_PROGRESS_BAR_WIDGET = "acquisition_progress_bar_widget"
 
 GT_PROGRESS_BAR_WIDGET = "gt_progress_bar_widget"
+
+TIME_TAGGER_PROGRESS_BAR = "time_tagger_progress_bar"
+TIME_TAGGER_WIDGET = "time_tagger_widget"
 
 INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
 GT_WIDGET_WRAPPER = "gt_widget_wrapper"

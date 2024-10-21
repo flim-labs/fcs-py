@@ -65,6 +65,7 @@ class IntensityTracing:
                 enabled_channels=app.enabled_channels,
                 bin_width_micros=app.bin_width_micros, 
                 write_bin=False,  
+                time_tagger=app.time_tagger,
                 write_data=True,  
                 acquisition_time_millis=acquisition_time_millis, 
                 firmware_file=app.selected_firmware,

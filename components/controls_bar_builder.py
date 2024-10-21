@@ -2,7 +2,9 @@ import os
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon
 
+from components.progress_bar import ProgressBar
 from components.resource_path import resource_path
+from components.settings import TIME_TAGGER_PROGRESS_BAR
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
@@ -24,7 +26,7 @@ from components.layout_utilities import draw_layout_separator
 class ControlsBarBuilder:
 
     @staticmethod
-    def init_gui_controls_layout(controls_row, buttons_row):
+    def init_gui_controls_layout(controls_row, buttons_row, app):
         layout_container = QVBoxLayout()
         layout_container.setSpacing(0)
         layout_container.setContentsMargins(0, 0, 0, 0)
@@ -46,6 +48,13 @@ class ControlsBarBuilder:
         controls_layout.addSpacing(10)
         layout_container.addLayout(controls_layout)
         layout_container.addWidget(draw_layout_separator())
+        # Time tagger progress bar
+        time_tagger_progress_bar = ProgressBar(
+            visible=False, indeterminate=True, label_text="Time tagger processing..."
+        )
+        app.widgets[TIME_TAGGER_PROGRESS_BAR] = time_tagger_progress_bar
+        layout_container.addWidget(time_tagger_progress_bar)
+        layout_container.addSpacing(5)     
         return blank_space, layout_container
 
     @staticmethod

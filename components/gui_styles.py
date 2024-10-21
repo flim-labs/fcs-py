@@ -723,5 +723,64 @@ class GUIStyles:
                 font-weight: 800;
                 font-size: 14px;
             }}                
-        """                         
-                           
+        """ 
+        
+    @staticmethod
+    def time_tagger_style():
+        return f"""
+            QWidget#container {{
+                border-radius: 5px;
+                border: 2px solid #1fd400;
+                padding: 0;
+                
+            }} 
+            QWidget {{
+                background-color: white;
+                padding: 0;
+            }}    
+            QCheckBox {{
+                spacing: 10px;
+                color: #1fd400;
+                font-family: "Montserrat";
+                font-weight: 800;
+                font-size: 14px;
+                letter-spacing: 0.1em;
+                border: none;
+                border-radius: 5px;
+                padding: 0 10px 0 0;
+            }}
+            QCheckBox::indicator {{
+                width: 20px;
+                height: 20px;
+                border-radius: 10px;  
+            }}
+
+            QCheckBox::indicator:unchecked {{
+                background-color: #6b6a6a;
+            }}
+
+            QCheckBox::indicator:checked {{
+                background-color: #1fd400;
+            }}                   
+        """ 
+                                       
+    @staticmethod
+    def progress_bar_style(color: str):
+        return f"""
+            QLabel {{
+                color: {color};
+                font-family: "Montserrat";
+                font-size: 18px;
+                font-weight: bold;
+                
+            }} 
+            QProgressBar {{
+                color: transparent;
+                background-color: white;
+                padding: 0;
+            }}
+            QProgressBar::chunk {{
+                background: {color};
+                color: transparent;
+            }}               
+        """                           

@@ -12,17 +12,32 @@ class FileUtils:
         return [os.path.join(data_folder, f) for f in files[:num]]
     
     @staticmethod
-    def get_recent_fcs_file():
+    def get_recent_fcs_file(extension=".bin"):
         data_folder = os.path.join(os.environ["USERPROFILE"], ".flim-labs", "data")
         files = [
             f
             for f in os.listdir(data_folder)
-            if f.startswith("fcs") and not ("calc" in f) and not ("intensity" in f)
+            if f.startswith("fcs") and not ("calc" in f) and not ("intensity" in f) and extension in f
         ]
         files.sort(
             key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True
         )
         return os.path.join(data_folder, files[0])
+    
+    
+    
+    @staticmethod   
+    def get_recent_time_tagger_file():
+        data_folder = os.path.join(os.environ["USERPROFILE"], ".flim-labs", "data")
+        files = [
+            f
+            for f in os.listdir(data_folder)
+            if f.startswith("time_tagger_intensity")
+        ]
+        files.sort(
+            key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True
+        )
+        return os.path.join(data_folder, files[0])       
     
     @staticmethod
     def clean_filename(filename):
