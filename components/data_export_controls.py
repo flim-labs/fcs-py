@@ -263,12 +263,12 @@ class ExportData:
             new_fcs_file_path, save_dir, save_name = ExportData.rename_and_move_file(
                 fcs_file, "fcs", "Save FCS files", timestamp, app
             )
+            if not new_fcs_file_path:
+                return
             ExportData.copy_file(
                 txt_fcs_file, save_name, save_dir, "fcs", timestamp, "txt"
             )
-
-            if not new_fcs_file_path:
-                return
+       
             for index, file in enumerate(intensity_files):
                 file_name = FileUtils.clean_filename(save_name)
                 new_intensity_file_name = (

@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-APP_VERSION = "1.2"
+APP_VERSION = "1.3"
 APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
