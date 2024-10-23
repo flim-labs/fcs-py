@@ -199,7 +199,7 @@ class FCSPostProcessingPlot:
         gt_widget.getAxis("bottom").label.setFont(q_font)
         gt_widget.getAxis("left").label.setFont(q_font)
         gt_widget.setTitle(
-            f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}; G(0) = { "{:.6f}".format(gt_values[0])}"
+            f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}; G(0) = {{:.6f}}".format(gt_values[0])
         )
         gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10)
         fcs_plot = gt_widget.plot(
