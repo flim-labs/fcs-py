@@ -4,7 +4,6 @@ import pyqtgraph as pg
 from flim_labs import flim_labs
 from components.animations import VibrantAnimation
 from components.check_card import CheckCard
-from components.fcs_controller import FCSPostProcessing
 from components.box_message import BoxMessage
 from components.format_utilities import FormatUtils
 from components.layout_utilities import create_gt_loading_layout, create_gt_wait_layout, insert_widget, remove_widget
@@ -186,6 +185,7 @@ class IntensityTracing:
 
     @staticmethod    
     def stop_button_pressed(app, app_close = False):
+        from components.fcs_controller import FCSPostProcessing
         app.pull_from_queue_timer.stop() 
         try:
             flim_labs.request_stop()
@@ -286,6 +286,7 @@ class IntensityTracingButtonsActions:
                    
     @staticmethod    
     def stop_button_pressed(app):
+        from components.fcs_controller import FCSPostProcessing
         app.pull_from_queue_timer.stop()   
         try:     
             flim_labs.request_stop()
