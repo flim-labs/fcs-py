@@ -47,6 +47,9 @@ class FCSWindow(QWidget):
         self.show_cps = True
         self.cps_threshold = int(self.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
+        # Time tagger
+        time_tagger = self.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER)
+        self.time_tagger = time_tagger == "true" or time_tagger == True
         default_enabled_channels = self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)
         self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
         
@@ -204,7 +207,7 @@ class FCSWindow(QWidget):
         collapse_button = CollapseButton(self.widgets[TOP_COLLAPSIBLE_WIDGET])
         self.widgets[COLLAPSE_BUTTON] = collapse_button
         buttons_row_layout.addWidget(collapse_button)
-        blank_space, controls_layout = ControlsBarBuilder.init_gui_controls_layout(controls_row, buttons_row_layout)
+        blank_space, controls_layout = ControlsBarBuilder.init_gui_controls_layout(controls_row, buttons_row_layout, self)
         self.blank_space = blank_space
         return controls_layout
 

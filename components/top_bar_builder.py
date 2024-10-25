@@ -1,6 +1,5 @@
 import os
 from PyQt6.QtCore import Qt, QSize
-from components.buttons import ReadAcquireModeButton
 from components.check_card import CheckCard
 from components.resource_path import resource_path
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -33,6 +32,7 @@ class TopBarBuilder:
             gt_calc_mode_buttons_row_layout,
             app
     ):
+        from components.buttons import ReadAcquireModeButton
         header_layout = QHBoxLayout()
         
         #Check card connection

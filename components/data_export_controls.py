@@ -45,8 +45,18 @@ class ExportDataControl(QWidget):
         layout.addLayout(self.export_data_control)
         self.export_data_control.addSpacing(10)
         layout.addLayout(self.file_size_info_layout)
+        layout.addSpacing(5)
+        # Time Tagger
+        time_tagger = self.create_time_tagger_widget()
+        layout.addWidget(time_tagger)
 
         self.setLayout(layout)
+
+    def create_time_tagger_widget(self):
+        from components.buttons import TimeTaggerWidget
+
+        time_tagger = TimeTaggerWidget(self.app)
+        return time_tagger
 
     def create_export_data_input(self):
         info_link_widget, export_data_control, inp = (
@@ -94,6 +104,8 @@ class ExportDataControl(QWidget):
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.app.bin_file_size_label.hide()
             self.app.control_inputs[ADD_NOTES_BUTTON].setVisible(False)
+        if TIME_TAGGER_WIDGET in self.app.widgets:
+            self.app.widgets[TIME_TAGGER_WIDGET].setVisible(state)
 
 
 class DataExportActions:
@@ -107,17 +119,17 @@ class DataExportActions:
             fcs_file_size = 0
         else:
             fcs_file_size = DataExportActions.calc_fcs_file_size(app, filtered_corr)
-        fcs_file_size_str = f"; {fcs_file_size} KB (fcs)" if fcs_file_size > 0 else ""
+        fcs_file_size_str = f";\n{fcs_file_size} KB (fcs)" if fcs_file_size > 0 else ""
         intensity_tracing_files_size, type = (
             DataExportActions.calc_intensity_files_size(app)
         )
         if type == "per_second":
             app.bin_file_size_label.setText(
-                f"Files size: {intensity_tracing_files_size}/s (intensity){fcs_file_size_str}"
+                f"{intensity_tracing_files_size}/s (intensity){fcs_file_size_str}"
             )
         else:
             app.bin_file_size_label.setText(
-                f"Files size: {intensity_tracing_files_size} (intensity){fcs_file_size_str}"
+                f"{intensity_tracing_files_size} (intensity){fcs_file_size_str}"
             )
 
     @staticmethod
@@ -237,12 +249,14 @@ class ExportData:
     def save_fcs_data(app):
         try:
             timestamp = calc_timestamp()
+            time_tagger = app.time_tagger
             num_acquisitions = (
                 app.selected_average
                 if app.free_running_acquisition_time == False
                 else 1
             )
             fcs_file = FileUtils.get_recent_fcs_file()
+            txt_fcs_file = FileUtils.get_recent_fcs_file(extension=".txt")
             intensity_files = FileUtils.get_recent_n_intensity_tracing_files(
                 num_acquisitions
             )
@@ -251,6 +265,10 @@ class ExportData:
             )
             if not new_fcs_file_path:
                 return
+            ExportData.copy_file(
+                txt_fcs_file, save_name, save_dir, "fcs", timestamp, "txt"
+            )
+       
             for index, file in enumerate(intensity_files):
                 file_name = FileUtils.clean_filename(save_name)
                 new_intensity_file_name = (
@@ -259,23 +277,70 @@ class ExportData:
                 new_intensity_ref_path = os.path.join(save_dir, new_intensity_file_name)
                 shutil.copyfile(file, new_intensity_ref_path)
 
+            if time_tagger:
+                time_tagger_file = FileUtils.get_recent_time_tagger_file()
+                new_time_tagger_path = ExportData.copy_file(
+                    time_tagger_file,
+                    save_name,
+                    save_dir,
+                    "time_tagger_fcs",
+                    timestamp,
+                )
+            new_time_tagger_path = (
+                ""
+                if not time_tagger or not new_time_tagger_path
+                else new_time_tagger_path
+            )
             file_paths = {
                 "fcs": new_fcs_file_path,
             }
-
             ExportData.download_scripts(
-                file_paths, save_name, save_dir, "fcs", timestamp
+                file_paths,
+                save_name,
+                save_dir,
+                "fcs",
+                timestamp,
+                time_tagger=time_tagger,
+                time_tagger_file_path=new_time_tagger_path,
             )
         except Exception as e:
             ScriptFileUtils.show_error_message(e)
 
     @staticmethod
-    def download_scripts(bin_file_paths, file_name, directory, script_type, timestamp):
+    def download_scripts(
+        bin_file_paths,
+        file_name,
+        directory,
+        script_type,
+        timestamp,
+        time_tagger=False,
+        time_tagger_file_path="",
+    ):
         file_name = FileUtils.clean_filename(file_name)
         file_name = f"{file_name}_{timestamp}"
         ScriptFileUtils.export_scripts(
-            bin_file_paths, file_name, directory, script_type
+            bin_file_paths,
+            file_name,
+            directory,
+            script_type,
+            time_tagger,
+            time_tagger_file_path,
         )
+
+    @staticmethod
+    def copy_file(
+        origin_file_path,
+        save_name,
+        save_dir,
+        file_type,
+        timestamp,
+        file_extension="bin",
+    ):
+        new_filename = f"{save_name}_{timestamp}_{file_type}"
+        new_filename = f"{FileUtils.clean_filename(new_filename)}.{file_extension}"
+        new_file_path = os.path.join(save_dir, new_filename)
+        shutil.copyfile(origin_file_path, new_file_path)
+        return new_file_path
 
     @staticmethod
     def rename_and_move_file(

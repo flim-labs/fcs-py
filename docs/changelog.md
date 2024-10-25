@@ -1,5 +1,12 @@
 # FCS Changelog
 
+## Version 1.3
+- Improve tau vector calculation
+- Export G(τ) data also in .txt format
+- Improve G(τ) graphs logarithmic representation
+- Improve Card Detection user experience
+- Add Time Tagger feature
+
 ## Version 1.2
 - Add automatic channels connections detection
 

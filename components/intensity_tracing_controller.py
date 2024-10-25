@@ -65,6 +65,7 @@ class IntensityTracing:
                 enabled_channels=app.enabled_channels,
                 bin_width_micros=app.bin_width_micros, 
                 write_bin=False,  
+                time_tagger=app.time_tagger,
                 write_data=True,  
                 acquisition_time_millis=acquisition_time_millis, 
                 firmware_file=app.selected_firmware,
@@ -224,7 +225,6 @@ class IntensityTracingButtonsActions:
     def start_button_pressed(app):
         IntensityTracingButtonsActions.clear_intensity_widgets(app)  
         if app.free_running_acquisition_time is False and app.selected_average > 1:
-            app.intensity_plots_to_show = []
             app.only_cps_shown = True
         else:
             app.only_cps_shown = False          
@@ -264,7 +264,10 @@ class IntensityTracingButtonsActions:
     @staticmethod
     def intensity_tracing_start(app, read_data=False):
         if not read_data:
-            only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
+            if app.only_cps_shown:
+                only_cps_widgets = [item for item in app.enabled_channels]
+            else:    
+                only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
             only_cps_widgets.sort()
             for ch in app.enabled_channels:
                 app.cps_counts[ch] = {
@@ -274,12 +277,13 @@ class IntensityTracingButtonsActions:
                 }    
             if len(only_cps_widgets) > 0:        
                 for index, channel in enumerate(only_cps_widgets):
-                    IntensityTracingOnlyCPS.create_only_cps_widget(app, index, channel)                    
-        for i, channel in enumerate(app.intensity_plots_to_show):
-            if i < len(app.intensity_charts):
-                app.intensity_charts[i].show()
-            else:
-                IntensityTracingPlot.create_chart_widget(app, i, channel, read_data)
+                    IntensityTracingOnlyCPS.create_only_cps_widget(app, index, channel)  
+        if  not app.only_cps_shown:                                        
+            for i, channel in enumerate(app.intensity_plots_to_show):
+                if i < len(app.intensity_charts):
+                    app.intensity_charts[i].show()
+                else:
+                    IntensityTracingPlot.create_chart_widget(app, i, channel, read_data)
 
                 
                    

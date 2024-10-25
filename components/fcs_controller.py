@@ -7,6 +7,7 @@ from components.settings import (
     GT_PROGRESS_BAR_WIDGET,
     GT_WIDGET_WRAPPER,
     PLOT_GRIDS_CONTAINER,
+    TIME_TAGGER_PROGRESS_BAR,
     UNICODE_SUP,
 )
 import numpy as np
@@ -15,6 +16,8 @@ import flim_labs
 from PyQt6.QtCore import QThread, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtGui import QFont
+
+from components.time_tagger import TimeTaggerController
 
 
 class FCSPostProcessingSingleCalcWorker(QThread):
@@ -172,43 +175,47 @@ class FCSPostProcessing:
                 300,
                 partial(ExportData.save_fcs_data, app),
             )
+              
+        # if app.write_data and app.time_tagger:
+            # app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
+            #TimeTaggerController.init_time_tagger_processing(app)            
+            
 
 class FCSPostProcessingPlot:
     @staticmethod
     def generate_chart(correlation, index, app, lag_index, gt_values):
-        lag_index[0] = lag_index[0] + 0.000000001
+        values = np.array(lag_index)
+        values = np.where(values <= 0, 1e-9, values)
+        log_values = np.log10(values)
+        log_values = np.where(log_values < 0, -0.1, log_values)
+        exponents_int = log_values.astype(int)
+        exponents_lin_space_int = np.linspace(
+            0, max(exponents_int), len(exponents_int)
+        ).astype(int)        
         gt_widget = pg.PlotWidget()
-        log_x = np.log10(lag_index)
-        log_x[0] = 0
-        exponents = np.floor(log_x)
-        exponents_int = np.array(exponents).astype(int)
-        exponents_lin_space = np.linspace(0, max(exponents_int))
-        exponents_lin_space_int = np.array(exponents_lin_space).astype(int)
         gt_widget.setLabel("left", "G(τ)", units="")
         gt_widget.setLabel("bottom", "τ (μs)", units="")
         q_font = QFont("Times New Roman")
         gt_widget.getAxis("bottom").label.setFont(q_font)
         gt_widget.getAxis("left").label.setFont(q_font)
         gt_widget.setTitle(
-            f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}"
+            f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}; G(0) = {{:.6f}}".format(gt_values[0])
         )
         gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10)
-        intensity_plot = gt_widget.plot(
-            log_x, gt_values, pen=pg.mkPen(color="#31c914", width=2)
+        fcs_plot = gt_widget.plot(
+            log_values, gt_values, pen=pg.mkPen(color="#31c914", width=2)
         )
         gt_widget.plotItem.getAxis("left").enableAutoSIPrefix(False)
         gt_widget.plotItem.getAxis("bottom").enableAutoSIPrefix(False)
-
         def format_power_of_ten(i):
-            if i == 0:
+            if i < 0:
                 return "0"
             else:
                 return "10" + "".join([UNICODE_SUP[c] for c in str(i)])
-
         ticks = [(i, format_power_of_ten(i)) for i in exponents_lin_space_int]
         axis = gt_widget.getAxis("bottom")
         axis.setTicks([ticks])
         gt_widget.setBackground("#141414")
-        app.gt_lines.append(intensity_plot)
+        app.gt_lines.append(fcs_plot)
         row, col = divmod(index, 2)
         app.layouts[GT_PLOTS_GRID].addWidget(gt_widget, row, col)
