@@ -59,6 +59,9 @@ class FCSWindow(QWidget):
         self.bin_width_inputs = BIN_WIDTH_INPUTS
         self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
         
+        self.tau_axis_scales = TAU_AXIS_SCALES
+        self.tau_axis_scale = self.settings.value(SETTINGS_TAU_AXIS_SCALE, DEFAULT_TAU_AXIS_SCALE)
+        
         self.averages_inputs = AVERAGES_INPUTS
         self.selected_average = int(self.settings.value(SETTINGS_AVERAGES, DEFAULT_AVERAGES))
 

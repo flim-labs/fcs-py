@@ -135,16 +135,16 @@ class InputParamsControls(QWidget):
         DataExportActions.calc_exported_file_size(self.app)
 
     def create_tau_scale_control(self, layout):
-        options = ["Low density tau points", "High density tau points"]
-        value = getattr(self.app, "tau_scale", options[0])
+        options = self.app.tau_axis_scales
         inp = ControlsBarBuilder.create_tau_scale_control(
             layout,
-            value,
+            self.app.tau_axis_scale,
             self.tau_scale_value_change,
             options,
         )
         self.app.control_inputs["tau_scale"] = inp
 
     def tau_scale_value_change(self, idx):
-        options = ["Low density tau points", "High density tau points"]
+        options = self.app.tau_axis_scales
         self.app.tau_scale = options[idx]
+        self.app.settings.setValue(SETTINGS_TAU_AXIS_SCALE, self.app.tau_scale)

@@ -278,7 +278,7 @@ class ControlsBarBuilder:
     def create_tau_scale_control(controls_row, value, change_cb, options):
         # Tau scale control
         _, inp = SelectControl.setup(
-            "Tau scale:",
+            "Tau points scale:",
             value,
             controls_row,
             options,
