@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-APP_VERSION = "1.3"
+APP_VERSION = "1.4"
 APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
@@ -20,6 +20,10 @@ DEFAULT_TAU = 100
 BIN_WIDTH_INPUTS = [1, 10, 100, 1000]
 SETTINGS_BIN_WIDTH_MICROS = "bin_width_micros"
 DEFAULT_BIN_WIDTH_MICROS = 10
+
+SETTINGS_TAU_AXIS_SCALE = "tau_axis_scale"
+DEFAULT_TAU_AXIS_SCALE= "Low density"
+TAU_AXIS_SCALES = ["Low density", "High density"]
 
 SETTINGS_CPS_THRESHOLD = "cps_threshold"
 DEFAULT_CPS_THRESHOLD = 0

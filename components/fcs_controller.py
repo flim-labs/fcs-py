@@ -33,12 +33,14 @@ class FCSPostProcessingSingleCalcWorker(QThread):
         acquisition_time,
         export_data,
         notes,
+        tau_high_density
     ):
         super().__init__()
         self.active_correlations = active_correlations
         self.num_acquisitions = num_acquisitions
         self.enabled_channels = enabled_channels
         self.bin_width = bin_width
+        self.tau_high_density = tau_high_density
         self.acquisition_time = acquisition_time
         self.export_data = export_data
         self.notes = notes
@@ -55,6 +57,7 @@ class FCSPostProcessingSingleCalcWorker(QThread):
                 acquisition_time=self.acquisition_time,
                 export_data=self.export_data,
                 notes=self.notes,
+                tau_high_density=self.tau_high_density
             )
             self.single_step_finished.emit(num + 1)
         self.finished.emit()
@@ -106,6 +109,8 @@ class FCSPostProcessing:
             (ch1, ch2) for ch1, ch2, active in correlations if active
         ]
         num_acquisitions = app.selected_average if free_running_mode == False else 1
+        tau_high_density = app.tau_axis_scale == "High density"
+        
         worker = FCSPostProcessingSingleCalcWorker(
             active_correlations,
             num_acquisitions,
@@ -114,6 +119,7 @@ class FCSPostProcessing:
             acquisition_time,
             export_data,
             notes,
+            tau_high_density
         )
         QApplication.processEvents()
         worker.single_step_finished.connect(

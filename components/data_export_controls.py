@@ -166,11 +166,12 @@ class DataExportActions:
         n_correlations = len(filtered_corr)
         n_channels = len(app.enabled_channels)
         notes_length = len(app.notes.encode("utf-8"))
-        n_lag_index = (
-            120
-            if expected_intensity_entries is None
-            else calculate_lag_index_length(expected_intensity_entries)
-        )
+        
+        # Get tau_high_density from app settings
+        tau_high_density = app.tau_axis_scale == "High density"
+        
+        n_lag_index = calculate_lag_index_length(bin_width, tau_high_density) 
+      
         header_size = 4
         u32_size = 4
         usize_size = 8
@@ -187,7 +188,7 @@ class DataExportActions:
             header_size + 2 * u32_size + metadata_json_size + g2_json_size
         )
         total_estimated_size_kb = round(total_estimated_size_bytes / 1024, 2)
-        return int(round(total_estimated_size_kb * 2.5, 2))
+        return int(round(total_estimated_size_kb, 2))
 
 
 class AddNotesToExportedDataPopup(QWidget):

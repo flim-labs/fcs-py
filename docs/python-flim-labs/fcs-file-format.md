@@ -105,7 +105,7 @@ The script files are automatically downloaded along with the intensity and fcs .
 For more details about the project follow these links:
 
 - [FCS introduction](../index.md)
-- [FCS GUI guide](../v1.3/index.md)
+- [FCS GUI guide](../v1.4/index.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

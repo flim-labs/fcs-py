@@ -1,5 +1,8 @@
 # FCS Changelog
 
+## Version 1.4
+- Give the user the possibility to choose between high and low density tau points scale
+
 ## Version 1.3
 - Improve tau vector calculation
 - Export G(τ) data also in .txt format

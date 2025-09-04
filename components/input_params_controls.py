@@ -15,6 +15,7 @@ class InputParamsControls(QWidget):
         layout = QHBoxLayout()
         self.setLayout(layout)
         self.create_bin_width_control(layout)
+        self.create_tau_scale_control(layout)
         running_mode_control = self.create_running_mode_control()
         layout.addLayout(running_mode_control)
         layout.addSpacing(15)
@@ -132,4 +133,19 @@ class InputParamsControls(QWidget):
         self.app.settings.setValue(SETTINGS_AVERAGES, int(value))
         self.app.acquisitions_count = 0
         DataExportActions.calc_exported_file_size(self.app)
-        
+
+    def create_tau_scale_control(self, layout):
+        options = self.app.tau_axis_scales
+        inp = ControlsBarBuilder.create_tau_scale_control(
+            layout,
+            self.app.tau_axis_scale,
+            self.tau_scale_value_change,
+            options,
+        )
+        self.app.control_inputs["tau_scale"] = inp
+
+    def tau_scale_value_change(self, idx):
+        options = self.app.tau_axis_scales
+        self.app.tau_axis_scale = options[idx]
+        self.app.settings.setValue(SETTINGS_TAU_AXIS_SCALE, self.app.tau_axis_scale)
+        DataExportActions.calc_exported_file_size(self.app)
