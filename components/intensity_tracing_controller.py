@@ -56,7 +56,6 @@ class IntensityTracing:
             print("Free running enabled: " + str(free_running_mode))
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(app.time_span))
-            print("Max points: " + str(40 * app.time_span))
             print("Bin width (µs): " + str(app.bin_width_micros))
             
             app.cached_time_span_seconds = float(app.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))

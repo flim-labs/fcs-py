@@ -146,5 +146,6 @@ class InputParamsControls(QWidget):
 
     def tau_scale_value_change(self, idx):
         options = self.app.tau_axis_scales
-        self.app.tau_scale = options[idx]
-        self.app.settings.setValue(SETTINGS_TAU_AXIS_SCALE, self.app.tau_scale)
+        self.app.tau_axis_scale = options[idx]
+        self.app.settings.setValue(SETTINGS_TAU_AXIS_SCALE, self.app.tau_axis_scale)
+        DataExportActions.calc_exported_file_size(self.app)
