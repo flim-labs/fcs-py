@@ -273,3 +273,16 @@ class ControlsBarBuilder:
         buttons_row_layout.addWidget(post_processing_button)
 
         return buttons_row_layout, realtime_button, post_processing_button
+
+    @staticmethod
+    def create_tau_scale_control(controls_row, value, change_cb, options):
+        # Tau scale control
+        _, inp = SelectControl.setup(
+            "Tau points scale:",
+            value,
+            controls_row,
+            options,
+            change_cb,
+        )
+        inp.setStyleSheet(GUIStyles.set_input_select_style())
+        return inp
