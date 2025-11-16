@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Run fcs.py (wait for Rust debugger)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/fcs.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_BACKTRACE": "full"
+            },
+            "python": "${workspaceFolder}/venv/Scripts/python.exe"
+        },
+        {
+            "name": "Rust: Attach with CodeLLDB",
+            "type": "lldb",
+            "request": "attach",
+            "pid": "${command:pickProcess}",
+            "sourceMap": {
+                "C:/Users/Daguanno/1/flim-labs/flim-processing": 
+                "C:/Users/Daguanno/1/flim-labs/flim-processing"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Python + Rust Debug (CodeLLDB)",
+            "configurations": [
+                "Python: Run fcs.py (wait for Rust debugger)",
+                "Rust: Attach with CodeLLDB"
+            ],
+            "stopAll": true
+        }
+    ]
+}
