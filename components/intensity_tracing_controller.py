@@ -292,7 +292,12 @@ class IntensityTracingButtonsActions:
         try:     
             flim_labs.request_stop()
         except:
-            pass    
+            pass
+        
+        if hasattr(app, 'fcs_worker') and app.fcs_worker is not None:
+            app.fcs_worker.stop()
+            app.fcs_worker = None
+        
         def clear_cps_and_countdown_widgets():
                 for _, animation in app.cps_widgets_animation.items():
                     if animation:
@@ -309,8 +314,9 @@ class IntensityTracingButtonsActions:
             gt_widget = create_gt_loading_layout(app)
             insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)              
         QApplication.processEvents()
-        app.intensity_lines.clear()            
-        FCSPostProcessing.get_input(app) 
+        app.intensity_lines.clear()
+        if not hasattr(app, 'fcs_worker') or app.fcs_worker is None:
+            FCSPostProcessing.get_input(app) 
         
                
     @staticmethod    

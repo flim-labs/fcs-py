@@ -23,6 +23,7 @@ from components.time_tagger import TimeTaggerController
 class FCSPostProcessingSingleCalcWorker(QThread):
     finished = pyqtSignal()
     single_step_finished = pyqtSignal(object)
+    stopped = pyqtSignal()
 
     def __init__(
         self,
@@ -49,26 +50,40 @@ class FCSPostProcessingSingleCalcWorker(QThread):
     def run(self):
         self.single_step_finished.emit(0)
         for num in range(self.num_acquisitions):
-            flim_labs.fluorescence_correlation_spectroscopy(
-                num_acquisitions=self.num_acquisitions,
-                correlations=self.active_correlations,
-                enabled_channels=self.enabled_channels,
-                bin_width=self.bin_width,
-                acquisition_time=self.acquisition_time,
-                export_data=self.export_data,
-                notes=self.notes,
-                tau_high_density=self.tau_high_density
-            )
+            if not self.is_running:
+                self.stopped.emit()
+                return
+            try:
+                flim_labs.fluorescence_correlation_spectroscopy(
+                    num_acquisitions=self.num_acquisitions,
+                    correlations=self.active_correlations,
+                    enabled_channels=self.enabled_channels,
+                    bin_width=self.bin_width,
+                    acquisition_time=self.acquisition_time,
+                    export_data=self.export_data,
+                    notes=self.notes,
+                    tau_high_density=self.tau_high_density
+                )
+            except Exception as e:
+                if "stopped by user" in str(e) or "FCS calculation stopped" in str(e):
+                    self.stopped.emit()
+                    return
+                raise
+            if not self.is_running:
+                self.stopped.emit()
+                return
             self.single_step_finished.emit(num + 1)
         self.finished.emit()
 
     def stop(self):
         self.is_running = False
+        flim_labs.request_fcs_stop()
 
 
 class FCSPostProcessingAverageCalcWorker(QThread):
     success = pyqtSignal(object)
-    error = pyqtSignal(str) 
+    error = pyqtSignal(str)
+    stopped = pyqtSignal()
 
     def __init__(self, num_acquisitions):
         super().__init__()
@@ -80,12 +95,22 @@ class FCSPostProcessingAverageCalcWorker(QThread):
             result = flim_labs.average_fluorescence_correlation_spectroscopy(
                 num_acquisitions=self.num_acquisitions,
             )
-            self.success.emit(result)
-        except ValueError as e:  
-            self.error.emit(str(e)) 
+            if self.is_running:
+                self.success.emit(result)
+        except ValueError as e:
+            if "stopped by user" in str(e) or "FCS calculation stopped" in str(e):
+                self.stopped.emit()
+            else:
+                self.error.emit(str(e))
+        except Exception as e:
+            if "stopped by user" in str(e) or "FCS calculation stopped" in str(e):
+                self.stopped.emit()
+            else:
+                self.error.emit(str(e))
 
     def stop(self):
         self.is_running = False
+        flim_labs.request_fcs_stop()
 
 
 class FCSPostProcessing:
@@ -122,12 +147,14 @@ class FCSPostProcessing:
             tau_high_density
         )
         QApplication.processEvents()
+        app.fcs_worker = worker
         worker.single_step_finished.connect(
             lambda iteration: FCSPostProcessing.update_gt_progress_bar(
                 iteration, app, worker
             )
         )
         worker.finished.connect(lambda: FCSPostProcessing.gt_averages_calc(app, worker))
+        worker.stopped.connect(lambda: FCSPostProcessing.handle_fcs_stopped(app, worker))
         worker.start()
 
     @staticmethod
@@ -139,10 +166,13 @@ class FCSPostProcessing:
     @staticmethod
     def gt_averages_calc(app, worker):
         worker.stop()
+        app.fcs_worker = None
         num_acquisitions = app.selected_average if app.free_running_acquisition_time == False else 1
         worker = FCSPostProcessingAverageCalcWorker(num_acquisitions)
+        app.fcs_worker = worker
         worker.success.connect(lambda result: FCSPostProcessing.handle_fcs_post_processing_result(result, app, worker))
         worker.error.connect(lambda error_message: display_error_message(error_message))
+        worker.stopped.connect(lambda: FCSPostProcessing.handle_fcs_stopped(app, worker))
         def display_error_message(error_message):
             BoxMessage.setup(
             "FCS Processing Error",
@@ -150,7 +180,20 @@ class FCSPostProcessing:
             QMessageBox.Icon.Critical,
             GUIStyles.set_msg_box_style(),
         )
-        worker.start()  
+        worker.start()
+    
+    @staticmethod
+    def handle_fcs_stopped(app, worker):
+        worker.stop()
+        app.fcs_worker = None
+        app.widgets[GT_PROGRESS_BAR_WIDGET].setVisible(False)
+        app.control_inputs[STOP_BUTTON].setEnabled(False)
+        BoxMessage.setup(
+            "FCS Processing",
+            "Elaborazione interrotta dall'utente",
+            QMessageBox.Icon.Information,
+            GUIStyles.set_msg_box_style(),
+        )  
               
     
 
@@ -158,6 +201,7 @@ class FCSPostProcessing:
     def handle_fcs_post_processing_result(gt_results, app, worker):
         from components.data_export_controls import ExportData
         worker.stop()
+        app.fcs_worker = None
         app.acquisition_stopped = True
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
         gt_widget = create_gt_layout(app)

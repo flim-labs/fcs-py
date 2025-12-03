@@ -101,6 +101,7 @@ class FCSWindow(QWidget):
         self.test_mode = False
         
         self.acquisition_stopped = False
+        self.fcs_worker = None
         
         self.cps_ch = {}
         self.cps_counts = {}
