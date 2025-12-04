@@ -46,11 +46,24 @@ class ExportDataControl(QWidget):
         self.export_data_control.addSpacing(10)
         layout.addLayout(self.file_size_info_layout)
         layout.addSpacing(5)
+
+
+        # Export options widget
+        self.export_options_widget = self.create_export_options_widget()
+        layout.addWidget(self.export_options_widget)
         # Time Tagger
-        time_tagger = self.create_time_tagger_widget()
-        layout.addWidget(time_tagger)
+        # Deprecated, now time tagger is included in the export options widget
+        # time_tagger = self.create_time_tagger_widget()
+        # layout.addWidget(time_tagger)
 
         self.setLayout(layout)
+    
+    def create_export_options_widget(self):
+        from components.buttons import MultiSelectDropdown
+        export_options_widget = MultiSelectDropdown(self.app)
+        self.app.widgets[EXPORT_OPTIONS_WIDGET] = export_options_widget
+        export_options_widget.setVisible(self.app.write_data)
+        return export_options_widget
 
     def create_time_tagger_widget(self):
         from components.buttons import TimeTaggerWidget
@@ -99,6 +112,7 @@ class ExportDataControl(QWidget):
             self.app.bin_file_size_label.show()
             DataExportActions.calc_exported_file_size(self.app)
             self.app.control_inputs[ADD_NOTES_BUTTON].setVisible(True)
+            self.app.widgets[EXPORT_OPTIONS_WIDGET].setVisible(True)
         else:
             self.app.write_data = False
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)

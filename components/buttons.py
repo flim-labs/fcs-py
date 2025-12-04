@@ -1,8 +1,8 @@
 import json
 import os
-from PyQt6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel
+from PyQt6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel, QSizePolicy
 from PyQt6.QtCore import QPropertyAnimation, Qt, QSize
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon, QPixmap, QFontMetrics
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.plots_config_widget import PlotsConfigPopup
 from components.read_data import ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
@@ -338,5 +338,179 @@ class TimeTaggerWidget(QWidget):
         self.setVisible(write_data)
         
     def on_time_tagger_state_changed(self, checked):
-        self.app.time_tagger = checked        
+        self.app.time_tagger = checked  
+    
+    
+    def toggle_visibility(self):
+        self.setVisible(not self.isVisible())
+
+    def get_export_options(self):
+        return {
+               "intensity_tracing": self.intensity_tracing_checkbox.isChecked(),
+                "fcs": self.fcs_checkbox.isChecked(),
+                "time_tagger": self.time_tagger_checkbox.isChecked(),
+            }
         
+    def update_from_settings(self):
+        self.intensity_tracing_checkbox.setChecked(self.app.settings.value(SETTINGS_EXPORT_INTENSITY_TRACING, DEFAULT_EXPORT_INTENSITY_TRACING))
+        self.fcs_checkbox.setChecked(self.app.settings.value(SETTINGS_EXPORT_FCS, DEFAULT_EXPORT_FCS))
+        self.time_tagger_checkbox.setChecked(self.app.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER))
+
+class MultiSelectDropdown(QWidget):
+    def __init__(self, app, parent=None):
+        super().__init__(parent)
+        self.app = app
+
+        # Calculate width needed for the longest menu text
+        # Create a temporary button to get font metrics
+        temp_button = QPushButton("EXPORT OPTIONS")
+        temp_button.setStyleSheet("""
+            QPushButton {
+                font-family: 'Montserrat';
+                font-size: 14px;
+                font-weight: 800;
+                letter-spacing: 0.1em;
+            }
+        """)
+        font_metrics = QFontMetrics(temp_button.font())
+        longest_text = "Export Intensity Tracing"
+        text_width = font_metrics.horizontalAdvance(longest_text)
+        # Calculate: text width + checkbox indicator + menu padding + margins + button padding
+        required_width = text_width + 30 + 24 + 24    # text + checkbox + menu margins + button margins
+        
+        # --- MAIN BUTTON CONTAINER -------------------------------------------
+        self.button_container = QWidget()
+        self.button_container.setObjectName("container")
+        self.button_container.setFixedHeight(48)
+        self.button_container.setFixedWidth(required_width)  # Fixed width to prevent expansion
+        self.button_container.setStyleSheet("""
+            QWidget#container {
+                border-radius: 5px;
+                border: 2px solid #3b3b3b;
+                background-color: #141414;
+                padding: 0;
+            }
+        """)
+
+        # Main button
+        self.button = QPushButton("EXPORT OPTIONS")
+        self.button.setCheckable(True)
+        self.button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button.setStyleSheet("""
+            QPushButton {
+                font-family: 'Montserrat';
+                font-size: 14px;
+                font-weight: 800;
+                letter-spacing: 0.1em;
+                color: #f8f8f8;
+                background-color: transparent;
+                border: none;
+                border-radius: 5px;
+                padding: 0;
+                text-align: left;
+            }
+            QPushButton:hover {
+                background-color: #1a1a1a;
+            }
+            QPushButton:checked {
+                background-color: #1a1a1a;
+            }
+        """)
+        self.button.clicked.connect(self.toggle_menu)
+
+        # Arrow icon
+        self.arrow_label = QLabel()
+        self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-down-dark-grey.png")).scaled(14, 14))
+        self.arrow_label.setFixedSize(14, 14)
+
+        # Button layout
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(10, 0, 10, 0)
+        button_layout.setSpacing(0)  # No automatic spacing between widgets
+        button_layout.addWidget(self.button, stretch=0)  # Don't let button expand
+        button_layout.addSpacing(0)  # Specific distance between "EXPORT OPTIONS" and arrow (adjust this value to change distance)
+        button_layout.addWidget(self.arrow_label)
+        self.button_container.setLayout(button_layout)
+
+        # --- DROPDOWN MENU -----------------------------------------
+        self.menu = QWidget(self, Qt.WindowType.Popup)
+        self.menu.setVisible(False)
+        # Set size policy to match button container width
+        self.menu.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.menu.setStyleSheet("""
+            QWidget {
+                background-color: #181818;
+                border: 1px solid #3b3b3b;
+                border-top: none;
+                border-bottom-left-radius: 5px;
+                border-bottom-right-radius: 5px;
+            }
+        """)
+
+        self.menu_layout = QVBoxLayout()
+        self.menu_layout.setContentsMargins(12, 10, 12, 10)
+        self.menu_layout.setSpacing(10)
+        
+        self.menu.setLayout(self.menu_layout)
+
+        # Checkbox options
+        checkboxExportOptions = ["EXPORT_INTENSITY_TRACING", "EXPORT_FCS", "TIME_TAGGER"]
+
+        self.checkboxes = []
+        for option in checkboxExportOptions:
+            cb = QCheckBox(option.replace("_", " ").title())
+            cb.setCursor(Qt.CursorShape.PointingHandCursor)
+            cb.setStyleSheet(GUIStyles.set_simple_checkbox_style("#FB8C00"))
+            self.menu_layout.addWidget(cb)
+            self.checkboxes.append(cb)
+
+        # Animation (smooth open/close)
+        self.animation = QPropertyAnimation(self.menu, b"maximumHeight")
+        self.animation.setDuration(200)
+
+        # Container layout
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.button_container)
+        layout.addWidget(self.menu)
+        self.setLayout(layout)
+
+    def toggle_menu(self):
+        is_opening = self.button.isChecked()
+
+        if is_opening:
+
+            pos = self.button_container.mapToGlobal(self.button_container.rect().bottomLeft())
+            self.menu.move(pos)  # posiziona il popup sotto il pulsante
+            # Set menu width to match button container width before showing
+            self.menu.setFixedWidth(self.button_container.width())
+            self.menu.setVisible(True)
+            self.animation.setStartValue(0)
+            self.animation.setEndValue(self.menu.sizeHint().height())
+            self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-up-dark-grey.png")).scaled(14, 14))
+            # Update container border color when open
+            self.button_container.setStyleSheet("""
+                QWidget#container {
+                    border-radius: 5px;
+                    border: 2px solid #FB8C00;
+                    background-color: #141414;
+                }
+            """)
+        else:
+            self.animation.setStartValue(self.menu.height())
+            self.animation.setEndValue(0)
+            self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-down-dark-grey.png")).scaled(14, 14))
+            # Reset container border color when closed
+            self.button_container.setStyleSheet("""
+                QWidget#container {
+                    border-radius: 5px;
+                    border: 2px solid #3b3b3b;
+                    background-color: #141414;
+                }
+            """)
+        self.animation.start()
+
+    def get_selected(self):
+        return [cb.text() for cb in self.checkboxes if cb.isChecked()]
+
