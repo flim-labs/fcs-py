@@ -118,6 +118,8 @@ class ExportDataControl(QWidget):
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.app.bin_file_size_label.hide()
             self.app.control_inputs[ADD_NOTES_BUTTON].setVisible(False)
+            self.app.widgets[EXPORT_OPTIONS_WIDGET].setVisible(False)
+
         if TIME_TAGGER_WIDGET in self.app.widgets:
             self.app.widgets[TIME_TAGGER_WIDGET].setVisible(state)
 

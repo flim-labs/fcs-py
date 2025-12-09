@@ -511,6 +511,21 @@ class MultiSelectDropdown(QWidget):
             """)
         self.animation.start()
 
+    def setVisible(self, visible):
+        if not visible and self.button.isChecked():
+        # Se il widget viene nascosto e il menu era aperto, chiudilo e resetta lo stato
+            self.button.setChecked(False)
+            self.menu.setVisible(False)
+            self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-down-dark-grey.png")).scaled(14, 14))
+            self.button_container.setStyleSheet("""
+                QWidget#container {
+                    border-radius: 5px;
+                    border: 2px solid #3b3b3b;
+                    background-color: #141414;
+                }
+            """)
+        super().setVisible(visible)
+
     def get_selected(self):
         return [cb.text() for cb in self.checkboxes if cb.isChecked()]
 
