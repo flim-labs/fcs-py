@@ -1,7 +1,7 @@
 from functools import partial
 from components.box_message import BoxMessage
 from components.gui_styles import GUIStyles
-from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
+from components.layout_utilities import create_gt_layout, create_gt_wait_layout, insert_widget, remove_widget
 from components.settings import (
     GT_PLOTS_GRID,
     GT_PROGRESS_BAR_WIDGET,
@@ -188,6 +188,20 @@ class FCSPostProcessing:
         app.fcs_worker = None
         app.widgets[GT_PROGRESS_BAR_WIDGET].setVisible(False)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
+        
+        # Remove the "Post-processing in progress..." layout and replace with wait layout
+        if GT_WIDGET_WRAPPER in app.widgets and app.widgets[GT_WIDGET_WRAPPER] is not None:
+            remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
+            gt_widget = create_gt_wait_layout(app)
+            insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)
+        
+        # Reset the FCS stop flag in Rust backend
+        try:
+            flim_labs.reset_fcs_stop()
+        except:
+            pass
+        
+        # Show popup message
         BoxMessage.setup(
             "FCS Processing",
             "Elaborazione interrotta dall'utente",
