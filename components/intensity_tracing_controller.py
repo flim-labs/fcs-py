@@ -195,11 +195,11 @@ class IntensityTracing:
                     if animation:
                         animation.stop()
                 app.acquisition_time_countdown_widget.setVisible(False)    
-        if app.acquisitions_count >= app.selected_average:           
-            app.acquisitions_count = 0         
-        else:    
-            app.acquisitions_count = app.acquisitions_count + 1         
-        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].update_acquisitions_count()        
+        if app.acquisitions_count >= app.selected_average:
+            app.acquisitions_count = 0
+        else:
+            app.acquisitions_count = app.acquisitions_count + 1
+        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].update_acquisitions_count()
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         app.cps_counts.clear()
         free_running = app.free_running_acquisition_time
@@ -210,10 +210,12 @@ class IntensityTracing:
             gt_widget = create_gt_loading_layout(app)
             insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)  
         QApplication.processEvents()
-        app.intensity_lines.clear()                 
-        if not app_close: 
+        app.intensity_lines.clear()
+        if not app_close:
             if app.acquisitions_count == app.selected_average:
-                FCSPostProcessing.get_input(app)  
+                if ABORT_BUTTON in app.control_inputs:
+                    app.control_inputs[ABORT_BUTTON].setEnabled(True)
+                FCSPostProcessing.get_input(app)
                   
       
             
@@ -245,9 +247,10 @@ class IntensityTracingButtonsActions:
             app.warning_box = message_box
             return
         app.control_inputs[START_BUTTON].setEnabled(False)
-        app.control_inputs[STOP_BUTTON].setEnabled(app.free_running_acquisition_time)
+        free_running = app.free_running_acquisition_time
+        app.control_inputs[STOP_BUTTON].setEnabled(free_running)
         if ABORT_BUTTON in app.control_inputs:
-            app.control_inputs[ABORT_BUTTON].setEnabled(True)
+            app.control_inputs[ABORT_BUTTON].setEnabled(not free_running)
         app.last_acquisition_ns = 0
         app.gt_charts.clear()
         if app.acquisitions_count == app.selected_average or app.acquisitions_count == 0:    
@@ -304,7 +307,7 @@ class IntensityTracingButtonsActions:
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         if ABORT_BUTTON in app.control_inputs:
-            app.control_inputs[ABORT_BUTTON].setEnabled(False)
+            app.control_inputs[ABORT_BUTTON].setEnabled(True)
         free_running = app.free_running_acquisition_time
         if ((app.acquisitions_count == app.selected_average) or free_running): 
             QTimer.singleShot(400, clear_cps_and_countdown_widgets)
