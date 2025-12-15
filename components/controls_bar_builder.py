@@ -66,10 +66,21 @@ class ControlsBarBuilder:
         read_bin_metadata_btn_pressed_cb,
         enabled_channels,
         app,
+        abort_btn_pressed_cb,
     ):
         # ACTION BUTTONS
         buttons_row_layout = QHBoxLayout()
         buttons_row_layout.addStretch(1)
+        # abort button
+        abort_button = QPushButton("ABORT")
+        abort_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        GUIStyles.set_stop_btn_style(abort_button)
+        abort_button.setFlat(True)
+        abort_button.setFixedHeight(55)
+        abort_button.setFixedWidth(110)
+        abort_button.setEnabled(False)
+        abort_button.clicked.connect(abort_btn_pressed_cb)
+        buttons_row_layout.addWidget(abort_button)
         # start button
         start_button = QPushButton("START")
         start_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -132,6 +143,7 @@ class ControlsBarBuilder:
             read_bin_data_button,
             bin_metadata_button,
             export_plot_img_button,
+            abort_button,
         )
 
     @staticmethod

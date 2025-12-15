@@ -245,7 +245,9 @@ class IntensityTracingButtonsActions:
             app.warning_box = message_box
             return
         app.control_inputs[START_BUTTON].setEnabled(False)
-        app.control_inputs[STOP_BUTTON].setEnabled(app.free_running_acquisition_time)   
+        app.control_inputs[STOP_BUTTON].setEnabled(app.free_running_acquisition_time)
+        if ABORT_BUTTON in app.control_inputs:
+            app.control_inputs[ABORT_BUTTON].setEnabled(True)
         app.last_acquisition_ns = 0
         app.gt_charts.clear()
         if app.acquisitions_count == app.selected_average or app.acquisitions_count == 0:    
@@ -298,9 +300,11 @@ class IntensityTracingButtonsActions:
                     if animation:
                         animation.stop()
                 app.acquisition_time_countdown_widget.setVisible(False)            
-        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)   
+        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
-        app.control_inputs[STOP_BUTTON].setEnabled(False)  
+        app.control_inputs[STOP_BUTTON].setEnabled(False)
+        if ABORT_BUTTON in app.control_inputs:
+            app.control_inputs[ABORT_BUTTON].setEnabled(False)
         free_running = app.free_running_acquisition_time
         if ((app.acquisitions_count == app.selected_average) or free_running): 
             QTimer.singleShot(400, clear_cps_and_countdown_widgets)
@@ -311,6 +315,33 @@ class IntensityTracingButtonsActions:
         QApplication.processEvents()
         app.intensity_lines.clear()            
         FCSPostProcessing.get_input(app) 
+
+    @staticmethod
+    def abort_button_pressed(app):
+        app.pull_from_queue_timer.stop()
+        try:
+            flim_labs.request_stop()
+        except Exception:
+            pass
+
+        def clear_cps_and_countdown_widgets():
+            for _, animation in app.cps_widgets_animation.items():
+                if animation:
+                    animation.stop()
+            app.acquisition_time_countdown_widget.setVisible(False)
+
+        app.widgets[ACQUISITION_PROGRESS_BAR_WIDGET].clear_acquisition_timer(app)
+        app.acquisitions_count = 0
+        app.cps_counts.clear()
+        QTimer.singleShot(400, clear_cps_and_countdown_widgets)
+        app.cps_widgets_animation.clear()
+        QApplication.processEvents()
+        app.intensity_lines.clear()
+        app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
+        app.control_inputs[STOP_BUTTON].setEnabled(False)
+        if ABORT_BUTTON in app.control_inputs:
+            app.control_inputs[ABORT_BUTTON].setEnabled(False)
+        FCSPostProcessing.abort(app)
         
                
     @staticmethod    

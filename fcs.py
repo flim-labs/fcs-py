@@ -233,6 +233,7 @@ class FCSWindow(QWidget):
                 excluded = [
                     START_BUTTON,
                     STOP_BUTTON,
+                    ABORT_BUTTON,
                     RESET_BUTTON,
                     ACQUIRE_BUTTON,
                     READ_BUTTON,
