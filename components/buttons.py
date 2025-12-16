@@ -1,8 +1,8 @@
 import json
 import os
-from PyQt6.QtWidgets import QComboBox, QMenu, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel, QSizePolicy
-from PyQt6.QtCore import QEvent, QPropertyAnimation, Qt, QSize, QTimer
-from PyQt6.QtGui import QAction, QIcon, QMouseEvent, QPixmap, QFontMetrics, QStandardItem, QStandardItemModel
+from PyQt6.QtWidgets import QComboBox,QStyledItemDelegate,QStyle, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel
+from PyQt6.QtCore import QEvent, QPropertyAnimation, Qt, QSize, QPoint, QRect
+from PyQt6.QtGui import  QIcon, QPixmap, QStandardItem, QStandardItemModel,QColor
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.plots_config_widget import PlotsConfigPopup
 from components.read_data import ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
@@ -11,6 +11,7 @@ from components.gui_styles import GUIStyles
 from components.controls_bar_builder import ControlsBarBuilder
 from components.settings import *
 from load_data import plot_fcs_data
+
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -357,10 +358,9 @@ class TimeTaggerWidget(QWidget):
         self.time_tagger_checkbox.setChecked(self.app.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER))
 
 
-from PyQt6.QtWidgets import QStyledItemDelegate, QComboBox, QStyle, QStyleOptionViewItem
-from PyQt6.QtCore import Qt, QSize, QRect, QEvent
-from PyQt6.QtGui import QStandardItemModel, QStandardItem, QIcon, QPixmap, QColor
 
+
+# USED BY MULTI SELECT DROPDOWN
 class IconRightDelegate(QStyledItemDelegate):
     """Delegate personalizzato per mostrare le icone a destra del testo"""
     
@@ -399,27 +399,32 @@ class IconRightDelegate(QStyledItemDelegate):
             checkbox_size
         )
         
-        # Disegna la checkbox con lo stile di sistema ma personalizzato
-        checkbox_option = QStyleOptionViewItem()
-        checkbox_option.rect = checkbox_rect
-        checkbox_option.widget = option.widget
-        
-        # Inizializza lo stato in modo pulito
-        checkbox_option.state = QStyle.StateFlag.State_Enabled | QStyle.StateFlag.State_Active
-        
-        # Imposta lo stato checked/unchecked
+        # Disegna la checkbox personalizzata con colore arancione
         if checkState == Qt.CheckState.Checked:
-            checkbox_option.state |= QStyle.StateFlag.State_On
+            # Checkbox selezionata: sfondo arancione con bordo arancione
+            painter.setPen(QColor("#FB8C00"))
+            painter.setBrush(QColor("#FB8C00"))
+            painter.drawRoundedRect(checkbox_rect, 3, 3)
+            
+            # Disegna il segno di spunta bianco
+            painter.setPen(QColor("#ffffff"))
+            painter.setRenderHint(painter.RenderHint.Antialiasing)
+            pen = painter.pen()
+            pen.setWidth(2)
+            painter.setPen(pen)
+            
+            # Coordinate del segno di spunta
+            check_points = [
+                QPoint(checkbox_rect.left() + 4, checkbox_rect.top() + 9),
+                QPoint(checkbox_rect.left() + 7, checkbox_rect.top() + 12),
+                QPoint(checkbox_rect.left() + 14, checkbox_rect.top() + 5)
+            ]
+            painter.drawPolyline(check_points)
         else:
-            checkbox_option.state |= QStyle.StateFlag.State_Off
-        
-        if option.widget:
-            option.widget.style().drawPrimitive(
-                QStyle.PrimitiveElement.PE_IndicatorCheckBox,
-                checkbox_option,
-                painter,
-                option.widget
-            )
+            # Checkbox non selezionata: solo bordo grigio
+            painter.setPen(QColor("#8c8c8c"))
+            painter.setBrush(Qt.GlobalColor.transparent)
+            painter.drawRoundedRect(checkbox_rect, 3, 3)
         
         # Calcola lo spazio per l'icona (se presente)
         has_icon = icon and isinstance(icon, QIcon) and not icon.isNull()
@@ -492,60 +497,7 @@ class MultiSelectDropdown(QComboBox):
       
         
         # Imposta lo stile
-        self.setStyleSheet("""
-            QComboBox {
-                background-color: #141414;
-                border: 2px solid #3b3b3b;
-                border-radius: 5px;
-                padding: 10px;
-                color: #f8f8f8;
-                font-family: 'Montserrat';
-                font-size: 14px;
-                font-weight: 800;
-                letter-spacing: 0.1em;
-                min-height: 28px;
-            }
-            QComboBox:on {
-                border: 2px solid #3b3b3b;
-                border-top-left-radius: 5px;
-                border-top-right-radius: 5px;
-                border-bottom-left-radius: 0px;
-                border-bottom-right-radius: 0px;
-            }
-            QComboBox::drop-down {
-                border: none;
-                width: 30px;
-                padding-right: 5px;
-            }
-            QComboBox::down-arrow {
-                image: url(assets/arrow-down-dark-grey.png);
-                width: 16px;
-                height: 16px;
-            }
-            QComboBox::down-arrow:on {
-                image: url(assets/arrow-up-dark-grey.png);
-            }
-            QListView {
-                background-color: #1e1e1e;
-                border: none;
-                border-bottom: 2px solid #3b3b3b;
-                border-left: 2px solid #3b3b3b;
-                border-right: 2px solid #3b3b3b;
-                border-bottom-left-radius: 5px;
-                border-bottom-right-radius: 5px;
-                outline: none;
-            }
-            QListView::item {
-                padding: 5px;
-                border: none;
-            }
-            QListView::item:hover {
-                background-color: #2a2a2a;
-            }
-            QListView::item:selected {
-                background-color: #FB8C00;
-            }
-        """)
+        self.setStyleSheet(GUIStyles.multi_select_dropdown_style())
 
    
 

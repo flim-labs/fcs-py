@@ -89,6 +89,14 @@ class TopBarBuilder:
         # Export data switch control
         export_data_control = QHBoxLayout()
         export_data_label = QLabel("Export data:")
+        export_data_label.setStyleSheet("""
+            QLabel {
+                font-family: 'Montserrat';
+                font-size: 14px;
+                font-weight: bold;
+                letter-spacing: 0.1em;
+            }
+        """)
         inp = SwitchControl(
             active_color="#FB8C00", width=70, height=30, checked=value)
         inp.toggled.connect(change_cb)
