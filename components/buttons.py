@@ -72,6 +72,7 @@ class ActionButtons(QWidget):
             read_bin_data_button,
             bin_metadata_button,
             export_plot_img_button,
+            abort_button,
         ) = ControlsBarBuilder.create_buttons(
             self.start_button_pressed,
             self.stop_button_pressed,
@@ -79,11 +80,13 @@ class ActionButtons(QWidget):
             self.plot_read_data_button_pressed,
             self.read_bin_metadata_button_pressed,
             self.app.enabled_channels,
-            self.app
+            self.app,
+            self.abort_button_pressed,
         )
         self.app.control_inputs[START_BUTTON] = start_button
         self.app.control_inputs[STOP_BUTTON] = stop_button
         self.app.control_inputs[RESET_BUTTON] = reset_button
+        self.app.control_inputs[ABORT_BUTTON] = abort_button
         read_bin_data_button.setVisible(self.app.acquire_read_mode == "read")
         bin_metadata_btn_visible = ReadDataControls.read_bin_metadata_enabled(self.app)
         bin_metadata_button.setVisible(bin_metadata_btn_visible)
@@ -101,6 +104,9 @@ class ActionButtons(QWidget):
 
     def stop_button_pressed(self):
         IntensityTracingButtonsActions.stop_button_pressed(self.app)
+
+    def abort_button_pressed(self):
+        IntensityTracingButtonsActions.abort_button_pressed(self.app)
 
     def reset_button_pressed(self):
         IntensityTracingButtonsActions.reset_button_pressed(self.app)

@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-APP_VERSION = "1.4"
+APP_VERSION = "1.5"
 APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
@@ -90,6 +90,7 @@ MAIN_LAYOUT = "main_layout"
 START_BUTTON = "start_button"
 STOP_BUTTON = "stop_button"
 RESET_BUTTON = "reset_button"
+ABORT_BUTTON = "abort_button"
 ACQUIRE_BUTTON = "acquire_button"
 READ_BUTTON = "read_button"
 EXPORT_PLOT_IMG_BUTTON = "export_plot_img_button"

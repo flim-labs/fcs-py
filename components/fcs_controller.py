@@ -1,8 +1,9 @@
 from functools import partial
 from components.box_message import BoxMessage
 from components.gui_styles import GUIStyles
-from components.layout_utilities import create_gt_layout, insert_widget, remove_widget
+from components.layout_utilities import create_gt_layout, create_gt_aborted_layout, insert_widget, remove_widget
 from components.settings import (
+    ABORT_BUTTON,
     GT_PLOTS_GRID,
     GT_PROGRESS_BAR_WIDGET,
     GT_WIDGET_WRAPPER,
@@ -49,6 +50,8 @@ class FCSPostProcessingSingleCalcWorker(QThread):
     def run(self):
         self.single_step_finished.emit(0)
         for num in range(self.num_acquisitions):
+            if not self.is_running:
+                break
             flim_labs.fluorescence_correlation_spectroscopy(
                 num_acquisitions=self.num_acquisitions,
                 correlations=self.active_correlations,
@@ -59,6 +62,8 @@ class FCSPostProcessingSingleCalcWorker(QThread):
                 notes=self.notes,
                 tau_high_density=self.tau_high_density
             )
+            if not self.is_running:
+                break
             self.single_step_finished.emit(num + 1)
         self.finished.emit()
 
@@ -80,7 +85,8 @@ class FCSPostProcessingAverageCalcWorker(QThread):
             result = flim_labs.average_fluorescence_correlation_spectroscopy(
                 num_acquisitions=self.num_acquisitions,
             )
-            self.success.emit(result)
+            if self.is_running:
+                self.success.emit(result)
         except ValueError as e:  
             self.error.emit(str(e)) 
 
@@ -110,7 +116,11 @@ class FCSPostProcessing:
         ]
         num_acquisitions = app.selected_average if free_running_mode == False else 1
         tau_high_density = app.tau_axis_scale == "High density"
-        
+
+        app.gt_aborted = False
+
+        if hasattr(flim_labs, "reset_fcs_stop"):
+            flim_labs.reset_fcs_stop()
         worker = FCSPostProcessingSingleCalcWorker(
             active_correlations,
             num_acquisitions,
@@ -122,6 +132,7 @@ class FCSPostProcessing:
             tau_high_density
         )
         QApplication.processEvents()
+        app.fcs_single_worker = worker
         worker.single_step_finished.connect(
             lambda iteration: FCSPostProcessing.update_gt_progress_bar(
                 iteration, app, worker
@@ -139,8 +150,11 @@ class FCSPostProcessing:
     @staticmethod
     def gt_averages_calc(app, worker):
         worker.stop()
+        if getattr(app, "gt_aborted", False):
+            return
         num_acquisitions = app.selected_average if app.free_running_acquisition_time == False else 1
         worker = FCSPostProcessingAverageCalcWorker(num_acquisitions)
+        app.fcs_avg_worker = worker
         worker.success.connect(lambda result: FCSPostProcessing.handle_fcs_post_processing_result(result, app, worker))
         worker.error.connect(lambda error_message: display_error_message(error_message))
         def display_error_message(error_message):
@@ -151,12 +165,35 @@ class FCSPostProcessing:
             GUIStyles.set_msg_box_style(),
         )
         worker.start()  
-              
     
+    @staticmethod
+    def abort(app):
+        app.gt_aborted = True
+        if hasattr(flim_labs, "request_fcs_stop"):
+            try:
+                flim_labs.request_fcs_stop()
+            except Exception:
+                pass
+        if hasattr(app, "fcs_single_worker") and app.fcs_single_worker is not None:
+            app.fcs_single_worker.stop()
+            app.fcs_single_worker.wait(1000)
+        if hasattr(app, "fcs_avg_worker") and app.fcs_avg_worker is not None:
+            app.fcs_avg_worker.stop()
+            app.fcs_avg_worker.wait(1000)
+        if GT_PROGRESS_BAR_WIDGET in app.widgets:
+            app.widgets[GT_PROGRESS_BAR_WIDGET].setVisible(False)
+        if GT_WIDGET_WRAPPER in app.widgets and PLOT_GRIDS_CONTAINER in app.layouts:
+            remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
+            gt_widget = create_gt_aborted_layout(app)
+            insert_widget(app.layouts[PLOT_GRIDS_CONTAINER], gt_widget, 1)
+            QApplication.processEvents()
 
     @staticmethod
     def handle_fcs_post_processing_result(gt_results, app, worker):
         from components.data_export_controls import ExportData
+        if getattr(app, "gt_aborted", False):
+            worker.stop()
+            return
         worker.stop()
         app.acquisition_stopped = True
         remove_widget(app.layouts[PLOT_GRIDS_CONTAINER], app.widgets[GT_WIDGET_WRAPPER])
@@ -181,7 +218,9 @@ class FCSPostProcessing:
                 300,
                 partial(ExportData.save_fcs_data, app),
             )
-              
+            
+        if ABORT_BUTTON in app.control_inputs:    
+            app.control_inputs[ABORT_BUTTON].setEnabled(False)      
         # if app.write_data and app.time_tagger:
             # app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
             #TimeTaggerController.init_time_tagger_processing(app)            
