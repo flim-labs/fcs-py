@@ -506,16 +506,33 @@ class MultiSelectDropdown(QComboBox):
                 min-height: 28px;
             }
             QComboBox:on {
-                border: 2px solid #FB8C00;
+                border: 2px solid #3b3b3b;
+                border-top-left-radius: 5px;
+                border-top-right-radius: 5px;
+                border-bottom-left-radius: 0px;
+                border-bottom-right-radius: 0px;
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 30px;
+                padding-right: 5px;
+            }
+            QComboBox::down-arrow {
+                image: url(assets/arrow-down-dark-grey.png);
+                width: 16px;
+                height: 16px;
+            }
+            QComboBox::down-arrow:on {
+                image: url(assets/arrow-up-dark-grey.png);
             }
             QListView {
                 background-color: #1e1e1e;
-                border: 2px solid #3b3b3b;
-                border-radius: 5px;
+                border: none;
+                border-bottom: 2px solid #3b3b3b;
+                border-left: 2px solid #3b3b3b;
+                border-right: 2px solid #3b3b3b;
+                border-bottom-left-radius: 5px;
+                border-bottom-right-radius: 5px;
                 outline: none;
             }
             QListView::item {
