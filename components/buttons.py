@@ -395,31 +395,20 @@ class IconRightDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         painter.save()
         
-        # Ottieni i dati dell'item
         text = index.data(Qt.ItemDataRole.DisplayRole)
         icon = index.data(Qt.ItemDataRole.DecorationRole)
         checkState = index.data(Qt.ItemDataRole.CheckStateRole)
         
-        # Abilita antialiasing
         painter.setRenderHint(painter.RenderHint.Antialiasing)
         
-        # Disegna lo sfondo con colori corretti
-        if option.state & QStyle.StateFlag.State_Selected:
-            bg_color = QColor("#FB8C00")  # Arancione per selezione
-        elif option.state & QStyle.StateFlag.State_MouseOver:
-            bg_color = QColor("#2a2a2a")  # Grigio scuro per hover
-        else:
-            bg_color = QColor("#1e1e1e")  # Grigio molto scuro di default
+       
+
         
-        painter.fillRect(option.rect, bg_color)
-        
-        # Margini e dimensioni
         margin = 8
         checkbox_size = 18
         icon_size = 20
         spacing = 8
         
-        # Posizione checkbox (sinistra)
         checkbox_rect = QRect(
             option.rect.left() + margin,
             option.rect.top() + (option.rect.height() - checkbox_size) // 2,
@@ -427,21 +416,17 @@ class IconRightDelegate(QStyledItemDelegate):
             checkbox_size
         )
         
-        # Disegna la checkbox personalizzata con colore arancione
         if checkState == Qt.CheckState.Checked:
-            # Checkbox selezionata: sfondo arancione con bordo arancione
             painter.setPen(QColor("#FB8C00"))
             painter.setBrush(QColor("#FB8C00"))
             painter.drawRoundedRect(checkbox_rect, 3, 3)
             
-            # Disegna il segno di spunta bianco
             painter.setPen(QColor("#ffffff"))
             painter.setRenderHint(painter.RenderHint.Antialiasing)
             pen = painter.pen()
             pen.setWidth(2)
             painter.setPen(pen)
             
-            # Coordinate del segno di spunta
             check_points = [
                 QPoint(checkbox_rect.left() + 4, checkbox_rect.top() + 9),
                 QPoint(checkbox_rect.left() + 7, checkbox_rect.top() + 12),
@@ -449,16 +434,13 @@ class IconRightDelegate(QStyledItemDelegate):
             ]
             painter.drawPolyline(check_points)
         else:
-            # Checkbox non selezionata: solo bordo grigio
             painter.setPen(QColor("#8c8c8c"))
             painter.setBrush(Qt.GlobalColor.transparent)
             painter.drawRoundedRect(checkbox_rect, 3, 3)
         
-        # Calcola lo spazio per l'icona (se presente)
         has_icon = icon and isinstance(icon, QIcon) and not icon.isNull()
         icon_space = icon_size + spacing if has_icon else 0
         
-        # Posizione del testo (dopo checkbox, con spazio per icona a destra)
         text_x = option.rect.left() + margin + checkbox_size + spacing
         text_width = option.rect.width() - margin * 2 - checkbox_size - spacing - icon_space
         text_rect = QRect(
@@ -468,7 +450,6 @@ class IconRightDelegate(QStyledItemDelegate):
             option.rect.height()
         )
         
-        # Disegna il testo
         painter.setPen(QColor("#f8f8f8"))
         painter.setFont(option.font)
         painter.drawText(
@@ -477,7 +458,6 @@ class IconRightDelegate(QStyledItemDelegate):
             text
         )
         
-        # Disegna l'icona a DESTRA (se presente)
         if has_icon:
             icon_x = option.rect.right() - margin - icon_size
             icon_y = option.rect.top() + (option.rect.height() - icon_size) // 2
@@ -491,21 +471,18 @@ class IconRightDelegate(QStyledItemDelegate):
     
     def editorEvent(self, event, model, option, index):
         """Gestisce i click sulle checkbox"""
-        # Gestisci solo MouseButtonRelease per evitare doppi toggle
         if event.type() == QEvent.Type.MouseButtonRelease:
             if option.rect.contains(event.pos()):
-                # Togglea lo stato
                 current_state = index.data(Qt.ItemDataRole.CheckStateRole)
                 new_state = Qt.CheckState.Unchecked if current_state == Qt.CheckState.Checked else Qt.CheckState.Checked
                 model.setData(index, new_state, Qt.ItemDataRole.CheckStateRole)
                 
-                # Forza un repaint della view per aggiornare tutte le checkbox
                 if option.widget and hasattr(option.widget, 'view'):
                     option.widget.view().viewport().update()
                 
                 return True
         
-        return False  # Non chiamare super() per evitare gestione duplicata
+        return False  
 
           
 class MultiSelectDropdown(QComboBox):
@@ -531,17 +508,13 @@ class MultiSelectDropdown(QComboBox):
       
         super().__init__(parent)   
 
-        # Set up standard model
         model = QStandardItemModel()
         self.setModel(model)
         
-        # Set icon dimensions
         self.setIconSize(QSize(20, 20))
         
-        # Set custom delegate for right-aligned icons and custom checkboxes
         self.setItemDelegate(IconRightDelegate(self))
         
-        # Apply custom stylesheet
         self.setStyleSheet(GUIStyles.multi_select_dropdown_style())
 
    
@@ -588,7 +561,6 @@ class MultiSelectDropdown(QComboBox):
         item = QStandardItem()
         item.setText(text)
         
-        # Add icon if userData is a PNG file path
         if userData is not None and isinstance(userData, str) and userData.endswith('.png'):
             icon_pixmap = QPixmap(userData)
             if not icon_pixmap.isNull():
