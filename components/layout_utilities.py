@@ -167,7 +167,7 @@ def create_gt_aborted_layout(app):
     gt_widget.setFixedWidth(int(app.width() / 1.95))
     gt_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
     gt_v_box = QVBoxLayout()
-    desc = QLabel("Process aborted")
+    desc = QLabel("G(τ) process aborted")
     desc.setObjectName("desc")
     desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
     gt_v_box.addWidget(desc)

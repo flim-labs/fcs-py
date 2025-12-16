@@ -3,6 +3,7 @@ from components.box_message import BoxMessage
 from components.gui_styles import GUIStyles
 from components.layout_utilities import create_gt_layout, create_gt_aborted_layout, insert_widget, remove_widget
 from components.settings import (
+    ABORT_BUTTON,
     GT_PLOTS_GRID,
     GT_PROGRESS_BAR_WIDGET,
     GT_WIDGET_WRAPPER,
@@ -217,7 +218,9 @@ class FCSPostProcessing:
                 300,
                 partial(ExportData.save_fcs_data, app),
             )
-              
+            
+        if ABORT_BUTTON in app.control_inputs:    
+            app.control_inputs[ABORT_BUTTON].setEnabled(False)      
         # if app.write_data and app.time_tagger:
             # app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
             #TimeTaggerController.init_time_tagger_processing(app)            

@@ -360,6 +360,7 @@ class IntensityTracingButtonsActions:
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
+        app.control_inputs[ABORT_BUTTON].setEnabled(False)
         IntensityTracingButtonsActions.clear_plots(app)
         QApplication.processEvents()  
         

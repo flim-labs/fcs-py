@@ -61,9 +61,9 @@ class GUIStyles:
                 font-family: "Montserrat";
                 color: white;
                 letter-spacing: 0.1em;
-                padding: 8px;
+                padding: 6px;
                 border-radius: 4px;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: bold;
             }}
 
