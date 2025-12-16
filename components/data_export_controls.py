@@ -61,6 +61,12 @@ class ExportDataControl(QWidget):
     def create_export_options_widget(self):
         from components.buttons import MultiSelectDropdown
         export_options_widget = MultiSelectDropdown(self.app)
+        export_options_widget.setPlaceholderText("EXPORT OPTIONS")
+        # Aggiungi items con icona per Time Tagger
+        export_options_widget.addItems(
+            ["Intensity tracing", "FCS", "Time Tagger"],
+            itemList=[None, None, "assets/time-tagger-icon.png"]
+        )
         self.app.widgets[EXPORT_OPTIONS_WIDGET] = export_options_widget
         export_options_widget.setVisible(self.app.write_data)
         return export_options_widget

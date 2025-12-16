@@ -1,8 +1,8 @@
 import json
 import os
-from PyQt6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel, QSizePolicy
-from PyQt6.QtCore import QPropertyAnimation, Qt, QSize
-from PyQt6.QtGui import QIcon, QPixmap, QFontMetrics
+from PyQt6.QtWidgets import QComboBox, QMenu, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel, QSizePolicy
+from PyQt6.QtCore import QEvent, QPropertyAnimation, Qt, QSize, QTimer
+from PyQt6.QtGui import QAction, QIcon, QMouseEvent, QPixmap, QFontMetrics, QStandardItem, QStandardItemModel
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.plots_config_widget import PlotsConfigPopup
 from components.read_data import ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
@@ -356,176 +356,236 @@ class TimeTaggerWidget(QWidget):
         self.fcs_checkbox.setChecked(self.app.settings.value(SETTINGS_EXPORT_FCS, DEFAULT_EXPORT_FCS))
         self.time_tagger_checkbox.setChecked(self.app.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER))
 
-class MultiSelectDropdown(QWidget):
-    def __init__(self, app, parent=None):
-        super().__init__(parent)
-        self.app = app
 
-        # Calculate width needed for the longest menu text
-        # Create a temporary button to get font metrics
-        temp_button = QPushButton("EXPORT OPTIONS")
-        temp_button.setStyleSheet("""
-            QPushButton {
-                font-family: 'Montserrat';
-                font-size: 14px;
-                font-weight: 800;
-                letter-spacing: 0.1em;
-            }
-        """)
-        font_metrics = QFontMetrics(temp_button.font())
-        longest_text = "Export Intensity Tracing"
-        text_width = font_metrics.horizontalAdvance(longest_text)
-        # Calculate: text width + checkbox indicator + menu padding + margins + button padding
-        required_width = text_width + 30 + 24 + 24    # text + checkbox + menu margins + button margins
+from PyQt6.QtWidgets import QStyledItemDelegate, QComboBox, QStyle, QStyleOptionViewItem
+from PyQt6.QtCore import Qt, QSize, QRect, QEvent
+from PyQt6.QtGui import QStandardItemModel, QStandardItem, QIcon, QPixmap, QColor
+
+class IconRightDelegate(QStyledItemDelegate):
+    """Delegate personalizzato per mostrare le icone a destra del testo"""
+    
+    def paint(self, painter, option, index):
+        painter.save()
         
-        # --- MAIN BUTTON CONTAINER -------------------------------------------
-        self.button_container = QWidget()
-        self.button_container.setObjectName("container")
-        self.button_container.setFixedHeight(48)
-        self.button_container.setFixedWidth(required_width)  # Fixed width to prevent expansion
-        self.button_container.setStyleSheet("""
-            QWidget#container {
-                border-radius: 5px;
-                border: 2px solid #3b3b3b;
-                background-color: #141414;
-                padding: 0;
-            }
-        """)
-
-        # Main button
-        self.button = QPushButton("EXPORT OPTIONS")
-        self.button.setCheckable(True)
-        self.button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.button.setStyleSheet("""
-            QPushButton {
-                font-family: 'Montserrat';
-                font-size: 14px;
-                font-weight: 800;
-                letter-spacing: 0.1em;
-                color: #f8f8f8;
-                background-color: transparent;
-                border: none;
-                border-radius: 5px;
-                padding: 0;
-                text-align: left;
-            }
-            QPushButton:hover {
-                background-color: #1a1a1a;
-            }
-            QPushButton:checked {
-                background-color: #1a1a1a;
-            }
-        """)
-        self.button.clicked.connect(self.toggle_menu)
-
-        # Arrow icon
-        self.arrow_label = QLabel()
-        self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-down-dark-grey.png")).scaled(14, 14))
-        self.arrow_label.setFixedSize(14, 14)
-
-        # Button layout
-        button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(10, 0, 10, 0)
-        button_layout.setSpacing(0)  # No automatic spacing between widgets
-        button_layout.addWidget(self.button, stretch=0)  # Don't let button expand
-        button_layout.addSpacing(0)  # Specific distance between "EXPORT OPTIONS" and arrow (adjust this value to change distance)
-        button_layout.addWidget(self.arrow_label)
-        self.button_container.setLayout(button_layout)
-
-        # --- DROPDOWN MENU -----------------------------------------
-        self.menu = QWidget(self, Qt.WindowType.Popup)
-        self.menu.setVisible(False)
-        # Set size policy to match button container width
-        self.menu.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.menu.setStyleSheet("""
-            QWidget {
-                background-color: #181818;
-                border: 1px solid #3b3b3b;
-                border-top: none;
-                border-bottom-left-radius: 5px;
-                border-bottom-right-radius: 5px;
-            }
-        """)
-
-        self.menu_layout = QVBoxLayout()
-        self.menu_layout.setContentsMargins(12, 10, 12, 10)
-        self.menu_layout.setSpacing(10)
+        # Ottieni i dati dell'item
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        icon = index.data(Qt.ItemDataRole.DecorationRole)
+        checkState = index.data(Qt.ItemDataRole.CheckStateRole)
         
-        self.menu.setLayout(self.menu_layout)
-
-        # Checkbox options
-        checkboxExportOptions = ["EXPORT_INTENSITY_TRACING", "EXPORT_FCS", "TIME_TAGGER"]
-
-        self.checkboxes = []
-        for option in checkboxExportOptions:
-            cb = QCheckBox(option.replace("_", " ").title())
-            cb.setCursor(Qt.CursorShape.PointingHandCursor)
-            cb.setStyleSheet(GUIStyles.set_simple_checkbox_style("#FB8C00"))
-            self.menu_layout.addWidget(cb)
-            self.checkboxes.append(cb)
-
-        # Animation (smooth open/close)
-        self.animation = QPropertyAnimation(self.menu, b"maximumHeight")
-        self.animation.setDuration(200)
-
-        # Container layout
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.button_container)
-        layout.addWidget(self.menu)
-        self.setLayout(layout)
-
-    def toggle_menu(self):
-        is_opening = self.button.isChecked()
-
-        if is_opening:
-
-            pos = self.button_container.mapToGlobal(self.button_container.rect().bottomLeft())
-            self.menu.move(pos)  # posiziona il popup sotto il pulsante
-            # Set menu width to match button container width before showing
-            self.menu.setFixedWidth(self.button_container.width())
-            self.menu.setVisible(True)
-            self.animation.setStartValue(0)
-            self.animation.setEndValue(self.menu.sizeHint().height())
-            self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-up-dark-grey.png")).scaled(14, 14))
-            # Update container border color when open
-            self.button_container.setStyleSheet("""
-                QWidget#container {
-                    border-radius: 5px;
-                    border: 2px solid #FB8C00;
-                    background-color: #141414;
-                }
-            """)
+        # Abilita antialiasing
+        painter.setRenderHint(painter.RenderHint.Antialiasing)
+        
+        # Disegna lo sfondo con colori corretti
+        if option.state & QStyle.StateFlag.State_Selected:
+            bg_color = QColor("#FB8C00")  # Arancione per selezione
+        elif option.state & QStyle.StateFlag.State_MouseOver:
+            bg_color = QColor("#2a2a2a")  # Grigio scuro per hover
         else:
-            self.animation.setStartValue(self.menu.height())
-            self.animation.setEndValue(0)
-            self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-down-dark-grey.png")).scaled(14, 14))
-            # Reset container border color when closed
-            self.button_container.setStyleSheet("""
-                QWidget#container {
-                    border-radius: 5px;
-                    border: 2px solid #3b3b3b;
-                    background-color: #141414;
-                }
-            """)
-        self.animation.start()
+            bg_color = QColor("#1e1e1e")  # Grigio molto scuro di default
+        
+        painter.fillRect(option.rect, bg_color)
+        
+        # Margini e dimensioni
+        margin = 8
+        checkbox_size = 18
+        icon_size = 20
+        spacing = 8
+        
+        # Posizione checkbox (sinistra)
+        checkbox_rect = QRect(
+            option.rect.left() + margin,
+            option.rect.top() + (option.rect.height() - checkbox_size) // 2,
+            checkbox_size,
+            checkbox_size
+        )
+        
+        # Disegna la checkbox con lo stile di sistema ma personalizzato
+        checkbox_option = QStyleOptionViewItem()
+        checkbox_option.rect = checkbox_rect
+        checkbox_option.widget = option.widget
+        
+        # Inizializza lo stato in modo pulito
+        checkbox_option.state = QStyle.StateFlag.State_Enabled | QStyle.StateFlag.State_Active
+        
+        # Imposta lo stato checked/unchecked
+        if checkState == Qt.CheckState.Checked:
+            checkbox_option.state |= QStyle.StateFlag.State_On
+        else:
+            checkbox_option.state |= QStyle.StateFlag.State_Off
+        
+        if option.widget:
+            option.widget.style().drawPrimitive(
+                QStyle.PrimitiveElement.PE_IndicatorCheckBox,
+                checkbox_option,
+                painter,
+                option.widget
+            )
+        
+        # Calcola lo spazio per l'icona (se presente)
+        has_icon = icon and isinstance(icon, QIcon) and not icon.isNull()
+        icon_space = icon_size + spacing if has_icon else 0
+        
+        # Posizione del testo (dopo checkbox, con spazio per icona a destra)
+        text_x = option.rect.left() + margin + checkbox_size + spacing
+        text_width = option.rect.width() - margin * 2 - checkbox_size - spacing - icon_space
+        text_rect = QRect(
+            text_x,
+            option.rect.top(),
+            text_width,
+            option.rect.height()
+        )
+        
+        # Disegna il testo
+        painter.setPen(QColor("#f8f8f8"))
+        painter.setFont(option.font)
+        painter.drawText(
+            text_rect,
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            text
+        )
+        
+        # Disegna l'icona a DESTRA (se presente)
+        if has_icon:
+            icon_x = option.rect.right() - margin - icon_size
+            icon_y = option.rect.top() + (option.rect.height() - icon_size) // 2
+            icon_rect = QRect(icon_x, icon_y, icon_size, icon_size)
+            icon.paint(painter, icon_rect)
+        
+        painter.restore()
+    
+    def sizeHint(self, option, index):
+        return QSize(option.rect.width() if option.rect.width() > 0 else 200, 40)
+    
+    def editorEvent(self, event, model, option, index):
+        """Gestisce i click sulle checkbox"""
+        # Gestisci solo MouseButtonRelease per evitare doppi toggle
+        if event.type() == QEvent.Type.MouseButtonRelease:
+            if option.rect.contains(event.pos()):
+                # Togglea lo stato
+                current_state = index.data(Qt.ItemDataRole.CheckStateRole)
+                new_state = Qt.CheckState.Unchecked if current_state == Qt.CheckState.Checked else Qt.CheckState.Checked
+                model.setData(index, new_state, Qt.ItemDataRole.CheckStateRole)
+                
+                # Forza un repaint della view per aggiornare tutte le checkbox
+                if option.widget and hasattr(option.widget, 'view'):
+                    option.widget.view().viewport().update()
+                
+                return True
+        
+        return False  # Non chiamare super() per evitare gestione duplicata
 
-    def setVisible(self, visible):
-        if not visible and self.button.isChecked():
-        # Se il widget viene nascosto e il menu era aperto, chiudilo e resetta lo stato
-            self.button.setChecked(False)
-            self.menu.setVisible(False)
-            self.arrow_label.setPixmap(QPixmap(resource_path("assets/arrow-down-dark-grey.png")).scaled(14, 14))
-            self.button_container.setStyleSheet("""
-                QWidget#container {
-                    border-radius: 5px;
-                    border: 2px solid #3b3b3b;
-                    background-color: #141414;
-                }
-            """)
-        super().setVisible(visible)
+          
+class MultiSelectDropdown(QComboBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)   
 
-    def get_selected(self):
-        return [cb.text() for cb in self.checkboxes if cb.isChecked()]
+        # Imposta un model standard
+        model = QStandardItemModel()
+        self.setModel(model)
+        
+        # Imposta le dimensioni delle icone
+        self.setIconSize(QSize(20, 20))
+        
+        # Imposta il delegate personalizzato per icone a destra
+        self.setItemDelegate(IconRightDelegate(self))
+        
+      
+        
+        # Imposta lo stile
+        self.setStyleSheet("""
+            QComboBox {
+                background-color: #141414;
+                border: 2px solid #3b3b3b;
+                border-radius: 5px;
+                padding: 10px;
+                color: #f8f8f8;
+                font-family: 'Montserrat';
+                font-size: 14px;
+                font-weight: 800;
+                letter-spacing: 0.1em;
+                min-height: 28px;
+            }
+            QComboBox:on {
+                border: 2px solid #FB8C00;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QListView {
+                background-color: #1e1e1e;
+                border: 2px solid #3b3b3b;
+                border-radius: 5px;
+                outline: none;
+            }
+            QListView::item {
+                padding: 5px;
+                border: none;
+            }
+            QListView::item:hover {
+                background-color: #2a2a2a;
+            }
+            QListView::item:selected {
+                background-color: #FB8C00;
+            }
+        """)
 
+   
+
+    def addItems(self, items, itemList=None):
+        """Add items to the dropdown"""
+        for indx, text in enumerate(items):
+            try:
+                data = itemList[indx] if itemList else None
+            except (TypeError, IndexError):
+                data = None
+            self.addItem(text, data)
+
+    def addItem(self, text, userData=None):
+        """Add a single item to the dropdown"""
+        item = QStandardItem()
+        item.setText(text)
+        
+        # Aggiungi l'icona se userData è un percorso PNG
+        if userData is not None and isinstance(userData, str) and userData.endswith('.png'):
+            icon_pixmap = QPixmap(userData)  # Rimuovi resource_path se non necessario
+            if not icon_pixmap.isNull():
+                scaled_pixmap = icon_pixmap.scaled(
+                    20, 20, 
+                    Qt.AspectRatioMode.KeepAspectRatio, 
+                    Qt.TransformationMode.SmoothTransformation
+                )
+                icon = QIcon(scaled_pixmap)
+                item.setIcon(icon)
+        elif userData is not None:
+            item.setData(userData, Qt.ItemDataRole.UserRole)
+        
+        # Abilita checkbox
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+        item.setCheckState(Qt.CheckState.Unchecked)
+        
+        self.model().appendRow(item)
+    
+    def getCheckedItems(self):
+        """Restituisce una lista dei testi degli item selezionati"""
+        checked = []
+        for i in range(self.model().rowCount()):
+            item = self.model().item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                checked.append(item.text())
+        return checked
+    
+    def getCheckedItemsData(self):
+        """Restituisce una lista dei dati UserRole degli item selezionati"""
+        checked = []
+        for i in range(self.model().rowCount()):
+            item = self.model().item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                data = item.data(Qt.ItemDataRole.UserRole)
+                checked.append(data)
+        return checked
+
+
+  
+
+    
