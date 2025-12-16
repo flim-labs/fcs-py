@@ -362,7 +362,35 @@ class TimeTaggerWidget(QWidget):
 
 # USED BY MULTI SELECT DROPDOWN
 class IconRightDelegate(QStyledItemDelegate):
-    """Delegate personalizzato per mostrare le icone a destra del testo"""
+    """
+    Custom delegate for rendering multi-select dropdown items with checkboxes and icons.
+    
+    This delegate provides a custom rendering layout for QComboBox items with the following features:
+    - Checkboxes positioned on the left side (orange when checked, gray border when unchecked)
+    - Item text displayed in the center
+    - Optional icons displayed on the right side
+    - Custom background colors for different states (selected, hover, default)
+    - Interactive checkbox toggling via mouse clicks
+    
+    The delegate overrides three main methods:
+    - paint(): Custom rendering of item appearance including checkbox, text, and icon
+    - sizeHint(): Defines the size of each item (40px height)
+    - editorEvent(): Handles mouse click events for checkbox toggling
+    
+    Parameters:
+        parent (QWidget, optional): Parent widget, typically the QComboBox using this delegate
+    
+    Visual Layout:
+        [Checkbox] [Item Text]                    [Icon]
+         (left)     (center)                     (right)
+    
+    Color Scheme:
+        - Checked checkbox: #FB8C00 (orange) with white checkmark
+        - Unchecked checkbox: #8c8c8c (gray) border, transparent fill
+        - Selected item background: #FB8C00 (orange)
+        - Hover item background: #2a2a2a (dark gray)
+        - Default item background: #1e1e1e (very dark gray)
+    """
     
     def paint(self, painter, option, index):
         painter.save()
@@ -481,28 +509,55 @@ class IconRightDelegate(QStyledItemDelegate):
 
           
 class MultiSelectDropdown(QComboBox):
+    """
+    A custom QComboBox widget that supports multiple item selection with checkboxes.
+    
+    This dropdown component allows users to select multiple items simultaneously using checkboxes.
+    Each item can optionally display an icon on the right side. The component uses the custom
+    IconRightDelegate for rendering items with orange checkboxes when selected.
+    
+    Features:
+    - Multiple item selection via checkboxes
+    - Optional icons for each item (displayed on the right)
+    - Custom styling with orange accent color
+    - Animated dropdown arrow (down when closed, up when open)
+    - Rounded corners that adapt to open/closed state
+    
+    Parameters:
+        parent (QWidget, optional): Parent widget. Defaults to None.
+    """
+    
     def __init__(self, parent=None):
+      
         super().__init__(parent)   
 
-        # Imposta un model standard
+        # Set up standard model
         model = QStandardItemModel()
         self.setModel(model)
         
-        # Imposta le dimensioni delle icone
+        # Set icon dimensions
         self.setIconSize(QSize(20, 20))
         
-        # Imposta il delegate personalizzato per icone a destra
+        # Set custom delegate for right-aligned icons and custom checkboxes
         self.setItemDelegate(IconRightDelegate(self))
         
-      
-        
-        # Imposta lo stile
+        # Apply custom stylesheet
         self.setStyleSheet(GUIStyles.multi_select_dropdown_style())
 
    
 
     def addItems(self, items, itemList=None):
-        """Add items to the dropdown"""
+        """
+        Add multiple items to the dropdown at once.
+        
+        Iterates through the items list and adds each item with its corresponding
+        userData (if provided).
+
+        Parameters:
+            items (list): List of string labels to display in the dropdown
+            itemList (list, optional): List of user data objects corresponding to each item.
+                                      Can be icon paths (*.png) or custom data. Defaults to None.
+        """
         for indx, text in enumerate(items):
             try:
                 data = itemList[indx] if itemList else None
@@ -511,13 +566,31 @@ class MultiSelectDropdown(QComboBox):
             self.addItem(text, data)
 
     def addItem(self, text, userData=None):
-        """Add a single item to the dropdown"""
+        """
+        Add a single item to the dropdown with optional icon or custom data.
+        
+        Creates a new item with a checkbox (initially unchecked). If userData is a path
+        to a PNG file, it will be displayed as an icon on the right side of the item.
+        Otherwise, userData is stored as UserRole data for later retrieval.
+        
+        Parameters:
+            text (str): The display text for the item
+            userData (str or object, optional): Either a file path to a PNG icon to display,
+                                               or custom data to associate with the item.
+                                               Defaults to None.
+        
+        Icon Behavior:
+            - If userData ends with '.png', it's treated as an icon path
+            - Icon is scaled to 20x20 pixels with smooth transformation
+            - If userData is not a PNG path, it's stored as custom data
+
+        """
         item = QStandardItem()
         item.setText(text)
         
-        # Aggiungi l'icona se userData è un percorso PNG
+        # Add icon if userData is a PNG file path
         if userData is not None and isinstance(userData, str) and userData.endswith('.png'):
-            icon_pixmap = QPixmap(userData)  # Rimuovi resource_path se non necessario
+            icon_pixmap = QPixmap(userData)
             if not icon_pixmap.isNull():
                 scaled_pixmap = icon_pixmap.scaled(
                     20, 20, 
@@ -529,14 +602,24 @@ class MultiSelectDropdown(QComboBox):
         elif userData is not None:
             item.setData(userData, Qt.ItemDataRole.UserRole)
         
-        # Abilita checkbox
+        # Enable checkbox for the item
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
         item.setCheckState(Qt.CheckState.Unchecked)
         
         self.model().appendRow(item)
     
     def getCheckedItems(self):
-        """Restituisce una lista dei testi degli item selezionati"""
+        """
+        Get a list of text labels for all checked items.
+        
+        Iterates through all items in the dropdown and returns the display text
+        of items that have their checkbox checked.
+        
+        Returns:
+            list: List of strings containing the text labels of checked items.
+                 Returns empty list if no items are checked.
+
+        """
         checked = []
         for i in range(self.model().rowCount()):
             item = self.model().item(i)
@@ -545,7 +628,22 @@ class MultiSelectDropdown(QComboBox):
         return checked
     
     def getCheckedItemsData(self):
-        """Restituisce una lista dei dati UserRole degli item selezionati"""
+        """
+        Get a list of UserRole data for all checked items.
+        
+        Iterates through all items in the dropdown and returns the custom data
+        (stored as UserRole) of items that have their checkbox checked. This is
+        useful when items were added with custom data objects instead of icon paths.
+        
+        Returns:
+            list: List of user data objects associated with checked items.
+                 Returns empty list if no items are checked or if items don't have UserRole data.
+        
+        Note:
+            Items that were added with PNG icon paths won't have UserRole data,
+            so they may return None values in the list.
+
+        """
         checked = []
         for i in range(self.model().rowCount()):
             item = self.model().item(i)
