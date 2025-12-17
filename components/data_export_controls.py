@@ -62,14 +62,39 @@ class ExportDataControl(QWidget):
         from components.buttons import MultiSelectDropdown
         export_options_widget = MultiSelectDropdown(self.app)
         export_options_widget.setPlaceholderText("EXPORT OPTIONS")
-        # Aggiungi items con icona per Time Tagger
         export_options_widget.addItems(
             ["Intensity tracing", "FCS", "Time Tagger"],
-            itemList=[None, None, "assets/time-tagger-icon.png"]
+            itemList=[
+                {"checked": self.app.export_intensity_tracing, "icon": None},
+                {"checked": self.app.export_fcs, "icon": None},
+                {"checked": self.app.time_tagger, "icon": "assets/time-tagger-icon.png"}
+            ]
         )
+    
+        # Forza il refresh del view per mostrare correttamente lo stato delle checkbox
+        export_options_widget.refreshView()
         self.app.widgets[EXPORT_OPTIONS_WIDGET] = export_options_widget
         export_options_widget.setVisible(self.app.write_data)
         return export_options_widget
+    
+    def on_export_option_changed(self, index, checked):
+        """
+        Gestisce il cambiamento di stato di una checkbox nelle export options.
+        Salva il nuovo stato nei settings.
+        
+        Parameters:
+            index (int): L'indice dell'item (0=Intensity tracing, 1=FCS, 2=Time Tagger)
+            checked (bool): Il nuovo stato
+        """
+        if index == 0:  # Intensity tracing
+            self.app.export_intensity_tracing = checked
+            self.app.settings.setValue(SETTINGS_EXPORT_INTENSITY_TRACING, checked)
+        elif index == 1:  # FCS
+            self.app.export_fcs = checked
+            self.app.settings.setValue(SETTINGS_EXPORT_FCS, checked)
+        elif index == 2:  # Time Tagger
+            self.app.time_tagger = checked
+            self.app.settings.setValue(SETTINGS_TIME_TAGGER, checked)
 
     def create_time_tagger_widget(self):
         from components.buttons import TimeTaggerWidget

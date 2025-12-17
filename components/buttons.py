@@ -391,17 +391,18 @@ class IconRightDelegate(QStyledItemDelegate):
         - Hover item background: #2a2a2a (dark gray)
         - Default item background: #1e1e1e (very dark gray)
     """
-    
+     
+   
+        
     def paint(self, painter, option, index):
         painter.save()
         
         text = index.data(Qt.ItemDataRole.DisplayRole)
         icon = index.data(Qt.ItemDataRole.DecorationRole)
-        checkState = index.data(Qt.ItemDataRole.CheckStateRole)
+        checkState = index.data(Qt.ItemDataRole.CheckStateRole)       
         
-        painter.setRenderHint(painter.RenderHint.Antialiasing)
         
-       
+        painter.setRenderHint(painter.RenderHint.Antialiasing)      
 
         
         margin = 8
@@ -416,7 +417,8 @@ class IconRightDelegate(QStyledItemDelegate):
             checkbox_size
         )
         
-        if checkState == Qt.CheckState.Checked:
+        # Confronta con il valore numerico: Qt.CheckState.Checked = 2
+        if checkState == 2:
             painter.setPen(QColor("#FB8C00"))
             painter.setBrush(QColor("#FB8C00"))
             painter.drawRoundedRect(checkbox_rect, 3, 3)
@@ -433,6 +435,7 @@ class IconRightDelegate(QStyledItemDelegate):
                 QPoint(checkbox_rect.left() + 14, checkbox_rect.top() + 5)
             ]
             painter.drawPolyline(check_points)
+            
         else:
             painter.setPen(QColor("#8c8c8c"))
             painter.setBrush(Qt.GlobalColor.transparent)
@@ -469,20 +472,7 @@ class IconRightDelegate(QStyledItemDelegate):
     def sizeHint(self, option, index):
         return QSize(option.rect.width() if option.rect.width() > 0 else 200, 40)
     
-    def editorEvent(self, event, model, option, index):
-        """Gestisce i click sulle checkbox"""
-        if event.type() == QEvent.Type.MouseButtonRelease:
-            if option.rect.contains(event.pos()):
-                current_state = index.data(Qt.ItemDataRole.CheckStateRole)
-                new_state = Qt.CheckState.Unchecked if current_state == Qt.CheckState.Checked else Qt.CheckState.Checked
-                model.setData(index, new_state, Qt.ItemDataRole.CheckStateRole)
-                
-                if option.widget and hasattr(option.widget, 'view'):
-                    option.widget.view().viewport().update()
-                
-                return True
-        
-        return False  
+    
 
           
 class MultiSelectDropdown(QComboBox):
@@ -503,10 +493,14 @@ class MultiSelectDropdown(QComboBox):
     Parameters:
         parent (QWidget, optional): Parent widget. Defaults to None.
     """
+
+
     
-    def __init__(self, parent=None):
+    
+    def __init__(self,window, parent=None):
       
-        super().__init__(parent)   
+        super().__init__(parent)
+        self.app = window   
 
         model = QStandardItemModel()
         self.setModel(model)
@@ -517,7 +511,31 @@ class MultiSelectDropdown(QComboBox):
         
         self.setStyleSheet(GUIStyles.multi_select_dropdown_style())
 
-   
+        # Ascolta i cambiamenti nel modello invece del view().pressed
+        model.dataChanged.connect(self.on_item_changed)
+
+    def on_item_changed(self, topLeft, bottomRight, roles):
+        """Chiamato quando i dati del modello cambiano"""
+        if Qt.ItemDataRole.CheckStateRole in roles:
+            index = topLeft
+            item = self.model().itemFromIndex(index)
+            checked = item.checkState() == Qt.CheckState.Checked
+            row = index.row()
+            
+            print(f"Item {item.text()} (row {row}) - Checked: {checked}")
+            
+            # Salva nei settings
+            if row == 0:
+                self.app.export_intensity_tracing = checked
+                self.app.settings.setValue(SETTINGS_EXPORT_INTENSITY_TRACING, checked)
+            elif row == 1:
+                self.app.export_fcs = checked
+                self.app.settings.setValue(SETTINGS_EXPORT_FCS, checked)
+            elif row == 2:
+                self.app.time_tagger = checked
+                self.app.settings.setValue(SETTINGS_TIME_TAGGER, checked)
+
+    
 
     def addItems(self, items, itemList=None):
         """
@@ -561,8 +579,25 @@ class MultiSelectDropdown(QComboBox):
         item = QStandardItem()
         item.setText(text)
         
-        if userData is not None and isinstance(userData, str) and userData.endswith('.png'):
-            icon_pixmap = QPixmap(userData)
+        # Handle different userData types
+        initial_checked = False
+        icon_path = None
+        
+        if userData is not None:
+            if isinstance(userData, dict):
+                # userData is a dict with 'icon' and 'checked' keys
+                icon_path = userData.get('icon')
+                initial_checked = userData.get('checked', False)
+            elif isinstance(userData, str) and userData.endswith('.png'):
+                # userData is a simple icon path string (backward compatibility)
+                icon_path = userData
+            else:
+                # Store as custom data
+                item.setData(userData, Qt.ItemDataRole.UserRole)
+        
+        # Set icon if provided
+        if icon_path is not None and isinstance(icon_path, str) and icon_path.endswith('.png'):
+            icon_pixmap = QPixmap(icon_path)
             if not icon_pixmap.isNull():
                 scaled_pixmap = icon_pixmap.scaled(
                     20, 20, 
@@ -571,12 +606,19 @@ class MultiSelectDropdown(QComboBox):
                 )
                 icon = QIcon(scaled_pixmap)
                 item.setIcon(icon)
-        elif userData is not None:
-            item.setData(userData, Qt.ItemDataRole.UserRole)
         
         # Enable checkbox for the item
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
-        item.setCheckState(Qt.CheckState.Unchecked)
+        # Set initial state based on userData
+        # item.setCheckState(Qt.CheckState.Checked if initial_checked else Qt.CheckState.Unchecked)
+        if(initial_checked):
+            check_state = Qt.CheckState.Checked
+        else:
+            check_state = Qt.CheckState.Unchecked
+        item.setCheckState(check_state)  
+        
+        
+        # DEBUG: Verifica lo stato impostato
         
         self.model().appendRow(item)
     
@@ -623,6 +665,35 @@ class MultiSelectDropdown(QComboBox):
                 data = item.data(Qt.ItemDataRole.UserRole)
                 checked.append(data)
         return checked
+    
+    def setItemChecked(self, index, checked):
+        """
+        Imposta lo stato checked di un item tramite indice.
+        
+        Parameters:
+            index (int): L'indice dell'item da modificare
+            checked (bool): True per checkare l'item, False per uncheckarlo
+        """
+        item = self.model().item(index)
+        if item:
+            state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+            item.setCheckState(state)
+    
+    def loadSettingsState(self):
+        """
+        Carica lo stato iniziale delle checkbox dai settings dell'app.
+        """
+        if hasattr(self, 'app'):
+            self.setItemChecked(0, self.app.export_intensity_tracing)
+            self.setItemChecked(1, self.app.export_fcs)
+            self.setItemChecked(2, self.app.time_tagger)
+    
+    def refreshView(self):
+        """
+        Forza l'aggiornamento del view per mostrare correttamente lo stato delle checkbox.
+        """
+        if self.view():
+            self.view().viewport().update()
 
 
   
