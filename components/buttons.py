@@ -706,72 +706,7 @@ class MultiSelectDropdown(QComboBox):
         
         self.model().appendRow(item)
     
-    def getCheckedItems(self):
-        """
-        Get a list of text labels for all checked items.
-        
-        Iterates through all items in the dropdown and returns the display text
-        of items that have their checkbox checked.
-        
-        Returns:
-            list: List of strings containing the text labels of checked items.
-                 Returns empty list if no items are checked.
-
-        """
-        checked = []
-        for i in range(self.model().rowCount()):
-            item = self.model().item(i)
-            if item.checkState() == Qt.CheckState.Checked:
-                checked.append(item.text())
-        return checked
-    
-    def getCheckedItemsData(self):
-        """
-        Get a list of UserRole data for all checked items.
-        
-        Iterates through all items in the dropdown and returns the custom data
-        (stored as UserRole) of items that have their checkbox checked. This is
-        useful when items were added with custom data objects instead of icon paths.
-        
-        Returns:
-            list: List of user data objects associated with checked items.
-                 Returns empty list if no items are checked or if items don't have UserRole data.
-        
-        Note:
-            Items that were added with PNG icon paths won't have UserRole data,
-            so they may return None values in the list.
-
-        """
-        checked = []
-        for i in range(self.model().rowCount()):
-            item = self.model().item(i)
-            if item.checkState() == Qt.CheckState.Checked:
-                data = item.data(Qt.ItemDataRole.UserRole)
-                checked.append(data)
-        return checked
-    
-    def setItemChecked(self, index, checked):
-        """
-        Set the checked state of an item by its index.
-        
-        Parameters:
-            index (int): The index of the item to modify (0-based)
-            checked (bool): True to check the item, False to uncheck it
-        """
-        item = self.model().item(index)
-        if item:
-            state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
-            item.setCheckState(state)
-    
-    def loadSettingsState(self):
-        """
-        Loads the initial state of the checkboxes from the app settings.
-        """
-        if hasattr(self, 'app'):
-            self.setItemChecked(0, self.app.export_intensity_tracing)
-            self.setItemChecked(1, self.app.export_fcs)
-            self.setItemChecked(2, self.app.time_tagger)
-    
+       
     def refreshView(self):
         """
         Forces the view update to correctly display the checkbox states.
