@@ -60,7 +60,13 @@ class ExportDataControl(QWidget):
     
     def create_export_options_widget(self):
         from components.buttons import MultiSelectDropdown
-        export_options_widget = MultiSelectDropdown(self.app)
+        # Configure settings mapping for automatic saving
+        settings_config = {
+            0: {'app_attr': 'export_intensity_tracing', 'setting_key': SETTINGS_EXPORT_INTENSITY_TRACING},
+            1: {'app_attr': 'export_fcs', 'setting_key': SETTINGS_EXPORT_FCS},
+            2: {'app_attr': 'time_tagger', 'setting_key': SETTINGS_TIME_TAGGER}
+        }
+        export_options_widget = MultiSelectDropdown(self.app, settings_config=settings_config)
         export_options_widget.setPlaceholderText("EXPORT OPTIONS")
         export_options_widget.addItems(
             ["Intensity tracing", "FCS", "Time Tagger"],
