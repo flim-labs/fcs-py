@@ -412,7 +412,8 @@ class IconRightDelegate(QStyledItemDelegate):
         
         text = index.data(Qt.ItemDataRole.DisplayRole)
         icon = index.data(Qt.ItemDataRole.DecorationRole)
-        checkState = index.data(Qt.ItemDataRole.CheckStateRole)       
+        checkState = index.data(Qt.ItemDataRole.CheckStateRole)
+        is_locked = index.data(Qt.ItemDataRole.UserRole + 1)
         
         
         painter.setRenderHint(painter.RenderHint.Antialiasing)      
@@ -430,8 +431,11 @@ class IconRightDelegate(QStyledItemDelegate):
             checkbox_size
         )
         
-        # Confronta con il valore numerico e enum: Qt.CheckState.Checked = 2
         is_checked = (checkState == Qt.CheckState.Checked or checkState == 2)
+        
+        if is_locked:
+            painter.setOpacity(0.5)
+        
         if is_checked:
             painter.setPen(QColor("#FB8C00"))
             painter.setBrush(QColor("#FB8C00"))
@@ -516,6 +520,11 @@ class IconRightDelegate(QStyledItemDelegate):
             bool: True if the event was handled, False otherwise
         """
         if event.type() == event.Type.MouseButtonRelease:
+            is_locked = index.data(Qt.ItemDataRole.UserRole + 1)
+            
+            if is_locked:
+                return True
+            
             # Ottieni lo stato corrente del checkbox
             current_state = index.data(Qt.ItemDataRole.CheckStateRole)
                        
@@ -673,11 +682,13 @@ class MultiSelectDropdown(QComboBox):
         
         initial_checked = False
         icon_path = None
+        locked = False
         
         if userData is not None:
             if isinstance(userData, dict):
                 icon_path = userData.get('icon')
                 initial_checked = userData.get('checked', False)
+                locked = userData.get('locked', False)
             elif isinstance(userData, str) and userData.endswith('.png'):
                 icon_path = userData
             else:
@@ -693,6 +704,8 @@ class MultiSelectDropdown(QComboBox):
                 )
                 icon = QIcon(scaled_pixmap)
                 item.setIcon(icon)
+        
+        item.setData(locked, Qt.ItemDataRole.UserRole + 1)
         
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
         if(initial_checked):

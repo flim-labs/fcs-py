@@ -60,24 +60,23 @@ class ExportDataControl(QWidget):
     
     def create_export_options_widget(self):
         from components.buttons import MultiSelectDropdown
-        # Configure settings mapping for automatic saving
         settings_config = {
-            0: {'app_attr': 'export_intensity_tracing', 'setting_key': SETTINGS_EXPORT_INTENSITY_TRACING},
-            1: {'app_attr': 'export_fcs', 'setting_key': SETTINGS_EXPORT_FCS},
+            0: {'app_attr': 'export_fcs', 'setting_key': SETTINGS_EXPORT_FCS},
+           
+            1: {'app_attr': 'export_intensity_tracing', 'setting_key': SETTINGS_EXPORT_INTENSITY_TRACING},
             2: {'app_attr': 'time_tagger', 'setting_key': SETTINGS_TIME_TAGGER}
         }
         export_options_widget = MultiSelectDropdown(self.app, settings_config=settings_config)
         export_options_widget.setPlaceholderText("EXPORT OPTIONS")
         export_options_widget.addItems(
-            ["Intensity tracing", "FCS", "Time Tagger"],
+            ["FCS", "Intensity tracing",  "Time Tagger"],
             itemList=[
-                {"checked": self.app.export_intensity_tracing, "icon": None},
-                {"checked": self.app.export_fcs, "icon": None},
+                {"checked": True, "icon": None, "locked": True},
+                {"checked": self.app.export_intensity_tracing, "icon": None},                
                 {"checked": self.app.time_tagger, "icon": "assets/time-tagger-icon.png"}
             ]
         )
     
-        # Forza il refresh del view per mostrare correttamente lo stato delle checkbox
         export_options_widget.refreshView()
         self.app.widgets[EXPORT_OPTIONS_WIDGET] = export_options_widget
         export_options_widget.setVisible(self.app.write_data)
@@ -89,16 +88,17 @@ class ExportDataControl(QWidget):
         Salva il nuovo stato nei settings.
         
         Parameters:
-            index (int): L'indice dell'item (0=Intensity tracing, 1=FCS, 2=Time Tagger)
+            index (int): L'indice dell'item (0=FCS, 1=Intensity tracing, 2=Time Tagger)
             checked (bool): Il nuovo stato
         """
-        if index == 0:  # Intensity tracing
+        if index == 0:  
+            self.app.export_fcs = True
+            self.app.settings.setValue(SETTINGS_EXPORT_FCS, True)
+        elif index == 1:  
             self.app.export_intensity_tracing = checked
             self.app.settings.setValue(SETTINGS_EXPORT_INTENSITY_TRACING, checked)
-        elif index == 1:  # FCS
-            self.app.export_fcs = checked
-            self.app.settings.setValue(SETTINGS_EXPORT_FCS, checked)
-        elif index == 2:  # Time Tagger
+        
+        elif index == 2: 
             self.app.time_tagger = checked
             self.app.settings.setValue(SETTINGS_TIME_TAGGER, checked)
 
@@ -300,6 +300,106 @@ class AddNotesToExportedDataPopup(QWidget):
 class ExportData:
 
     @staticmethod
+    def save_intensity_tracing_data(app):
+        """Save only intensity tracing file (without FCS)"""
+        try:
+            timestamp = calc_timestamp()
+            time_tagger = app.time_tagger
+            num_acquisitions = (
+                app.selected_average
+                if app.free_running_acquisition_time == False
+                else 1
+            )
+            intensity_files = FileUtils.get_recent_n_intensity_tracing_files(
+                num_acquisitions
+            )
+            
+            if not intensity_files:
+                return
+            
+            
+            dialog = QFileDialog()
+            save_path, _ = dialog.getSaveFileName(
+                app,
+                "Save Intensity Tracing files",
+                "",
+                "All Files (*);;Binary Files (*.bin)",
+                options=QFileDialog.Option.DontUseNativeDialog,
+            )
+            if not save_path:
+                return
+            
+            save_dir = os.path.dirname(save_path)
+            save_name = os.path.basename(save_path)
+            file_name = FileUtils.clean_filename(save_name)
+            
+            
+            for index, file in enumerate(intensity_files):
+                new_intensity_file_name = (
+                    f"{file_name}_{timestamp}_intensity_tracing_{index + 1}.bin"
+                )
+                new_intensity_ref_path = os.path.join(save_dir, new_intensity_file_name)
+                shutil.copyfile(file, new_intensity_ref_path)
+            
+            if time_tagger:
+                time_tagger_file = FileUtils.get_recent_time_tagger_file()
+                if time_tagger_file:
+                    new_time_tagger_path = ExportData.copy_file(
+                        time_tagger_file,
+                        save_name,
+                        save_dir,
+                        "time_tagger_intensity",
+                        timestamp,
+                    )
+            
+            ScriptFileUtils.show_success_message(file_name)
+        except Exception as e:
+            ScriptFileUtils.show_error_message(e)
+
+    @staticmethod
+    def save_time_tagger_data(app):
+        """Save only time tagger files (without FCS and intensity tracing)"""
+        try:
+            timestamp = calc_timestamp()
+            num_acquisitions = (
+                app.selected_average
+                if app.free_running_acquisition_time == False
+                else 1
+            )
+            
+            time_tagger_file = FileUtils.get_recent_time_tagger_file()
+            if not time_tagger_file:
+                return
+            
+            dialog = QFileDialog()
+            save_path, _ = dialog.getSaveFileName(
+                app,
+                "Save Time Tagger files",
+                "",
+                "All Files (*);;Binary Files (*.bin)",
+                options=QFileDialog.Option.DontUseNativeDialog,
+            )
+            if not save_path:
+                return
+            
+            save_dir = os.path.dirname(save_path)
+            save_name = os.path.basename(save_path)
+            
+            new_time_tagger_path = ExportData.copy_file(
+                time_tagger_file,
+                save_name,
+                save_dir,
+                "time_tagger_intensity",
+                timestamp,
+            )
+            
+            # Mostra il messaggio di successo
+            file_name = FileUtils.clean_filename(save_name)
+            ScriptFileUtils.show_success_message(file_name)
+        except Exception as e:
+            ScriptFileUtils.show_error_message(e)
+
+    @staticmethod
     def save_fcs_data(app):
         try:
             timestamp = calc_timestamp()
@@ -309,27 +409,33 @@ class ExportData:
                 if app.free_running_acquisition_time == False
                 else 1
             )
+
             fcs_file = FileUtils.get_recent_fcs_file()
             txt_fcs_file = FileUtils.get_recent_fcs_file(extension=".txt")
             intensity_files = FileUtils.get_recent_n_intensity_tracing_files(
-                num_acquisitions
-            )
+                  num_acquisitions
+              )
+
+                          
             new_fcs_file_path, save_dir, save_name = ExportData.rename_and_move_file(
-                fcs_file, "fcs", "Save FCS files", timestamp, app
-            )
-            if not new_fcs_file_path:
-                return
-            ExportData.copy_file(
-                txt_fcs_file, save_name, save_dir, "fcs", timestamp, "txt"
-            )
-       
-            for index, file in enumerate(intensity_files):
-                file_name = FileUtils.clean_filename(save_name)
-                new_intensity_file_name = (
-                    f"{file_name}_{timestamp}_intensity_tracing_{index + 1}.bin"
+                    fcs_file, "fcs", "Save FCS files", timestamp, app
                 )
-                new_intensity_ref_path = os.path.join(save_dir, new_intensity_file_name)
-                shutil.copyfile(file, new_intensity_ref_path)
+            if not new_fcs_file_path:
+                    return
+            ExportData.copy_file(
+                    txt_fcs_file, save_name, save_dir, "fcs", timestamp, "txt"
+                )
+
+           
+       
+            if app.export_intensity_tracing:
+                for index, file in enumerate(intensity_files):
+                    file_name = FileUtils.clean_filename(save_name)
+                    new_intensity_file_name = (
+                        f"{file_name}_{timestamp}_intensity_tracing_{index + 1}.bin"
+                    )
+                    new_intensity_ref_path = os.path.join(save_dir, new_intensity_file_name)
+                    shutil.copyfile(file, new_intensity_ref_path)
 
             if time_tagger:
                 time_tagger_file = FileUtils.get_recent_time_tagger_file()
