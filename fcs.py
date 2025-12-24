@@ -21,6 +21,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
 
+
 class FCSWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -47,6 +48,8 @@ class FCSWindow(QWidget):
         self.show_cps = True
         self.cps_threshold = int(self.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
+        self.export_intensity_tracing=self.settings.value(SETTINGS_EXPORT_INTENSITY_TRACING, DEFAULT_EXPORT_INTENSITY_TRACING) in ['true', True]
+        self.export_fcs=self.settings.value(SETTINGS_EXPORT_FCS, DEFAULT_EXPORT_FCS) in ['true', True]
         # Time tagger
         time_tagger = self.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER)
         self.time_tagger = time_tagger == "true" or time_tagger == True

@@ -44,6 +44,12 @@ DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[0]"
 SETTINGS_GT_PLOTS_TO_SHOW = "gt_plots_to_show"
 DEFAULT_GT_PLOTS_TO_SHOW = "[[0, 0]]"
 
+SETTINGS_EXPORT_INTENSITY_TRACING = "export_intensity_tracing"
+DEFAULT_EXPORT_INTENSITY_TRACING = True
+
+SETTINGS_EXPORT_FCS="export_fcs"
+DEFAULT_EXPORT_FCS = True
+
 
 EXPORT_DATA_GUIDE_LINK = (
     "https://flim-labs.github.io/fcs-py/python-flim-labs/fcs-file-format.html"
@@ -121,6 +127,7 @@ GT_PROGRESS_BAR_WIDGET = "gt_progress_bar_widget"
 
 TIME_TAGGER_PROGRESS_BAR = "time_tagger_progress_bar"
 TIME_TAGGER_WIDGET = "time_tagger_widget"
+EXPORT_OPTIONS_WIDGET = "export_options_widget"
 
 INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
 GT_WIDGET_WRAPPER = "gt_widget_wrapper"
