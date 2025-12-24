@@ -161,6 +161,23 @@ def create_gt_loading_layout(app):
     return gt_widget
 
 
+def create_gt_aborted_layout(app):   
+    gt_widget = QWidget()
+    gt_widget.setObjectName("container")
+    gt_widget.setFixedWidth(int(app.width() / 1.95))
+    gt_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+    gt_v_box = QVBoxLayout()
+    desc = QLabel("G(τ) process aborted")
+    desc.setObjectName("desc")
+    desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    gt_v_box.addWidget(desc)
+    gt_widget.setStyleSheet(GUIStyles.gt_wait_widget_container())    
+    gt_v_box.setAlignment(Qt.AlignmentFlag.AlignCenter) 
+    gt_widget.setLayout(gt_v_box)
+    app.widgets[GT_WIDGET_WRAPPER] = gt_widget
+    return gt_widget
+
+
 def create_gt_layout(app):    
     gt_widget = QWidget()
     gt_widget.setObjectName("container")

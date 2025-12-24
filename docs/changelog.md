@@ -1,5 +1,8 @@
 # FCS Changelog
 
+## Version 1.5
+- Give the user the possibility to abort G(τ) calculations
+
 ## Version 1.4
 - Give the user the possibility to choose between high and low density tau points scale
 
