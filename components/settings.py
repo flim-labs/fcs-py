@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-APP_VERSION = "1.5"
+APP_VERSION = "1.6"
 APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
@@ -24,6 +24,10 @@ DEFAULT_BIN_WIDTH_MICROS = 10
 SETTINGS_TAU_AXIS_SCALE = "tau_axis_scale"
 DEFAULT_TAU_AXIS_SCALE= "Low density"
 TAU_AXIS_SCALES = ["Low density", "High density"]
+
+SETTINGS_FCS_ALGORITHM = "fcs_algorithm"
+DEFAULT_FCS_ALGORITHM = "Multiple-τ correlation"
+FCS_ALGORITHMS = ["Multiple-τ correlation", "FFT-based correlation"]
 
 SETTINGS_CPS_THRESHOLD = "cps_threshold"
 DEFAULT_CPS_THRESHOLD = 0
