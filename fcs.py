@@ -85,8 +85,8 @@ class FCSWindow(QWidget):
         self.control_inputs = {}
         self.widgets = {}
         self.layouts = {}
-        self.bin_file_size = ''
-        self.bin_file_size_label = QLabel("")
+        # self.bin_file_size = ''
+        # self.bin_file_size_label = QLabel("")
         self.selected_gt_calc_mode = self.settings.value(SETTINGS_GT_CALC_MODE, DEFAULT_GT_CALC_MODE).strip('"')
 
         self.warning_box = None
@@ -131,7 +131,7 @@ class FCSWindow(QWidget):
         
         GUIStyles.set_fonts()
         self.init_ui()
-        self.bin_file_size_label.setVisible(self.write_data)
+        # self.bin_file_size_label.setVisible(self.write_data)
         ReadDataControls.handle_widgets_visibility(
                 self, self.acquire_read_mode == "read")    
         
@@ -148,7 +148,7 @@ class FCSWindow(QWidget):
         from components.data_export_controls import DataExportActions
         self.create_top_utilities_layout()
         init_ui(self, self.top_utilities_layout)
-        DataExportActions.calc_exported_file_size(self)
+        # DataExportActions.calc_exported_file_size(self)
        
 
     def create_top_utilities_layout(self): 
