@@ -171,7 +171,7 @@ class ChannelsControl(QWidget):
         self.app.control_inputs[START_BUTTON].setEnabled(
             len(self.app.enabled_channels) > 0
         )
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
 
     def open_ch_correlations_popup(self):
         self.popup = ChCorrelationsPopup(self.app)

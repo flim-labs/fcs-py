@@ -21,6 +21,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
 
+
 class FCSWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -47,6 +48,8 @@ class FCSWindow(QWidget):
         self.show_cps = True
         self.cps_threshold = int(self.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
+        self.export_intensity_tracing=self.settings.value(SETTINGS_EXPORT_INTENSITY_TRACING, DEFAULT_EXPORT_INTENSITY_TRACING) in ['true', True]
+        self.export_fcs=self.settings.value(SETTINGS_EXPORT_FCS, DEFAULT_EXPORT_FCS) in ['true', True]
         # Time tagger
         time_tagger = self.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER)
         self.time_tagger = time_tagger == "true" or time_tagger == True
@@ -82,8 +85,8 @@ class FCSWindow(QWidget):
         self.control_inputs = {}
         self.widgets = {}
         self.layouts = {}
-        self.bin_file_size = ''
-        self.bin_file_size_label = QLabel("")
+        # self.bin_file_size = ''
+        # self.bin_file_size_label = QLabel("")
         self.selected_gt_calc_mode = self.settings.value(SETTINGS_GT_CALC_MODE, DEFAULT_GT_CALC_MODE).strip('"')
 
         self.warning_box = None
@@ -128,7 +131,7 @@ class FCSWindow(QWidget):
         
         GUIStyles.set_fonts()
         self.init_ui()
-        self.bin_file_size_label.setVisible(self.write_data)
+        # self.bin_file_size_label.setVisible(self.write_data)
         ReadDataControls.handle_widgets_visibility(
                 self, self.acquire_read_mode == "read")    
         
@@ -145,7 +148,7 @@ class FCSWindow(QWidget):
         from components.data_export_controls import DataExportActions
         self.create_top_utilities_layout()
         init_ui(self, self.top_utilities_layout)
-        DataExportActions.calc_exported_file_size(self)
+        # DataExportActions.calc_exported_file_size(self)
        
 
     def create_top_utilities_layout(self): 
