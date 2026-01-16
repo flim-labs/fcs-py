@@ -87,7 +87,7 @@ class InputParamsControls(QWidget):
             self.app.control_inputs[SETTINGS_AVERAGES].setEnabled(True)
             self.app.free_running_acquisition_time = False
             self.app.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
-        DataExportActions.calc_exported_file_size(self.app)    
+        # DataExportActions.calc_exported_file_size(self.app)    
             
     def create_cps_threshold_control(self, layout):
             value = int(self.app.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
@@ -106,7 +106,7 @@ class InputParamsControls(QWidget):
         self.app.settings.setValue(
             SETTINGS_ACQUISITION_TIME_MILLIS, self.app.acquisition_time_millis
         )
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
 
     def time_span_value_change(self, value):
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
@@ -126,14 +126,14 @@ class InputParamsControls(QWidget):
         value = self.sender().currentText()
         self.app.bin_width_micros = int(value)
         self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, int(value))
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
         
     def averages_value_change(self, value):
         value = self.sender().currentText()
         self.app.selected_average = int(value)
         self.app.settings.setValue(SETTINGS_AVERAGES, int(value))
         self.app.acquisitions_count = 0
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
 
     def create_tau_scale_control(self, layout):
         options = self.app.tau_axis_scales
@@ -160,7 +160,7 @@ class InputParamsControls(QWidget):
         options = self.app.tau_axis_scales
         self.app.tau_axis_scale = options[idx]
         self.app.settings.setValue(SETTINGS_TAU_AXIS_SCALE, self.app.tau_axis_scale)
-        DataExportActions.calc_exported_file_size(self.app)
+        #DataExportActions.calc_exported_file_size(self.app)
         
 
     def fcs_algorithm_value_change(self, idx):
@@ -168,3 +168,4 @@ class InputParamsControls(QWidget):
         self.app.fcs_algorithm = options[idx]
         self.app.settings.setValue(SETTINGS_FCS_ALGORITHM, self.app.fcs_algorithm)
           
+        # DataExportActions.calc_exported_file_size(self.app)

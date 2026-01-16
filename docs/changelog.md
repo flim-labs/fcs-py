@@ -1,5 +1,9 @@
 # FCS Changelog
 
+## Version 1.6
+- Added the ability for users to select which additional files to export alongside FCS files (intensity tracing and/or time tagger).
+- Added the option to choose the FCS calculation algorithm type (FFT-based or non-FFT-based).
+
 ## Version 1.5
 - Give the user the possibility to abort G(τ) calculations
 

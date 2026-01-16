@@ -38,13 +38,13 @@ class ExportDataControl(QWidget):
             self.create_export_data_input()
         )
         self.add_notes_button = self.create_add_notes_btn()
-        self.file_size_info_layout = self.create_file_size_info_row()
+        # self.file_size_info_layout = self.create_file_size_info_row()
         layout = QHBoxLayout()
         layout.addWidget(self.info_link_widget)
         layout.addWidget(self.add_notes_button)
         layout.addLayout(self.export_data_control)
         self.export_data_control.addSpacing(10)
-        layout.addLayout(self.file_size_info_layout)
+        # layout.addLayout(self.file_size_info_layout)
         layout.addSpacing(5)
 
 
@@ -128,15 +128,15 @@ class ExportDataControl(QWidget):
         self.app.control_inputs[ADD_NOTES_BUTTON] = button
         return button
 
-    def create_file_size_info_row(self):
-        file_size_info_layout = TopBarBuilder.create_file_size_info_row(
-            self.app,
-            self.app.bin_file_size,
-            self.app.bin_file_size_label,
-            self.app.write_data,
-            partial(DataExportActions.calc_exported_file_size, self.app),
-        )
-        return file_size_info_layout
+    # def create_file_size_info_row(self):
+    #     file_size_info_layout = TopBarBuilder.create_file_size_info_row(
+    #         self.app,
+    #         self.app.bin_file_size,
+    #         self.app.bin_file_size_label,
+    #         self.app.write_data,
+    #         partial(DataExportActions.calc_exported_file_size, self.app),
+    #     )
+    #     return file_size_info_layout
 
     def show_add_notes_popup(self):
         notes_popup = AddNotesToExportedDataPopup(self.app)
@@ -146,14 +146,14 @@ class ExportDataControl(QWidget):
         if state:
             self.app.write_data = True
             self.app.settings.setValue(SETTINGS_WRITE_DATA, True)
-            self.app.bin_file_size_label.show()
-            DataExportActions.calc_exported_file_size(self.app)
+            # self.app.bin_file_size_label.show()
+            # DataExportActions.calc_exported_file_size(self.app)
             self.app.control_inputs[ADD_NOTES_BUTTON].setVisible(True)
             self.app.widgets[EXPORT_OPTIONS_WIDGET].setVisible(True)
         else:
             self.app.write_data = False
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
-            self.app.bin_file_size_label.hide()
+            # self.app.bin_file_size_label.hide()
             self.app.control_inputs[ADD_NOTES_BUTTON].setVisible(False)
             self.app.widgets[EXPORT_OPTIONS_WIDGET].setVisible(False)
 
@@ -163,85 +163,87 @@ class ExportDataControl(QWidget):
 
 class DataExportActions:
     @staticmethod
-    def calc_exported_file_size(app):
-        if len(app.enabled_channels) == 0:
-            app.bin_file_size_label.setText("")
-            return
-        filtered_corr = [(x, y) for x, y, boolean in app.ch_correlations if boolean]
-        if len(filtered_corr) == 0:
-            fcs_file_size = 0
-        else:
-            fcs_file_size = DataExportActions.calc_fcs_file_size(app, filtered_corr)
-        fcs_file_size_str = f";\n{fcs_file_size} KB (fcs)" if fcs_file_size > 0 else ""
-        intensity_tracing_files_size, type = (
-            DataExportActions.calc_intensity_files_size(app)
-        )
-        if type == "per_second":
-            app.bin_file_size_label.setText(
-                f"{intensity_tracing_files_size}/s (intensity){fcs_file_size_str}"
-            )
-        else:
-            app.bin_file_size_label.setText(
-                f"{intensity_tracing_files_size} (intensity){fcs_file_size_str}"
-            )
+    def calc_exported_file_size():
+        pass
+    # def calc_exported_file_size(app):
+    #     if len(app.enabled_channels) == 0:
+    #         app.bin_file_size_label.setText("")
+    #         return
+    #     filtered_corr = [(x, y) for x, y, boolean in app.ch_correlations if boolean]
+    #     if len(filtered_corr) == 0:
+    #         fcs_file_size = 0
+    #     else:
+    #         fcs_file_size = DataExportActions.calc_fcs_file_size(app, filtered_corr)
+    #     fcs_file_size_str = f";\n{fcs_file_size} KB (fcs)" if fcs_file_size > 0 else ""
+    #     intensity_tracing_files_size, type = (
+    #         DataExportActions.calc_intensity_files_size(app)
+    #     )
+    #     if type == "per_second":
+    #         app.bin_file_size_label.setText(
+    #             f"{intensity_tracing_files_size}/s (intensity){fcs_file_size_str}"
+    #         )
+    #     else:
+    #         app.bin_file_size_label.setText(
+    #             f"{intensity_tracing_files_size} (intensity){fcs_file_size_str}"
+    #         )
 
-    @staticmethod
-    def calc_intensity_files_size(app):
-        free_running = app.free_running_acquisition_time
-        num_acquisition = app.selected_average if not free_running else 1
-        chunk_bytes = 8 + (4 * len(app.enabled_channels))
-        chunk_bytes_in_us = (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
-        acquisition_time = (
-            0 if app.acquisition_time_millis is None else app.acquisition_time_millis
-        )
-        if free_running is True:
-            file_size_bytes = int(chunk_bytes_in_us)
-            bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
-            return bin_file_size, "per_second"
-        else:
-            file_size_bytes = int(chunk_bytes_in_us * (acquisition_time / 1000))
-            bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
-            return bin_file_size, "total"
+    # @staticmethod
+    # def calc_intensity_files_size(app):
+    #     free_running = app.free_running_acquisition_time
+    #     num_acquisition = app.selected_average if not free_running else 1
+    #     chunk_bytes = 8 + (4 * len(app.enabled_channels))
+    #     chunk_bytes_in_us = (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
+    #     acquisition_time = (
+    #         0 if app.acquisition_time_millis is None else app.acquisition_time_millis
+    #     )
+    #     if free_running is True:
+    #         file_size_bytes = int(chunk_bytes_in_us)
+    #         bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
+    #         return bin_file_size, "per_second"
+    #     else:
+    #         file_size_bytes = int(chunk_bytes_in_us * (acquisition_time / 1000))
+    #         bin_file_size = FormatUtils.format_size(file_size_bytes * num_acquisition)
+    #         return bin_file_size, "total"
 
-    @staticmethod
-    def calc_fcs_file_size(app, filtered_corr):
-        bin_width = app.bin_width_micros
-        acquisition_time = (
-            0 if app.acquisition_time_millis is None else app.acquisition_time_millis
-        )
-        free_running = app.free_running_acquisition_time
-        num_acquisition = app.selected_average if not free_running else 1
-        expected_intensity_entries = (
-            calculate_expected_intensity_entries(acquisition_time, bin_width)
-            if not free_running
-            else None
-        )
-        n_correlations = len(filtered_corr)
-        n_channels = len(app.enabled_channels)
-        notes_length = len(app.notes.encode("utf-8"))
+    # @staticmethod
+    # def calc_fcs_file_size(app, filtered_corr):
+    #     bin_width = app.bin_width_micros
+    #     acquisition_time = (
+    #         0 if app.acquisition_time_millis is None else app.acquisition_time_millis
+    #     )
+    #     free_running = app.free_running_acquisition_time
+    #     num_acquisition = app.selected_average if not free_running else 1
+    #     expected_intensity_entries = (
+    #         calculate_expected_intensity_entries(acquisition_time, bin_width)
+    #         if not free_running
+    #         else None
+    #     )
+    #     n_correlations = len(filtered_corr)
+    #     n_channels = len(app.enabled_channels)
+    #     notes_length = len(app.notes.encode("utf-8"))
         
-        # Get tau_high_density from app settings
-        tau_high_density = app.tau_axis_scale == "High density"
+    #     # Get tau_high_density from app settings
+    #     tau_high_density = app.tau_axis_scale == "High density"
         
-        n_lag_index = calculate_lag_index_length(bin_width, tau_high_density) 
+    #     n_lag_index = calculate_lag_index_length(bin_width, tau_high_density) 
       
-        header_size = 4
-        u32_size = 4
-        usize_size = 8
-        f64_size = 8
-        correlations_size = n_correlations * (2 * usize_size)
-        channels_size = n_channels * usize_size
-        metadata_json_size = correlations_size + channels_size + notes_length
-        lag_index_size = n_lag_index * usize_size
-        g2_correlations_size = n_correlations * (
-            2 * usize_size + (num_acquisition + 1) * n_lag_index * f64_size
-        )
-        g2_json_size = lag_index_size + g2_correlations_size
-        total_estimated_size_bytes = (
-            header_size + 2 * u32_size + metadata_json_size + g2_json_size
-        )
-        total_estimated_size_kb = round(total_estimated_size_bytes / 1024, 2)
-        return int(round(total_estimated_size_kb, 2))
+    #     header_size = 4
+    #     u32_size = 4
+    #     usize_size = 8
+    #     f64_size = 8
+    #     correlations_size = n_correlations * (2 * usize_size)
+    #     channels_size = n_channels * usize_size
+    #     metadata_json_size = correlations_size + channels_size + notes_length
+    #     lag_index_size = n_lag_index * usize_size
+    #     g2_correlations_size = n_correlations * (
+    #         2 * usize_size + (num_acquisition + 1) * n_lag_index * f64_size
+    #     )
+    #     g2_json_size = lag_index_size + g2_correlations_size
+    #     total_estimated_size_bytes = (
+    #         header_size + 2 * u32_size + metadata_json_size + g2_json_size
+    #     )
+    #     total_estimated_size_kb = round(total_estimated_size_bytes / 1024, 2)
+    #     return int(round(total_estimated_size_kb, 2))
 
 
 class AddNotesToExportedDataPopup(QWidget):
@@ -278,7 +280,7 @@ class AddNotesToExportedDataPopup(QWidget):
 
     def save_notes(self):
         self.app.notes = self.textarea.toPlainText()
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
         self.close()
 
     def limit_characters(self):
