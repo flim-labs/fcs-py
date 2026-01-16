@@ -214,30 +214,30 @@ class GUIStyles:
         """    
 
     @staticmethod
-    def set_input_number_style():
-        return """
-            QDoubleSpinBox, QSpinBox, QLineEdit {
+    def set_input_number_style(min_width=120):
+        return f"""
+            QDoubleSpinBox, QSpinBox, QLineEdit {{
                 color: #f8f8f8;
                 font-family: "Montserrat";
                 font-size: 12px;
                 padding: 8px;
                 height: 22px;
-                min-width: 120px;
+                min-width: {min_width}px;
                 border-radius: 5px;
                 background-color: transparent;
-            }
-            QDoubleSpinBox, QSpinBox {
+            }}
+            QDoubleSpinBox, QSpinBox {{
                 border: 1px solid #3b3b3b;
 
-            }
-            QLineEdit {
+            }}
+            QLineEdit {{
                 border: 1px solid #f5f538;
 
-            }
-            QDoubleSpinBox:disabled, QSpinBox:disabled {
+            }}
+            QDoubleSpinBox:disabled, QSpinBox:disabled {{
             color: #404040;  
             border-color: #404040;
-            }        
+            }}        
         """
 
     @staticmethod
@@ -763,7 +763,65 @@ class GUIStyles:
                 background-color: #1fd400;
             }}                   
         """ 
-                                       
+
+
+    @staticmethod
+    def multi_select_dropdown_style():
+
+        return f"""
+            QComboBox {{
+                    background-color: #141414;
+                    border: 2px solid #3b3b3b;
+                    border-radius: 5px;
+                    padding: 10px;
+                    color: #f8f8f8;
+                    font-family: 'Montserrat';
+                    font-size: 14px;
+                    font-weight: 800;
+                    letter-spacing: 0.1em;
+                    min-height: 28px;
+                }}
+                QComboBox:on {{
+                    border: 2px solid #3b3b3b;
+                    border-top-left-radius: 5px;
+                    border-top-right-radius: 5px;
+                    border-bottom-left-radius: 0px;
+                    border-bottom-right-radius: 0px;
+                }}
+                QComboBox::drop-down {{
+                    border: none;
+                    width: 30px;
+                    padding-right: 5px;
+                }}
+                QComboBox::down-arrow {{
+                    image: url(assets/arrow-down-dark-grey.png);
+                    width: 16px;
+                    height: 16px;
+                }}
+                QComboBox::down-arrow:on {{
+                    image: url(assets/arrow-up-dark-grey.png);
+                }}
+                QListView {{
+                    background-color: #1e1e1e;
+                    border: none;
+                    border-bottom: 2px solid #3b3b3b;
+                    border-left: 2px solid #3b3b3b;
+                    border-right: 2px solid #3b3b3b;
+                    border-bottom-left-radius: 5px;
+                    border-bottom-right-radius: 5px;
+                    outline: none;
+                }}
+                QListView::item {{
+                    padding: 5px;
+                    border: none;
+                }}
+                QListView::item:hover {{
+                    background-color: #2a2a2a;
+                }}
+                QListView::item:selected {{
+                    background-color: #FB8C00;
+                }}
+        """
     @staticmethod
     def progress_bar_style(color: str):
         return f"""

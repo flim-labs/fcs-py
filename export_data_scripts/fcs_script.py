@@ -99,7 +99,7 @@ with open(file_path, "rb") as f:
         col = i % num_plots_per_row
         ax = fig.add_subplot(gs[row, col])
         for data_index, data in enumerate(data_list):
-            label = f"G(τ) {data_index + 1}" if data_index != 0 else f"G(τ) mean"
+            label = "G(τ) mean" if data_index == 0 else f"G(τ) {data_index}"
             ax.plot(lag_index, data, label=label)
         ax.set_xlabel("τ(μs)")
         ax.set_ylabel("G(τ)")

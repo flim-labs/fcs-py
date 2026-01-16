@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-APP_VERSION = "1.5"
+APP_VERSION = "1.6"
 APP_NAME = "FCS"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
@@ -25,6 +25,10 @@ SETTINGS_TAU_AXIS_SCALE = "tau_axis_scale"
 DEFAULT_TAU_AXIS_SCALE= "Low density"
 TAU_AXIS_SCALES = ["Low density", "High density"]
 
+SETTINGS_FCS_ALGORITHM = "fcs_algorithm"
+DEFAULT_FCS_ALGORITHM = "Multiple-τ correlation"
+FCS_ALGORITHMS = ["Multiple-τ correlation", "FFT-based correlation"]
+
 SETTINGS_CPS_THRESHOLD = "cps_threshold"
 DEFAULT_CPS_THRESHOLD = 0
 
@@ -43,6 +47,12 @@ DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[0]"
 
 SETTINGS_GT_PLOTS_TO_SHOW = "gt_plots_to_show"
 DEFAULT_GT_PLOTS_TO_SHOW = "[[0, 0]]"
+
+SETTINGS_EXPORT_INTENSITY_TRACING = "export_intensity_tracing"
+DEFAULT_EXPORT_INTENSITY_TRACING = True
+
+SETTINGS_EXPORT_FCS="export_fcs"
+DEFAULT_EXPORT_FCS = True
 
 
 EXPORT_DATA_GUIDE_LINK = (
@@ -121,6 +131,7 @@ GT_PROGRESS_BAR_WIDGET = "gt_progress_bar_widget"
 
 TIME_TAGGER_PROGRESS_BAR = "time_tagger_progress_bar"
 TIME_TAGGER_WIDGET = "time_tagger_widget"
+EXPORT_OPTIONS_WIDGET = "export_options_widget"
 
 INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
 GT_WIDGET_WRAPPER = "gt_widget_wrapper"

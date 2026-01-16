@@ -7,6 +7,8 @@ class FileUtils:
     @staticmethod
     def get_recent_n_intensity_tracing_files(num):
         data_folder = os.path.join(os.environ["USERPROFILE"], ".flim-labs", "data", "fcs-intensity")
+        if not os.path.exists(data_folder):
+            return []
         files = [f for f in os.listdir(data_folder) if f.startswith("intensity-tracing")]
         files.sort(key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True)
         return [os.path.join(data_folder, f) for f in files[:num]]
