@@ -89,6 +89,14 @@ class TopBarBuilder:
         # Export data switch control
         export_data_control = QHBoxLayout()
         export_data_label = QLabel("Export data:")
+        export_data_label.setStyleSheet("""
+            QLabel {
+                font-family: 'Montserrat';
+                font-size: 14px;
+                font-weight: bold;
+                letter-spacing: 0.1em;
+            }
+        """)
         inp = SwitchControl(
             active_color="#FB8C00", width=70, height=30, checked=value)
         inp.toggled.connect(change_cb)
@@ -97,17 +105,17 @@ class TopBarBuilder:
 
         return info_link_widget, export_data_control, inp
 
-    @staticmethod
-    def create_file_size_info_row(app, bin_file_size, bin_file_size_label, write_data, cb_calc_file_size):
-        file_size_info_layout = QHBoxLayout()
-        bin_file_size_label.setText("")
-        bin_file_size_label.setStyleSheet("QLabel { color : #FFA726; }")
+    # @staticmethod
+    # def create_file_size_info_row(app, bin_file_size, bin_file_size_label, write_data, cb_calc_file_size):
+    #     file_size_info_layout = QHBoxLayout()
+    #     bin_file_size_label.setText("")
+    #     bin_file_size_label.setStyleSheet("QLabel { color : #FFA726; }")
 
-        file_size_info_layout.addWidget(bin_file_size_label)
-        bin_file_size_label.show() if write_data is True else bin_file_size_label.hide()
-        cb_calc_file_size()
+    #     file_size_info_layout.addWidget(bin_file_size_label)
+    #     bin_file_size_label.show() if write_data is True else bin_file_size_label.hide()
+    #     cb_calc_file_size()
 
-        return file_size_info_layout
+    #     return file_size_info_layout
 
     @staticmethod
     def create_download_files_menu(

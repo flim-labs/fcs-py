@@ -150,7 +150,7 @@ class ChCorrelationsMatrix(QWidget):
         filtered_gt_to_show = self.filter_gt_plot_to_show_on_correlations_change()
         self.app.gt_plots_to_show = filtered_gt_to_show
         self.app.settings.setValue(SETTINGS_GT_PLOTS_TO_SHOW, json.dumps(filtered_gt_to_show))
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
         self.correlations_saved.emit()
         
 
