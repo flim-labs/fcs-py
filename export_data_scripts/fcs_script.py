@@ -1,10 +1,27 @@
 import struct
+import json
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 
 
 file_path = "<FILE-PATH>"
 print("Using data file: " + file_path)
+
+# Channel custom names
+channel_names = <CHANNEL-NAMES>
+
+def get_channel_name(channel_id, truncate_len=5):
+    """
+    Get the display name for a channel.
+    Returns "CustomName (Ch1)" if custom name exists, otherwise "Channel 1".
+    """
+    custom_name = channel_names.get(str(channel_id), None)
+    default_part = f"(Ch{channel_id + 1})"
+    if custom_name:
+        if truncate_len and len(custom_name) > truncate_len:
+            custom_name = custom_name[:truncate_len] + "..."
+        return f"{custom_name} {default_part}"
+    return f"Channel {channel_id + 1}"
 
 # Read bin data
 with open(file_path, "rb") as f:
@@ -34,7 +51,7 @@ with open(file_path, "rb") as f:
             "Enabled channels: "
             + (
                 ", ".join(
-                    ["Channel " + str(ch + 1) for ch in metadata["enabled_channels"]]
+                    [get_channel_name(ch) for ch in metadata["enabled_channels"]]
                 )
             )
         )
@@ -101,9 +118,11 @@ with open(file_path, "rb") as f:
         for data_index, data in enumerate(data_list):
             label = f"G(τ) {data_index + 1}" if data_index != 0 else f"G(τ) mean"
             ax.plot(lag_index, data, label=label)
+        ch1_name = get_channel_name(channel1)
+        ch2_name = get_channel_name(channel2)
         ax.set_xlabel("τ(μs)")
         ax.set_ylabel("G(τ)")
-        ax.set_title(f"Channel {channel1 + 1}- Channel {channel2 + 1}")
+        ax.set_title(f"{ch1_name} - {ch2_name}")
         ax.set_xscale("log")
         ax.grid(True)
         ax.legend()

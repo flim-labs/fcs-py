@@ -56,6 +56,9 @@ class FCSWindow(QWidget):
         default_enabled_channels = self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)
         self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
         
+        default_channel_names = self.settings.value(SETTINGS_CHANNEL_NAMES, DEFAULT_CHANNEL_NAMES)
+        self.channel_names = json.loads(default_channel_names) if default_channel_names is not None else {}
+        
         self.taus = TAUS_INPUTS
         self.selected_tau = self.settings.value(SETTINGS_TAU, DEFAULT_TAU)
         

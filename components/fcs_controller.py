@@ -2,6 +2,7 @@ from functools import partial
 from components.box_message import BoxMessage
 from components.gui_styles import GUIStyles
 from components.layout_utilities import create_gt_layout, create_gt_aborted_layout, insert_widget, remove_widget
+from components.channel_name_utils import get_channel_name
 from components.settings import (
     ABORT_BUTTON,
     GT_PLOTS_GRID,
@@ -252,8 +253,10 @@ class FCSPostProcessingPlot:
         q_font = QFont("Times New Roman")
         gt_widget.getAxis("bottom").label.setFont(q_font)
         gt_widget.getAxis("left").label.setFont(q_font)
+        ch1_name = get_channel_name(correlation[0], app.channel_names, truncate_len=5)
+        ch2_name = get_channel_name(correlation[1], app.channel_names, truncate_len=5)
         gt_widget.setTitle(
-            f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}; G(0) = {{:.6f}}".format(gt_values[0])
+            f"{ch1_name} - {ch2_name}; G(0) = {{:.6f}}".format(gt_values[0])
         )
         gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10)
         fcs_plot = gt_widget.plot(

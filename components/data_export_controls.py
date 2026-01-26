@@ -462,6 +462,7 @@ class ExportData:
                 save_dir,
                 "fcs",
                 timestamp,
+                channel_names=app.channel_names,
                 time_tagger=time_tagger,
                 time_tagger_file_path=new_time_tagger_path,
             )
@@ -475,6 +476,7 @@ class ExportData:
         directory,
         script_type,
         timestamp,
+        channel_names=None,
         time_tagger=False,
         time_tagger_file_path="",
     ):
@@ -485,6 +487,7 @@ class ExportData:
             file_name,
             directory,
             script_type,
+            channel_names,
             time_tagger,
             time_tagger_file_path,
         )

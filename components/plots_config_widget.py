@@ -11,6 +11,7 @@ from components.intensity_tracing_controller import IntensityTracingButtonsActio
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
+from components.channel_name_utils import get_channel_name
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -111,7 +112,9 @@ class PlotsConfigPopup(QWidget):
         QApplication.processEvents()            
         corr_data = self.get_cleaned_correlations()
         for index, (ch1, ch2) in enumerate(corr_data):
-            checkbox = self.set_checkboxes(f"Channel {ch1 + 1} - Channel {ch2 + 1}", "gt")
+            ch1_name = get_channel_name(ch1, self.app.channel_names, truncate_len=15)
+            ch2_name = get_channel_name(ch2, self.app.channel_names, truncate_len=15)
+            checkbox = self.set_checkboxes(f"{ch1_name} - {ch2_name}", "gt")
             gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in self.app.gt_plots_to_show]
             isChecked = (ch1, ch2) in gt_plot_to_show
             checkbox.setChecked(isChecked)
@@ -122,7 +125,8 @@ class PlotsConfigPopup(QWidget):
     def init_intensity_grid(self):
         self.app.enabled_channels.sort()
         for ch in self.app.enabled_channels:
-            checkbox = self.set_checkboxes(f"Channel {ch + 1}", "intensity")
+            ch_name = get_channel_name(ch, self.app.channel_names, truncate_len=15)
+            checkbox = self.set_checkboxes(ch_name, "intensity")
             isChecked = ch in self.app.intensity_plots_to_show
             checkbox.setChecked(isChecked)
             if len(self.app.intensity_plots_to_show) >=4 and ch not in self.app.intensity_plots_to_show:
@@ -132,7 +136,7 @@ class PlotsConfigPopup(QWidget):
 
     def set_checkboxes(self, text, typology):
         checkbox_wrapper = QWidget()
-        checkbox_wrapper.setObjectName(f"tau_checkbox_wrapper")
+        checkbox_wrapper.setObjectName(f"simple_checkbox_wrapper")
         row = QHBoxLayout()
         checkbox = QCheckBox(text)
         checkbox.setStyleSheet(GUIStyles.set_tau_checkbox_style(color = "#FB8C00" if typology == 'intensity' else "#31c914" ))
