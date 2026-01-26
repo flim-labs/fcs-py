@@ -54,7 +54,7 @@ class ControlsBarBuilder:
         )
         app.widgets[TIME_TAGGER_PROGRESS_BAR] = time_tagger_progress_bar
         layout_container.addWidget(time_tagger_progress_bar)
-        layout_container.addSpacing(5)     
+        layout_container.addSpacing(5)
         return blank_space, layout_container
 
     @staticmethod
@@ -128,6 +128,7 @@ class ControlsBarBuilder:
         bin_metadata_button.clicked.connect(read_bin_metadata_btn_pressed_cb)
         # # export plot image button
         from components.buttons import ExportPlotImageButton
+
         export_plot_img_button = ExportPlotImageButton(app)
         buttons_row_layout.addWidget(bin_metadata_button)
         buttons_row_layout.addWidget(export_plot_img_button)
@@ -220,7 +221,7 @@ class ControlsBarBuilder:
             controls_row,
             change_cb,
         )
-        inp.setStyleSheet(GUIStyles.set_input_number_style())
+        inp.setStyleSheet(GUIStyles.set_input_number_style(min_width=60))
         return inp
 
     @staticmethod
@@ -234,7 +235,7 @@ class ControlsBarBuilder:
             controls_row,
             change_cb,
         )
-        inp.setStyleSheet(GUIStyles.set_input_number_style())
+        inp.setStyleSheet(GUIStyles.set_input_number_style(min_width=70))
         inp.setEnabled(show_cps)
         return inp
 
@@ -251,7 +252,7 @@ class ControlsBarBuilder:
             change_cb,
         )
         inp.setEnabled(not free_running.isChecked())
-        inp.setStyleSheet(GUIStyles.set_input_number_style())
+        inp.setStyleSheet(GUIStyles.set_input_number_style(min_width=60))
         return inp
 
     @staticmethod
@@ -290,6 +291,19 @@ class ControlsBarBuilder:
         # Tau scale control
         _, inp = SelectControl.setup(
             "Tau points scale:",
+            value,
+            controls_row,
+            options,
+            change_cb,
+        )
+        inp.setStyleSheet(GUIStyles.set_input_select_style())
+        return inp
+
+    @staticmethod
+    def create_fcs_algorithm_control(controls_row, value, change_cb, options):
+        # Tau scale control
+        _, inp = SelectControl.setup(
+            "Algorithm Type:",
             value,
             controls_row,
             options,

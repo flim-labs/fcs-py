@@ -25,6 +25,10 @@ SETTINGS_TAU_AXIS_SCALE = "tau_axis_scale"
 DEFAULT_TAU_AXIS_SCALE= "Low density"
 TAU_AXIS_SCALES = ["Low density", "High density"]
 
+SETTINGS_FCS_ALGORITHM = "fcs_algorithm"
+DEFAULT_FCS_ALGORITHM = "Multiple-τ correlation"
+FCS_ALGORITHMS = ["Multiple-τ correlation", "FFT-based correlation"]
+
 SETTINGS_CPS_THRESHOLD = "cps_threshold"
 DEFAULT_CPS_THRESHOLD = 0
 

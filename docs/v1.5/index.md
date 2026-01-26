@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
 
 <div align="center">
-  <h1>FCS v1.5</h1>
+  <h1>FCS v1.6</h1>
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
@@ -48,7 +48,7 @@
 
 ## Introduction
 
-Welcome to [FCS (Fluorescence Correlation Spectroscopy)](https://github.com/flim-labs/fcs-py) _v1.5_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
+Welcome to [FCS (Fluorescence Correlation Spectroscopy)](https://github.com/flim-labs/fcs-py) _v1.6_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
 For a general introduction to the aims, technical requirements and installation of the project, read the [FCS Homepage](../index.md). You can also follow the [Data export](../python-flim-labs/fcs-file-format.md) dedicated guide link.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -57,7 +57,7 @@ For a general introduction to the aims, technical requirements and installation 
 
 ## GUI Usage
 
-<img src="../assets/images/gui-v1.5.png" width="100%">
+<img src="../assets/images/gui2-v1.5.png" width="100%">
 
 The GUI offers advanced parameter configuration functionalities for real-time acquisition of photon intensity traces and subsequent computation of their **G(<span style="font-family: Times New Roman">τ</span>) correlations** during post-processing. With the ability to enable from _1_ to _8_ channels simultaneously and configure the desired number and type of correlations (`auto` and `cross`) between channels, the software can calculate up to a total of `64` correlation functions (G(<span style="font-family: Times New Roman">τ</span>)). Let's delve into the configurable parameters in detail:
 
@@ -81,7 +81,7 @@ _Note: The connection type set in the software must match the actual connection 
 
 #### Correlations
 
-<img src="../assets/images/correlations-v1.1.png" width="100%">
+<img src="../assets/images/correlations-v1.5.png" width="100%">
 
 The software provides a guided user interface for selecting **correlations between channels**, and thus between photon intensity vectors, on which to perform post-processing and **calculate G(<span style="font-family: Times New Roman">τ</span>) correlation functions**. Users can choose to set both `auto-correlations` (a channel correlated with itself) and `cross-correlations` (correlations between different channels). If the user selects a cross-correlation, for example, between channel 6 and channel 8, the reverse correlation (between channel 8 and channel 6) will be automatically set as well. With the ability to activate up to 8 acquisition channels simultaneously, it is possible, by activating all possible correlations, to calculate up to a total of _64_ correlation functions.
 
@@ -91,6 +91,15 @@ The software provides a guided user interface for selecting **correlations betwe
 #### Bin width
 
 The user can set a **bin width** choosing between _1_, _10_, _100_ and _1000_ values (μs). Bin width represents the duration of time to wait for accumulating photon counts in the exported data file. In the interface plots, this value is adjusted to maintain real-time visualization.
+
+<hr>
+
+#### Algorithm Type
+
+The **Algorithm Type** parameter allows users to select which algorithm will be used for the calculation of the G(<span style="font-family: Times New Roman">τ</span>) correlation functions during FCS post-processing. Two options are available:
+
+- **FFT-based correlation**: Utilizes the Fast Fourier Transform to efficiently compute the correlation function, especially suitable for long time series and large datasets. This method is generally faster and is recommended for most standard use cases.
+- **Multiple-τ correlation**: Employs a multiple-tau algorithm, which is particularly useful for handling data with a wide range of time scales. This method can provide more flexibility in certain experimental scenarios and is a well-established approach in FCS analysis.
 
 <hr>
 
@@ -161,10 +170,17 @@ If connections are found, the system allows the user to update the configuration
 
 #### Export data
 
-Users can choose to **export FCS post-processing data** in _.bin_ and _.txt_ file format for further analysis.
-Refers to this sections for more details:
+Users can choose to **export FCS post-processing data** in _.bin_ and _.txt_ file format for further analysis. The FCS files are always downloaded if the export option is enabled.
 
-- [Export Data](#export-data)
+Additionally, the user can select—via checkboxes in the export options—which supplementary files to download:
+
+- **Intensity-tracing files**: These files contain the raw photon intensity traces used as the basis for FCS calculations. Selecting this option allows for further analysis or reprocessing of the original intensity data.
+- **Time-tagger files**: If enabled, the software will also export the time-tagger data file, which is useful for advanced timing and synchronization analyses.
+
+This flexible export system ensures that users can tailor the data download to their specific analysis needs, obtaining only the files relevant to their workflow.
+
+Refer to this section for more details:
+
 - [FCS Data Export guide ](../python-flim-labs/fcs-file-format.md)
 
 <hr>
@@ -180,6 +196,7 @@ Here a table summary of the configurable parameters:
 | `selected_conn_channel` | string | set the selected connection type for acquisition (USB or SMA) | "USB" | If USB is selected, USB firmware is automatically used. If SMA is selected, SMA firmware is automatically used. |
 | `correlations` | list of tuples | Set the list of correlations between couple of channels (from 1 to 64 correlations) | [] | |
 | `bin_width_micros` | number | Set the numerical value in microseconds. Range: _1-1000µs_ | 10 (µs) | the time duration to wait for photons count accumulation. |
+| `fcs_algorithm` | string | Set the FCS algorithm to 'Multiple-τ correlation' or 'FFT-based correlation' | Multiple-τ correlation | Selects which algorithm is used to compute the G(τ) correlation functions: FFT-based is faster for large datasets, Multiple-τ is flexible for a wide range of time scales. |
 | `tau_axis_scale` | string | Set the tau axis scale to 'Low density' or 'High density' | Low density | if set to _High density_, a much greater number of tau points will be calculated, providing a more detailed and smoother correlation curve |
 | `free_running_acquisition_time` | boolean | Set the acquisition time mode (_True_ or _False_) | True | If set to True, the _acquisition_time_millis_ is indeterminate. If set to False, the acquisition_time_millis param is needed (acquisition duration) |
 | `time_span` | number | Time interval, in seconds, for the visible data range on the duration x-axis. Range: _1-300s_ | 5 | For instance, if `time_span` is set to _5s_, the _x-axis_ will scroll to continuously display the latest 5 seconds of real-time data on the chart |
@@ -206,6 +223,8 @@ The configurable parameters which can be stored in the settings file include:
 - `acquisition_time_millis`
 - `free_running_acquisition_time`
 - `write_data`
+- `fcs_algorithm`
+- `tau_axis_scale`
 - `averages`
 - `ch_correlation`
 - `gt_plots_to_show`
@@ -228,6 +247,8 @@ free_running_mode=false
 acquisition_time_millis=4000
 averages=2
 cps_threshold=250000
+tau_axis_scale=High density
+fcs_algorithm=FFT-based correlation
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

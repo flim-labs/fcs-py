@@ -16,6 +16,7 @@ class InputParamsControls(QWidget):
         self.setLayout(layout)
         self.create_bin_width_control(layout)
         self.create_tau_scale_control(layout)
+        self.create_fcs_algorithm_control(layout)
         running_mode_control = self.create_running_mode_control()
         layout.addLayout(running_mode_control)
         layout.addSpacing(15)
@@ -143,9 +144,28 @@ class InputParamsControls(QWidget):
             options,
         )
         self.app.control_inputs["tau_scale"] = inp
+        
+    def create_fcs_algorithm_control(self, layout):    
+        options = self.app.fcs_algorithms
+        inp = ControlsBarBuilder.create_fcs_algorithm_control(
+            layout,
+            self.app.fcs_algorithm,
+            self.fcs_algorithm_value_change,
+            options,
+        )
+        self.app.control_inputs["fcs_algorithm"] = inp 
+        
 
     def tau_scale_value_change(self, idx):
         options = self.app.tau_axis_scales
         self.app.tau_axis_scale = options[idx]
         self.app.settings.setValue(SETTINGS_TAU_AXIS_SCALE, self.app.tau_axis_scale)
+        #DataExportActions.calc_exported_file_size(self.app)
+        
+
+    def fcs_algorithm_value_change(self, idx):
+        options = self.app.fcs_algorithms
+        self.app.fcs_algorithm = options[idx]
+        self.app.settings.setValue(SETTINGS_FCS_ALGORITHM, self.app.fcs_algorithm)
+          
         # DataExportActions.calc_exported_file_size(self.app)

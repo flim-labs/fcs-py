@@ -68,6 +68,9 @@ class FCSWindow(QWidget):
         self.tau_axis_scales = TAU_AXIS_SCALES
         self.tau_axis_scale = self.settings.value(SETTINGS_TAU_AXIS_SCALE, DEFAULT_TAU_AXIS_SCALE)
         
+        self.fcs_algorithms = FCS_ALGORITHMS
+        self.fcs_algorithm = self.settings.value(SETTINGS_FCS_ALGORITHM, DEFAULT_FCS_ALGORITHM)
+        
         self.averages_inputs = AVERAGES_INPUTS
         self.selected_average = int(self.settings.value(SETTINGS_AVERAGES, DEFAULT_AVERAGES))
 

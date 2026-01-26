@@ -163,7 +163,7 @@ class ExportDataControl(QWidget):
 
 class DataExportActions:
     @staticmethod
-    def placeholder_function():
+    def calc_exported_file_size():
         pass
     # def calc_exported_file_size(app):
     #     if len(app.enabled_channels) == 0:

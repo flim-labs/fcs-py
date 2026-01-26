@@ -37,7 +37,8 @@ class FCSPostProcessingSingleCalcWorker(QThread):
         export_fcs,
         export_intensity_tracing,
         notes,
-        tau_high_density
+        tau_high_density,
+        fcs_algorithm
     ):
         super().__init__()
         self.active_correlations = active_correlations
@@ -51,6 +52,7 @@ class FCSPostProcessingSingleCalcWorker(QThread):
         self.export_intensity_tracing = export_intensity_tracing
         self.notes = notes
         self.is_running = True
+        self.use_fft_correlation = (fcs_algorithm == "FFT-based correlation")
 
     def run(self):
         self.single_step_finished.emit(0)
@@ -66,7 +68,8 @@ class FCSPostProcessingSingleCalcWorker(QThread):
                 export_fcs=self.export_fcs and self.write_data,
                 export_intensity_tracing=self.export_intensity_tracing and self.write_data,
                 notes=self.notes,
-                tau_high_density=self.tau_high_density
+                tau_high_density=self.tau_high_density,
+                use_fft_correlation=self.use_fft_correlation
             )
             if not self.is_running:
                 break
@@ -124,6 +127,7 @@ class FCSPostProcessing:
         ]
         num_acquisitions = app.selected_average if free_running_mode == False else 1
         tau_high_density = app.tau_axis_scale == "High density"
+        fcs_algorithm = app.fcs_algorithm
 
         app.gt_aborted = False
 
@@ -139,7 +143,8 @@ class FCSPostProcessing:
             export_fcs,
             export_intensity_tracing,
             notes,
-            tau_high_density
+            tau_high_density,
+            fcs_algorithm
         )
         QApplication.processEvents()
         app.fcs_single_worker = worker
