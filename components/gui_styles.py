@@ -214,30 +214,30 @@ class GUIStyles:
         """    
 
     @staticmethod
-    def set_input_number_style():
-        return """
-            QDoubleSpinBox, QSpinBox, QLineEdit {
+    def set_input_number_style(min_width=120):
+        return f"""
+            QDoubleSpinBox, QSpinBox, QLineEdit {{
                 color: #f8f8f8;
                 font-family: "Montserrat";
                 font-size: 12px;
                 padding: 8px;
                 height: 22px;
-                min-width: 120px;
+                min-width: {min_width}px;
                 border-radius: 5px;
                 background-color: transparent;
-            }
-            QDoubleSpinBox, QSpinBox {
+            }}
+            QDoubleSpinBox, QSpinBox {{
                 border: 1px solid #3b3b3b;
 
-            }
-            QLineEdit {
+            }}
+            QLineEdit {{
                 border: 1px solid #f5f538;
 
-            }
-            QDoubleSpinBox:disabled, QSpinBox:disabled {
+            }}
+            QDoubleSpinBox:disabled, QSpinBox:disabled {{
             color: #404040;  
             border-color: #404040;
-            }        
+            }}        
         """
 
     @staticmethod
