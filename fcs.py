@@ -258,6 +258,9 @@ class FCSWindow(QWidget):
                 self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(
                     not self.free_running_acquisition_time
                 )
+                self.control_inputs[SETTINGS_AVERAGES].setEnabled(
+                    not self.free_running_acquisition_time
+                )
 
     def resizeEvent(self, event):  
         super(FCSWindow, self).resizeEvent(event)
