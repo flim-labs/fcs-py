@@ -166,12 +166,18 @@ class ReadData:
         lag_index = data["lag_index"]
         g2_correlations = data["g2_correlations"]
         gt_plot_to_show = [
-            tuple(item) if isinstance(item, list) else item
+            tuple(int(x) for x in item) if isinstance(item, (list, tuple)) else item
             for item in app.gt_plots_to_show
         ]
-        filtered_gt_results = [
-            res for res in g2_correlations if tuple(res[0]) in gt_plot_to_show
-        ]
+        gt_plot_to_show = [item for item in gt_plot_to_show if isinstance(item, tuple)]
+        gt_plot_set = set(gt_plot_to_show)
+        if gt_plot_set:
+            filtered_gt_results = [
+                res for res in g2_correlations
+                if tuple(int(x) for x in res[0]) in gt_plot_set
+            ]
+        else:
+            filtered_gt_results = g2_correlations
         
         # Get channel_names from file metadata for use in plot titles
         metadata = app.reader_data["fcs"]["metadata"]
@@ -356,7 +362,8 @@ class ReaderPopup(QWidget):
                 ch1_name = get_channel_name(ch[0], channel_names_from_file, truncate_len=15)
                 ch2_name = get_channel_name(ch[1], channel_names_from_file, truncate_len=15)
                 checkbox, checkbox_wrapper = self.set_checkboxes(
-                    f"{ch1_name} - {ch2_name}"
+                    f"{ch1_name} - {ch2_name}",
+                    tuple(ch),
                 )
                 checkbox.setChecked(False)
                 self.channels_checkboxes.append(checkbox)
@@ -392,13 +399,14 @@ class ReaderPopup(QWidget):
             clear_layout(self.layouts["ch_layout"])
             del self.layouts["ch_layout"]
 
-    def set_checkboxes(self, text):
+    def set_checkboxes(self, text, value):
         checkbox_wrapper = QWidget()
         checkbox_wrapper.setObjectName(f"simple_checkbox_wrapper")
         row = QHBoxLayout()
         checkbox = QCheckBox(text)
         checkbox.setStyleSheet(GUIStyles.set_simple_checkbox_style(color="#ffff00"))
         checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        checkbox.setProperty("value", value)
         checkbox.toggled.connect(
             lambda state, checkbox=checkbox: self.on_channel_toggled(state, checkbox)
         )
@@ -413,7 +421,7 @@ class ReaderPopup(QWidget):
             tuple(item) if isinstance(item, list) else item
             for item in self.app.gt_plots_to_show
         ]
-        corr_tuple = self.extract_correlation_from_label(label_text)
+        corr_tuple = checkbox.property("value")
         if state:
             if corr_tuple not in gt_plot_to_show:
                 gt_plot_to_show.append(corr_tuple)
@@ -479,12 +487,6 @@ class ReaderPopup(QWidget):
         screen_geometry = QApplication.primaryScreen().availableGeometry().center()
         window_geometry.moveCenter(screen_geometry)
         self.move(window_geometry.topLeft())
-
-    def extract_correlation_from_label(self, text):
-        numbers = re.findall(r"\d+", text)
-        corr_tuples = tuple(int(num) - 1 for num in numbers)
-        return corr_tuples
-
 
 class ReaderMetadataPopup(QWidget):
     def __init__(self, window):
