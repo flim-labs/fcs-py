@@ -1,8 +1,12 @@
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 
+from components.channel_name_utils import get_channel_name
 
-def plot_fcs_data(g2_correlations, lag_index, show_plot=True):
+
+def plot_fcs_data(g2_correlations, lag_index, show_plot=True, channel_names=None):
+    if channel_names is None:
+        channel_names = {}
     num_plots = len(g2_correlations)
     num_plots_per_row = 1
     if num_plots < 2:
@@ -26,7 +30,9 @@ def plot_fcs_data(g2_correlations, lag_index, show_plot=True):
             ax.plot(lag_index, data, label=label)
         ax.set_xlabel("τ(μs)")
         ax.set_ylabel("G(τ)")
-        ax.set_title(f"Channel {channel1 + 1}- Channel {channel2 + 1}")
+        ch1_name = get_channel_name(channel1, channel_names, truncate_len=12)
+        ch2_name = get_channel_name(channel2, channel_names, truncate_len=12)
+        ax.set_title(f"{ch1_name} - {ch2_name}")
         ax.set_xscale("log")
         ax.grid(True)
         ax.legend()      

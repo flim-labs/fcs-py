@@ -220,7 +220,9 @@ class ReadData:
     def prepare_fcs_data_for_export_img(app):
         lag_index = app.reader_data["fcs"]["data"]["lag_index"]
         g2_correlations = app.reader_data["fcs"]["data"]["g2_correlations"]
-        return g2_correlations, lag_index
+        metadata = app.reader_data["fcs"]["metadata"]
+        channel_names = metadata.get("channel_names", {})
+        return g2_correlations, lag_index, channel_names
 
     @staticmethod
     def show_warning_message(title, message):
