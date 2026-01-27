@@ -34,6 +34,7 @@ from components.logo_utilities import TitlebarIcon
 from components.messages_utilities import MessagesUtilities
 from components.resource_path import resource_path
 from components.settings import (
+    ABORT_BUTTON,
     BIN_METADATA_BUTTON,
     CHECK_CARD_WIDGET,
     COLLAPSE_BUTTON,
@@ -239,6 +240,8 @@ class ReadDataControls:
         app.control_inputs[START_BUTTON].setVisible(not read_mode)
         app.control_inputs[STOP_BUTTON].setVisible(not read_mode)
         app.control_inputs[RESET_BUTTON].setVisible(not read_mode)
+        if ABORT_BUTTON in app.control_inputs:
+            app.control_inputs[ABORT_BUTTON].setVisible(not read_mode)
         app.control_inputs[READ_FILE_BUTTON].setVisible(read_mode)
         app.control_inputs[EXPORT_PLOT_IMG_BUTTON].setVisible(bin_metadata_btn_visible)
         app.widgets[TOP_COLLAPSIBLE_WIDGET].setVisible(not read_mode)
