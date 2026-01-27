@@ -22,6 +22,7 @@ from matplotlib import pyplot as plt
 from components.box_message import BoxMessage
 from components.fcs_controller import FCSPostProcessingPlot
 from components.gui_styles import GUIStyles
+from components.channel_name_utils import get_channel_name
 from components.input_text_control import InputTextControl
 from components.layout_utilities import (
     clear_layout,
@@ -33,6 +34,7 @@ from components.logo_utilities import TitlebarIcon
 from components.messages_utilities import MessagesUtilities
 from components.resource_path import resource_path
 from components.settings import (
+    ABORT_BUTTON,
     BIN_METADATA_BUTTON,
     CHECK_CARD_WIDGET,
     COLLAPSE_BUTTON,
@@ -73,6 +75,21 @@ class ReadData:
         app.reader_data["fcs"]["metadata"]["lag_index"] = lag_index
         app.reader_data["fcs"]["data"]["lag_index"] = lag_index
         app.reader_data["fcs"]["data"]["g2_correlations"] = g2_correlations
+        
+        # Extract channel_names from notes if present
+        if "notes" in metadata and metadata["notes"]:
+            try:
+                notes_data = json.loads(metadata["notes"])
+                if isinstance(notes_data, dict) and "channel_names" in notes_data:
+                    app.reader_data["fcs"]["metadata"]["channel_names"] = notes_data["channel_names"]
+                    app.reader_data["fcs"]["metadata"]["notes"] = notes_data.get("notes", "")
+                else:
+                    app.reader_data["fcs"]["metadata"]["channel_names"] = {}
+            except:
+                # If notes is not JSON, keep it as is
+                app.reader_data["fcs"]["metadata"]["channel_names"] = {}
+        else:
+            app.reader_data["fcs"]["metadata"]["channel_names"] = {}
 
     @staticmethod
     def read_fcs_bin(window, app, filter_string = None):
@@ -155,11 +172,16 @@ class ReadData:
         filtered_gt_results = [
             res for res in g2_correlations if tuple(res[0]) in gt_plot_to_show
         ]
+        
+        # Get channel_names from file metadata for use in plot titles
+        metadata = app.reader_data["fcs"]["metadata"]
+        channel_names_from_file = metadata.get("channel_names", {})
+        
         for index, res in enumerate(filtered_gt_results):
             correlation = res[0]
             gt_values = res[1][0]
-            FCSPostProcessingPlot.generate_chart(
-                correlation, index, app, lag_index, gt_values
+            FCSPostProcessingPlot.generate_chart_with_custom_names(
+                correlation, index, app, lag_index, gt_values, channel_names_from_file
             )
 
     @staticmethod
@@ -218,6 +240,8 @@ class ReadDataControls:
         app.control_inputs[START_BUTTON].setVisible(not read_mode)
         app.control_inputs[STOP_BUTTON].setVisible(not read_mode)
         app.control_inputs[RESET_BUTTON].setVisible(not read_mode)
+        if ABORT_BUTTON in app.control_inputs:
+            app.control_inputs[ABORT_BUTTON].setVisible(not read_mode)
         app.control_inputs[READ_FILE_BUTTON].setVisible(read_mode)
         app.control_inputs[EXPORT_PLOT_IMG_BUTTON].setVisible(bin_metadata_btn_visible)
         app.widgets[TOP_COLLAPSIBLE_WIDGET].setVisible(not read_mode)
@@ -315,6 +339,9 @@ class ReaderPopup(QWidget):
             and file_metadata["correlations"] is not None
         ):
             ch_correlations = file_metadata["correlations"]
+            # Get channel_names from file metadata
+            channel_names_from_file = file_metadata.get("channel_names", {})
+            
             self.app.gt_plots_to_show = []
             self.app.settings.setValue(
                 SETTINGS_GT_PLOTS_TO_SHOW, json.dumps(self.app.gt_plots_to_show)
@@ -324,8 +351,10 @@ class ReaderPopup(QWidget):
             desc.setStyleSheet("font-size: 16px; font-family: 'Montserrat'")
             grid = QGridLayout()
             for ch in ch_correlations:
+                ch1_name = get_channel_name(ch[0], channel_names_from_file, truncate_len=15)
+                ch2_name = get_channel_name(ch[1], channel_names_from_file, truncate_len=15)
                 checkbox, checkbox_wrapper = self.set_checkboxes(
-                    f"Channel {ch[0] + 1} - Channel {ch[1] + 1}"
+                    f"{ch1_name} - {ch2_name}"
                 )
                 checkbox.setChecked(False)
                 self.channels_checkboxes.append(checkbox)

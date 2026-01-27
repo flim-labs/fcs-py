@@ -1,5 +1,9 @@
 file_path = '<FILE-PATH>';
 
+% Channel custom names
+channel_names_json = '<CHANNEL-NAMES-JSON>';
+channel_names = jsondecode(channel_names_json);
+
 % Open the file
 metadata = struct('enabled_channels', [], 'correlations', [], 'num_acquisitions', [], 'acquisition_time', [], 'bin_width', [], 'notes', []);
 
@@ -38,9 +42,27 @@ g2_correlations_json = jsondecode(g2_correlations_json_str);
 lag_index = g2_correlations_json.lag_index;
 g2_correlations = g2_correlations_json.g2_correlations;
 
+% Function to get channel name
+function name = get_channel_name(channel_id, channel_names, truncate_len)
+    if nargin < 3
+        truncate_len = 5;
+    end
+    field_name = ['x' num2str(channel_id)];
+    if isfield(channel_names, field_name)
+        custom_name = channel_names.(field_name);
+        if length(custom_name) > truncate_len
+            custom_name = [custom_name(1:truncate_len) '...'];
+        end
+        name = [custom_name ' (Ch' num2str(channel_id + 1) ')'];
+    else
+        name = ['Channel ' num2str(channel_id + 1)];
+    end
+end
+
 % Enabled channels
 if ~isempty(metadata.enabled_channels)
-    disp(['Enabled channels: ' strjoin(arrayfun(@(ch) ['Channel ' num2str(ch + 1)], metadata.enabled_channels, 'UniformOutput', false), ', ')]);
+    channel_names_str = arrayfun(@(ch) get_channel_name(ch, channel_names, 5), metadata.enabled_channels, 'UniformOutput', false);
+    disp(['Enabled channels: ' strjoin(channel_names_str, ', ')]);
 end
 
 % Correlations (info about correlated channels)
@@ -126,12 +148,15 @@ for i = 1:num_plots
         plot(lag_index_plot, current_data, 'DisplayName', ['G(\tau) ' num2str(data_index)]);
     end
    
+    ch1_name = get_channel_name(channel1, channel_names, 5);
+    ch2_name = get_channel_name(channel2, channel_names, 5);
+    
     hold off;
     set(gca, 'XScale', 'log');
     xlim([1, max(lag_index_plot)]);
     xlabel('\tau (\mus)');
     ylabel('G(\tau)');
-    title(['Channel ' num2str(channel1 + 1) ' - Channel ' num2str(channel2 + 1)]);
+    title([ch1_name ' - ' ch2_name]);
     grid on;
     legend('Location', 'northeast');
 end

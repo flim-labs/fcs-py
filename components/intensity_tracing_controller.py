@@ -10,6 +10,7 @@ from components.format_utilities import FormatUtils
 from components.layout_utilities import create_gt_loading_layout, create_gt_wait_layout, insert_widget, remove_widget
 from components.messages_utilities import MessagesUtilities
 from components.gui_styles import GUIStyles
+from components.channel_name_utils import get_channel_name
 from components.settings import *
 from PyQt6.QtWidgets import (
     QApplication,
@@ -436,7 +437,8 @@ class IntensityTracingPlot:
         intensity_widget = pg.PlotWidget()
         intensity_widget.setLabel('left', 'AVG. Photon counts', units='')
         intensity_widget.setLabel('bottom', 'Time', units='s')
-        intensity_widget.setTitle("Channel " + str(channel_index + 1))
+        channel_title = get_channel_name(channel_index, app.channel_names, truncate_len=30)
+        intensity_widget.setTitle(channel_title)
         intensity_plot = intensity_widget.plot(x, y, pen=pg.mkPen(color="#FB8C00", width=2))
         intensity_widget.setStyleSheet("border: 1px solid #3b3b3b")
         intensity_widget.setBackground("#0E0E0E")
@@ -518,7 +520,8 @@ class IntensityTracingOnlyCPS:
                 bg_color="transparent",
                 start_color="#DA1212",
             )           
-        channel_label = QLabel(f"Channel {channel + 1}")
+        channel_name = get_channel_name(channel, app.channel_names, truncate_len=30)
+        channel_label = QLabel(channel_name)
         channel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         channel_label.setObjectName("vertical_ch" if layout == 'vertical' else "horizontal_ch")
         if layout == 'vertical':

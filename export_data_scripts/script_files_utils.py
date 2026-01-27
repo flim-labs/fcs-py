@@ -1,5 +1,6 @@
 import os
 import shutil
+import json
 
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
@@ -19,11 +20,14 @@ time_tagger_py_script_path = resource_path("export_data_scripts/time_tagger_scri
 class ScriptFileUtils:
 
     @classmethod
-    def export_scripts(cls, bin_file_paths, file_name, directory, script_type, time_tagger=False, time_tagger_file_path=""):
+    def export_scripts(cls, bin_file_paths, file_name, directory, script_type, channel_names=None, time_tagger=False, time_tagger_file_path=""):
         try:
+            if channel_names is None:
+                channel_names = {}
+                
             if time_tagger:
                 python_modifier = cls.get_time_tagger_content_modifiers()
-                cls.write_new_scripts_content(python_modifier, {"time_tagger": time_tagger_file_path}, file_name, directory, "py", "time_tagger_fcs")  
+                cls.write_new_scripts_content(python_modifier, {"time_tagger": time_tagger_file_path}, file_name, directory, "py", "time_tagger_fcs", channel_names)  
             
             if script_type == "fcs":
                 python_modifier, matlab_modifier = cls.get_fcs_content_modifiers(time_tagger)
@@ -34,6 +38,7 @@ class ScriptFileUtils:
                     directory,
                     "py",
                     script_type,
+                    channel_names,
                 )
                 cls.write_new_scripts_content(
                     matlab_modifier,
@@ -42,6 +47,7 @@ class ScriptFileUtils:
                     directory,
                     "m",
                     script_type,
+                    channel_names,
                 )
             cls.show_success_message(file_name)
         except Exception as e:
@@ -56,9 +62,13 @@ class ScriptFileUtils:
         directory,
         file_extension,
         script_type,
+        channel_names=None,
     ):
+        if channel_names is None:
+            channel_names = {}
+            
         content = cls.read_file_content(content_modifier["source_file"])
-        new_content = cls.manipulate_file_content(content, bin_file_paths)
+        new_content = cls.manipulate_file_content(content, bin_file_paths, channel_names, file_extension)
         script_file_name = f"{file_name}_{script_type}_script.{file_extension}"
         script_file_path = os.path.join(directory, script_file_name)
         cls.write_file(script_file_path, new_content)
@@ -119,8 +129,19 @@ class ScriptFileUtils:
             return file.readlines()
 
     @classmethod
-    def manipulate_file_content(cls, content, file_paths):
+    def manipulate_file_content(cls, content, file_paths, channel_names, file_extension):
         manipulated_lines = []
+        # Prepare channel names for injection
+        if file_extension == "py":
+            channel_names_str = json.dumps(channel_names)
+        else:  # MATLAB
+            # Convert Python dict to MATLAB struct format
+            if channel_names:
+                fields = [f'"x{k}", "{v}"' for k, v in channel_names.items()]
+                channel_names_str = f'struct({", ".join(fields)})'
+            else:
+                channel_names_str = 'struct()'
+        
         for line in content:
             if "fcs" in file_paths:
                 line = line.replace("<FILE-PATH>", file_paths["fcs"].replace("\\", "/"))
@@ -128,6 +149,13 @@ class ScriptFileUtils:
                 line = line.replace(
                     "<FILE-PATH>", file_paths["time_tagger"].replace("\\", "/")
                 )
+            
+            # Replace channel names placeholder
+            if file_extension == "py":
+                line = line.replace("<CHANNEL-NAMES>", channel_names_str)
+            else:  # MATLAB
+                line = line.replace("<CHANNEL-NAMES-JSON>", json.dumps(channel_names))
+            
             manipulated_lines.append(line)
         return manipulated_lines
 

@@ -7,6 +7,7 @@ from PyQt6.QtGui import QIcon, QColor
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
 from components.logo_utilities import TitlebarIcon
+from components.channel_name_utils import get_channel_name
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -98,8 +99,9 @@ class ChCorrelationsMatrix(QWidget):
 
     def set_matrix_labels(self, num_channels, enabled_channels):
         for i in range(num_channels):
-            self.matrix.setHorizontalHeaderItem(i, QTableWidgetItem(f"Ch {enabled_channels[i] + 1}"))
-            self.matrix.setVerticalHeaderItem(i, QTableWidgetItem(f"Ch {enabled_channels[i] + 1}"))
+            ch_name = get_channel_name(enabled_channels[i], self.app.channel_names, truncate_len=15)
+            self.matrix.setHorizontalHeaderItem(i, QTableWidgetItem(ch_name))
+            self.matrix.setVerticalHeaderItem(i, QTableWidgetItem(ch_name))
             self.build_matrix_checkboxes(num_channels, enabled_channels)
 
       
