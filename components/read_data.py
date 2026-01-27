@@ -518,6 +518,7 @@ class ReaderMetadataPopup(QWidget):
         metadata_keys = self.get_metadata_keys_dict()
         metadata = self.app.reader_data["fcs"]["metadata"]
         metadata["lag_index"][0] = 0
+        channel_names_from_file = metadata.get("channel_names", {})
         file = self.app.reader_data["fcs"]["files"]["fcs"]
         v_box = QVBoxLayout()
         if metadata:
@@ -548,14 +549,21 @@ class ReaderMetadataPopup(QWidget):
                     metadata_value = str(metadata[key])
                     if key == "enabled_channels":
                         metadata_value = ", ".join(
-                            ["Channel " + str(ch + 1) for ch in metadata[key]]
+                            [
+                                get_channel_name(ch, channel_names_from_file)
+                                for ch in metadata[key]
+                            ]
                         )
                     if key == "acquisition_time":
                         if metadata[key] is not None:
                             metadata_value = str(metadata[key] / 1000)
                     if key == "correlations":
                         correlated_channels = [
-                            [channel + 1 for channel in pair] for pair in metadata[key]
+                            (
+                                get_channel_name(pair[0], channel_names_from_file),
+                                get_channel_name(pair[1], channel_names_from_file),
+                            )
+                            for pair in metadata[key]
                         ]
                         metadata_value = str(correlated_channels)
                     if key == "lag_index":
