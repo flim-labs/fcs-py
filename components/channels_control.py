@@ -2,7 +2,7 @@ import os
 import json
 
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QIcon
 from components.channels_detection import DetectChannelsButton
 from components.controls_bar_builder import ControlsBarBuilder
@@ -11,6 +11,8 @@ from components.plots_config_widget import PlotsConfigPopup
 from components.correlations_matrix import ChCorrelationsPopup
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
+from components.channel_name_utils import get_channel_name_parts
+from components.rename_channel_modal import RenameChannelModal
 from components.settings import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +78,7 @@ class ChannelsControl(QWidget):
             self.app.conn_channels,
         )
         inp.setFixedHeight(40)
+        inp.setFixedWidth(90)
         self.app.control_inputs[SETTINGS_CONN_CHANNEL] = inp
 
     def conn_channel_type_value_change(self, index):
@@ -101,12 +104,25 @@ class ChannelsControl(QWidget):
 
             ch_checkbox_wrapper = QWidget()
             ch_checkbox_wrapper.setObjectName(f"ch_checkbox_wrapper")
-            checkbox = FancyCheckbox(text=f"Channel {i + 1}")
+            ch_checkbox_wrapper.setMinimumWidth(100)
+            
+            # Get custom and default parts of the channel name
+            custom_part, default_part = get_channel_name_parts(i, self.app.channel_names)
+            
+            checkbox = FancyCheckbox(
+                text=f"{custom_part} {default_part}" if default_part else custom_part,
+                label_custom_part=custom_part if default_part else "",
+                label_default_part=default_part
+            )
             checkbox.setStyleSheet(GUIStyles.set_checkbox_style())
             checked = i in self.app.enabled_channels
             checkbox.set_checked(checked)
             checkbox.toggled.connect(
                 lambda state, index=i: self.on_ch_toggled(state, index)
+            )
+            # Connect label click to open rename modal
+            checkbox.labelClicked.connect(
+                lambda index=i: self.open_rename_modal(index)
             )
             row = QHBoxLayout()
             row.addWidget(checkbox)
@@ -180,3 +196,28 @@ class ChannelsControl(QWidget):
     def open_plots_config_popup(self):
         self.popup = PlotsConfigPopup(self.app, start_acquisition=False)
         self.popup.show()
+    
+    def open_rename_modal(self, channel_id):
+        """Open the rename channel modal"""
+        current_name = self.app.channel_names.get(str(channel_id), "")
+        modal = RenameChannelModal(channel_id, current_name, self.app)
+        modal.channelRenamed.connect(self.on_channel_renamed)
+        modal.exec()
+    
+    @pyqtSlot(int, str)
+    def on_channel_renamed(self, channel_id, new_name):
+        """Handle channel rename"""
+        # Update the channel name in the app
+        if new_name:
+            self.app.channel_names[str(channel_id)] = new_name
+        else:
+            # Remove custom name if empty
+            self.app.channel_names.pop(str(channel_id), None)
+        
+        # Save to settings
+        self.app.settings.setValue(SETTINGS_CHANNEL_NAMES, json.dumps(self.app.channel_names))
+        
+        # Update the checkbox label
+        custom_part, default_part = get_channel_name_parts(channel_id, self.app.channel_names)
+        checkbox = self.app.channel_checkboxes[channel_id]
+        checkbox.set_text_parts(custom_part, default_part)

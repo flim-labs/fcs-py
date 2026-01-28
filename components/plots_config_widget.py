@@ -6,11 +6,11 @@ from PyQt6.QtWidgets import  QWidget, QPushButton, QCheckBox, QHBoxLayout, QGrid
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QColor
 from components.correlations_matrix import ChCorrelationsMatrix
-from components.helpers import extract_channel_from_label
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
 from components.gui_styles import GUIStyles
+from components.channel_name_utils import get_channel_name
 from components.settings import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -111,7 +111,9 @@ class PlotsConfigPopup(QWidget):
         QApplication.processEvents()            
         corr_data = self.get_cleaned_correlations()
         for index, (ch1, ch2) in enumerate(corr_data):
-            checkbox = self.set_checkboxes(f"Channel {ch1 + 1} - Channel {ch2 + 1}", "gt")
+            ch1_name = get_channel_name(ch1, self.app.channel_names, truncate_len=15)
+            ch2_name = get_channel_name(ch2, self.app.channel_names, truncate_len=15)
+            checkbox = self.set_checkboxes(f"{ch1_name} - {ch2_name}", "gt", (ch1, ch2))
             gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in self.app.gt_plots_to_show]
             isChecked = (ch1, ch2) in gt_plot_to_show
             checkbox.setChecked(isChecked)
@@ -122,7 +124,8 @@ class PlotsConfigPopup(QWidget):
     def init_intensity_grid(self):
         self.app.enabled_channels.sort()
         for ch in self.app.enabled_channels:
-            checkbox = self.set_checkboxes(f"Channel {ch + 1}", "intensity")
+            ch_name = get_channel_name(ch, self.app.channel_names, truncate_len=15)
+            checkbox = self.set_checkboxes(ch_name, "intensity", ch)
             isChecked = ch in self.app.intensity_plots_to_show
             checkbox.setChecked(isChecked)
             if len(self.app.intensity_plots_to_show) >=4 and ch not in self.app.intensity_plots_to_show:
@@ -130,13 +133,14 @@ class PlotsConfigPopup(QWidget):
         self.update_layout(self.intensity_checkboxes_wrappers, self.intensity_ch_grid, "intensity")        
 
 
-    def set_checkboxes(self, text, typology):
+    def set_checkboxes(self, text, typology, value):
         checkbox_wrapper = QWidget()
-        checkbox_wrapper.setObjectName(f"tau_checkbox_wrapper")
+        checkbox_wrapper.setObjectName(f"simple_checkbox_wrapper")
         row = QHBoxLayout()
         checkbox = QCheckBox(text)
         checkbox.setStyleSheet(GUIStyles.set_tau_checkbox_style(color = "#FB8C00" if typology == 'intensity' else "#31c914" ))
         checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        checkbox.setProperty("value", value)
         checkbox.toggled.connect(partial(self.on_ch_intensity_toggled, checkbox=checkbox) if typology == 'intensity' else partial(self.on_ch_gt_toggled, checkbox=checkbox))
         row.addWidget(checkbox)
         checkbox_wrapper.setLayout(row)
@@ -175,8 +179,8 @@ class PlotsConfigPopup(QWidget):
             grid.addWidget(widget, row, col)
 
     def on_ch_intensity_toggled(self, state, checkbox):
-        label_text = checkbox.text() 
-        ch_num_index = extract_channel_from_label(label_text) 
+        label_text = checkbox.text()
+        ch_num_index = checkbox.property("value")
         if state:
             if ch_num_index not in self.app.intensity_plots_to_show:
                 self.app.intensity_plots_to_show.append(ch_num_index)
@@ -197,10 +201,10 @@ class PlotsConfigPopup(QWidget):
             self.start_btn.setEnabled(start_btn_enabled)
 
 
-    def on_ch_gt_toggled(self, state, checkbox):    
-        label_text = checkbox.text() 
+    def on_ch_gt_toggled(self, state, checkbox):
+        label_text = checkbox.text()
         gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in self.app.gt_plots_to_show]
-        corr_tuple = self.extract_correlation_from_label(label_text) 
+        corr_tuple = checkbox.property("value")
         if state:
             if corr_tuple not in gt_plot_to_show:
                 gt_plot_to_show.append(corr_tuple)
@@ -229,12 +233,6 @@ class PlotsConfigPopup(QWidget):
        
 
 
-    def extract_correlation_from_label(self, text):
-        numbers = re.findall(r'\d+', text)
-        corr_tuples = tuple(int(num) - 1 for num in numbers)
-        return corr_tuples
-    
-    
     def get_cleaned_correlations(self):
         filtered_corr = [(x, y) for x, y, boolean in self.app.ch_correlations if boolean]
         return filtered_corr      

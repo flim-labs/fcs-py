@@ -2,6 +2,7 @@ from functools import partial
 from components.box_message import BoxMessage
 from components.gui_styles import GUIStyles
 from components.layout_utilities import create_gt_layout, create_gt_aborted_layout, insert_widget, remove_widget
+from components.channel_name_utils import get_channel_name
 from components.settings import (
     ABORT_BUTTON,
     GT_PLOTS_GRID,
@@ -105,7 +106,14 @@ class FCSPostProcessingAverageCalcWorker(QThread):
 class FCSPostProcessing:
     @staticmethod
     def get_input(app):
-        notes = app.notes
+        # Save channel_names together with notes
+        import json as json_lib
+        notes_with_metadata = {
+            "notes": app.notes,
+            "channel_names": app.channel_names
+        }
+        notes = json_lib.dumps(notes_with_metadata)
+        
         free_running_mode = app.free_running_acquisition_time
         enabled_channels = app.enabled_channels
         bin_width = int(app.bin_width_micros)
@@ -242,6 +250,50 @@ class FCSPostProcessing:
 
 class FCSPostProcessingPlot:
     @staticmethod
+    def generate_chart_with_custom_names(correlation, index, app, lag_index, gt_values, channel_names):
+        """Generate chart using channel_names from file instead of app settings"""
+        values = np.array(lag_index)
+        values = np.where(values <= 0, 1e-9, values)
+        log_values = np.log10(values)
+        log_values = np.where(log_values < 0, -0.1, log_values)
+        exponents_int = log_values.astype(int)
+        exponents_lin_space_int = np.linspace(
+            0, max(exponents_int), len(exponents_int)
+        ).astype(int)        
+        gt_widget = pg.PlotWidget()
+        gt_widget.setLabel("left", "G(τ)", units="")
+        gt_widget.setLabel("bottom", "τ (μs)", units="")
+        q_font = QFont("Times New Roman")
+        gt_widget.getAxis("bottom").label.setFont(q_font)
+        gt_widget.getAxis("left").label.setFont(q_font)
+        ch1_name = get_channel_name(correlation[0], channel_names, truncate_len=5)
+        ch2_name = get_channel_name(correlation[1], channel_names, truncate_len=5)
+        gt_widget.setTitle(
+            f"{ch1_name} - {ch2_name}; G(0) = {{:.6f}}".format(gt_values[0])
+        )
+        gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10)
+        fcs_plot = gt_widget.plot(
+            log_values, gt_values, pen=pg.mkPen(color="#31c914", width=2)
+        )
+        gt_widget.plotItem.getAxis("left").enableAutoSIPrefix(False)
+        gt_widget.plotItem.getAxis("bottom").enableAutoSIPrefix(False)
+        def format_power_of_ten(i):
+            if i < 0:
+                return "0"
+            else:
+                return "10" + "".join([UNICODE_SUP[c] for c in str(i)])
+        ticks = [(i, format_power_of_ten(i)) for i in exponents_lin_space_int]
+        gt_widget.plotItem.getAxis("bottom").setTicks([ticks])
+        gt_widget.setStyleSheet("border: 1px solid #3b3b3b")
+        gt_widget.setBackground("#0E0E0E")
+        gt_widget.getAxis("left").setTextPen("#cecece")
+        gt_widget.getAxis("bottom").setTextPen("#cecece")
+        row, col = divmod(index, 2)
+        app.layouts[GT_PLOTS_GRID].addWidget(gt_widget, row, col)
+        app.gt_charts.append(gt_widget)
+        app.gt_lines.append(fcs_plot)
+
+    @staticmethod
     def generate_chart(correlation, index, app, lag_index, gt_values):
         values = np.array(lag_index)
         values = np.where(values <= 0, 1e-9, values)
@@ -257,8 +309,10 @@ class FCSPostProcessingPlot:
         q_font = QFont("Times New Roman")
         gt_widget.getAxis("bottom").label.setFont(q_font)
         gt_widget.getAxis("left").label.setFont(q_font)
+        ch1_name = get_channel_name(correlation[0], app.channel_names, truncate_len=5)
+        ch2_name = get_channel_name(correlation[1], app.channel_names, truncate_len=5)
         gt_widget.setTitle(
-            f"Channel {correlation[0] + 1} - Channel {correlation[1] + 1}; G(0) = {{:.6f}}".format(gt_values[0])
+            f"{ch1_name} - {ch2_name}; G(0) = {{:.6f}}".format(gt_values[0])
         )
         gt_widget.plotItem.layout.setContentsMargins(10, 10, 10, 10)
         fcs_plot = gt_widget.plot(

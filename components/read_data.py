@@ -22,6 +22,7 @@ from matplotlib import pyplot as plt
 from components.box_message import BoxMessage
 from components.fcs_controller import FCSPostProcessingPlot
 from components.gui_styles import GUIStyles
+from components.channel_name_utils import get_channel_name
 from components.input_text_control import InputTextControl
 from components.layout_utilities import (
     clear_layout,
@@ -33,6 +34,7 @@ from components.logo_utilities import TitlebarIcon
 from components.messages_utilities import MessagesUtilities
 from components.resource_path import resource_path
 from components.settings import (
+    ABORT_BUTTON,
     BIN_METADATA_BUTTON,
     CHECK_CARD_WIDGET,
     COLLAPSE_BUTTON,
@@ -73,6 +75,21 @@ class ReadData:
         app.reader_data["fcs"]["metadata"]["lag_index"] = lag_index
         app.reader_data["fcs"]["data"]["lag_index"] = lag_index
         app.reader_data["fcs"]["data"]["g2_correlations"] = g2_correlations
+        
+        # Extract channel_names from notes if present
+        if "notes" in metadata and metadata["notes"]:
+            try:
+                notes_data = json.loads(metadata["notes"])
+                if isinstance(notes_data, dict) and "channel_names" in notes_data:
+                    app.reader_data["fcs"]["metadata"]["channel_names"] = notes_data["channel_names"]
+                    app.reader_data["fcs"]["metadata"]["notes"] = notes_data.get("notes", "")
+                else:
+                    app.reader_data["fcs"]["metadata"]["channel_names"] = {}
+            except:
+                # If notes is not JSON, keep it as is
+                app.reader_data["fcs"]["metadata"]["channel_names"] = {}
+        else:
+            app.reader_data["fcs"]["metadata"]["channel_names"] = {}
 
     @staticmethod
     def read_fcs_bin(window, app, filter_string = None):
@@ -149,17 +166,28 @@ class ReadData:
         lag_index = data["lag_index"]
         g2_correlations = data["g2_correlations"]
         gt_plot_to_show = [
-            tuple(item) if isinstance(item, list) else item
+            tuple(int(x) for x in item) if isinstance(item, (list, tuple)) else item
             for item in app.gt_plots_to_show
         ]
-        filtered_gt_results = [
-            res for res in g2_correlations if tuple(res[0]) in gt_plot_to_show
-        ]
+        gt_plot_to_show = [item for item in gt_plot_to_show if isinstance(item, tuple)]
+        gt_plot_set = set(gt_plot_to_show)
+        if gt_plot_set:
+            filtered_gt_results = [
+                res for res in g2_correlations
+                if tuple(int(x) for x in res[0]) in gt_plot_set
+            ]
+        else:
+            filtered_gt_results = g2_correlations
+        
+        # Get channel_names from file metadata for use in plot titles
+        metadata = app.reader_data["fcs"]["metadata"]
+        channel_names_from_file = metadata.get("channel_names", {})
+        
         for index, res in enumerate(filtered_gt_results):
             correlation = res[0]
             gt_values = res[1][0]
-            FCSPostProcessingPlot.generate_chart(
-                correlation, index, app, lag_index, gt_values
+            FCSPostProcessingPlot.generate_chart_with_custom_names(
+                correlation, index, app, lag_index, gt_values, channel_names_from_file
             )
 
     @staticmethod
@@ -198,7 +226,9 @@ class ReadData:
     def prepare_fcs_data_for_export_img(app):
         lag_index = app.reader_data["fcs"]["data"]["lag_index"]
         g2_correlations = app.reader_data["fcs"]["data"]["g2_correlations"]
-        return g2_correlations, lag_index
+        metadata = app.reader_data["fcs"]["metadata"]
+        channel_names = metadata.get("channel_names", {})
+        return g2_correlations, lag_index, channel_names
 
     @staticmethod
     def show_warning_message(title, message):
@@ -218,6 +248,8 @@ class ReadDataControls:
         app.control_inputs[START_BUTTON].setVisible(not read_mode)
         app.control_inputs[STOP_BUTTON].setVisible(not read_mode)
         app.control_inputs[RESET_BUTTON].setVisible(not read_mode)
+        if ABORT_BUTTON in app.control_inputs:
+            app.control_inputs[ABORT_BUTTON].setVisible(not read_mode)
         app.control_inputs[READ_FILE_BUTTON].setVisible(read_mode)
         app.control_inputs[EXPORT_PLOT_IMG_BUTTON].setVisible(bin_metadata_btn_visible)
         app.widgets[TOP_COLLAPSIBLE_WIDGET].setVisible(not read_mode)
@@ -315,6 +347,9 @@ class ReaderPopup(QWidget):
             and file_metadata["correlations"] is not None
         ):
             ch_correlations = file_metadata["correlations"]
+            # Get channel_names from file metadata
+            channel_names_from_file = file_metadata.get("channel_names", {})
+            
             self.app.gt_plots_to_show = []
             self.app.settings.setValue(
                 SETTINGS_GT_PLOTS_TO_SHOW, json.dumps(self.app.gt_plots_to_show)
@@ -324,8 +359,11 @@ class ReaderPopup(QWidget):
             desc.setStyleSheet("font-size: 16px; font-family: 'Montserrat'")
             grid = QGridLayout()
             for ch in ch_correlations:
+                ch1_name = get_channel_name(ch[0], channel_names_from_file, truncate_len=15)
+                ch2_name = get_channel_name(ch[1], channel_names_from_file, truncate_len=15)
                 checkbox, checkbox_wrapper = self.set_checkboxes(
-                    f"Channel {ch[0] + 1} - Channel {ch[1] + 1}"
+                    f"{ch1_name} - {ch2_name}",
+                    tuple(ch),
                 )
                 checkbox.setChecked(False)
                 self.channels_checkboxes.append(checkbox)
@@ -361,13 +399,14 @@ class ReaderPopup(QWidget):
             clear_layout(self.layouts["ch_layout"])
             del self.layouts["ch_layout"]
 
-    def set_checkboxes(self, text):
+    def set_checkboxes(self, text, value):
         checkbox_wrapper = QWidget()
         checkbox_wrapper.setObjectName(f"simple_checkbox_wrapper")
         row = QHBoxLayout()
         checkbox = QCheckBox(text)
         checkbox.setStyleSheet(GUIStyles.set_simple_checkbox_style(color="#ffff00"))
         checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        checkbox.setProperty("value", value)
         checkbox.toggled.connect(
             lambda state, checkbox=checkbox: self.on_channel_toggled(state, checkbox)
         )
@@ -382,7 +421,7 @@ class ReaderPopup(QWidget):
             tuple(item) if isinstance(item, list) else item
             for item in self.app.gt_plots_to_show
         ]
-        corr_tuple = self.extract_correlation_from_label(label_text)
+        corr_tuple = checkbox.property("value")
         if state:
             if corr_tuple not in gt_plot_to_show:
                 gt_plot_to_show.append(corr_tuple)
@@ -449,12 +488,6 @@ class ReaderPopup(QWidget):
         window_geometry.moveCenter(screen_geometry)
         self.move(window_geometry.topLeft())
 
-    def extract_correlation_from_label(self, text):
-        numbers = re.findall(r"\d+", text)
-        corr_tuples = tuple(int(num) - 1 for num in numbers)
-        return corr_tuples
-
-
 class ReaderMetadataPopup(QWidget):
     def __init__(self, window):
         super().__init__()
@@ -489,6 +522,7 @@ class ReaderMetadataPopup(QWidget):
         metadata_keys = self.get_metadata_keys_dict()
         metadata = self.app.reader_data["fcs"]["metadata"]
         metadata["lag_index"][0] = 0
+        channel_names_from_file = metadata.get("channel_names", {})
         file = self.app.reader_data["fcs"]["files"]["fcs"]
         v_box = QVBoxLayout()
         if metadata:
@@ -519,14 +553,21 @@ class ReaderMetadataPopup(QWidget):
                     metadata_value = str(metadata[key])
                     if key == "enabled_channels":
                         metadata_value = ", ".join(
-                            ["Channel " + str(ch + 1) for ch in metadata[key]]
+                            [
+                                get_channel_name(ch, channel_names_from_file)
+                                for ch in metadata[key]
+                            ]
                         )
                     if key == "acquisition_time":
                         if metadata[key] is not None:
                             metadata_value = str(metadata[key] / 1000)
                     if key == "correlations":
                         correlated_channels = [
-                            [channel + 1 for channel in pair] for pair in metadata[key]
+                            (
+                                get_channel_name(pair[0], channel_names_from_file),
+                                get_channel_name(pair[1], channel_names_from_file),
+                            )
+                            for pair in metadata[key]
                         ]
                         metadata_value = str(correlated_channels)
                     if key == "lag_index":

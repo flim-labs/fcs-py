@@ -303,8 +303,15 @@ class ExportPlotImageButton(QWidget):
     
     
     def on_export_plot_image(self):
-        g2_correlations, lag_index = ReadData.prepare_fcs_data_for_export_img(self.app)
-        plot = plot_fcs_data(g2_correlations, lag_index, show_plot=False)
+        g2_correlations, lag_index, channel_names = (
+            ReadData.prepare_fcs_data_for_export_img(self.app)
+        )
+        plot = plot_fcs_data(
+            g2_correlations,
+            lag_index,
+            show_plot=False,
+            channel_names=channel_names,
+        )
         ReadData.save_plot_image(plot)        
   
    

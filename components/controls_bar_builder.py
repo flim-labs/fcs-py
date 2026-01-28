@@ -99,6 +99,7 @@ class ControlsBarBuilder:
         abort_button.setFixedHeight(55)
         abort_button.setFixedWidth(110)
         abort_button.setEnabled(False)
+        abort_button.setVisible(app.acquire_read_mode != "read")
         abort_button.clicked.connect(abort_btn_pressed_cb)
         buttons_row_layout.addWidget(abort_button)
         # reset button
