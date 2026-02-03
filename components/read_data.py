@@ -471,7 +471,9 @@ class ReaderPopup(QWidget):
         self.move(window_geometry.topLeft())
 
     def extract_correlation_from_label(self, text):
-        numbers = re.findall(r"\d+", text)
+        # Extract channel numbers from "(Ch1)" and "(Ch2)" pattern only
+        # This avoids picking up numbers from custom channel names like "test11"
+        numbers = re.findall(r"\(Ch(\d+)\)", text)
         corr_tuples = tuple(int(num) - 1 for num in numbers)
         return corr_tuples
 
