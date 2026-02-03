@@ -38,7 +38,8 @@ class FCSPostProcessingSingleCalcWorker(QThread):
         export_intensity_tracing,
         notes,
         tau_high_density,
-        fcs_algorithm
+        fcs_algorithm,
+        channel_names
     ):
         super().__init__()
         self.active_correlations = active_correlations
@@ -48,6 +49,7 @@ class FCSPostProcessingSingleCalcWorker(QThread):
         self.tau_high_density = tau_high_density
         self.acquisition_time = acquisition_time
         self.write_data = write_data
+        self.channel_names = channel_names
         self.export_fcs = export_fcs
         self.export_intensity_tracing = export_intensity_tracing
         self.notes = notes
@@ -69,7 +71,8 @@ class FCSPostProcessingSingleCalcWorker(QThread):
                 export_intensity_tracing=self.export_intensity_tracing and self.write_data,
                 notes=self.notes,
                 tau_high_density=self.tau_high_density,
-                use_fft_correlation=self.use_fft_correlation
+                use_fft_correlation=self.use_fft_correlation,
+                channel_names=self.channel_names
             )
             if not self.is_running:
                 break
@@ -106,13 +109,7 @@ class FCSPostProcessingAverageCalcWorker(QThread):
 class FCSPostProcessing:
     @staticmethod
     def get_input(app):
-        # Save channel_names together with notes
-        import json as json_lib
-        notes_with_metadata = {
-            "notes": app.notes,
-            "channel_names": app.channel_names
-        }
-        notes = json_lib.dumps(notes_with_metadata)
+        notes = app.notes
         
         free_running_mode = app.free_running_acquisition_time
         enabled_channels = app.enabled_channels
@@ -151,7 +148,8 @@ class FCSPostProcessing:
             export_intensity_tracing,
             notes,
             tau_high_density,
-            fcs_algorithm
+            fcs_algorithm,
+            app.channel_names
         )
         QApplication.processEvents()
         app.fcs_single_worker = worker

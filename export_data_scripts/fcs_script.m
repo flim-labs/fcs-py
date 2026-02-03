@@ -31,6 +31,11 @@ json_metadata_data = fread(fid, json_metadata_length, 'char')';
 json_metadata_str = char(json_metadata_data);
 metadata = jsondecode(json_metadata_str);
 
+% If channel_names was not provided via placeholder, try to read from metadata
+if isempty(channel_names) && isfield(metadata, 'channel_names')
+    channel_names = metadata.channel_names;
+end
+
 % Read g2_correlations JSON length
 g2_correlations_json_length = fread(fid, 1, 'uint32');
 
