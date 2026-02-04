@@ -6,7 +6,6 @@ from PyQt6.QtWidgets import  QWidget, QPushButton, QCheckBox, QHBoxLayout, QGrid
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QColor
 from components.correlations_matrix import ChCorrelationsMatrix
-from components.helpers import extract_channel_from_label
 from components.intensity_tracing_controller import IntensityTracingButtonsActions
 from components.logo_utilities import TitlebarIcon
 from components.resource_path import resource_path
