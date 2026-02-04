@@ -114,7 +114,7 @@ class PlotsConfigPopup(QWidget):
         for index, (ch1, ch2) in enumerate(corr_data):
             ch1_name = get_channel_name(ch1, self.app.channel_names, truncate_len=15)
             ch2_name = get_channel_name(ch2, self.app.channel_names, truncate_len=15)
-            checkbox = self.set_checkboxes(f"{ch1_name} - {ch2_name}", "gt")
+            checkbox = self.set_checkboxes(f"{ch1_name} - {ch2_name}", "gt", channel_data=(ch1, ch2))
             gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in self.app.gt_plots_to_show]
             isChecked = (ch1, ch2) in gt_plot_to_show
             checkbox.setChecked(isChecked)
@@ -126,7 +126,7 @@ class PlotsConfigPopup(QWidget):
         self.app.enabled_channels.sort()
         for ch in self.app.enabled_channels:
             ch_name = get_channel_name(ch, self.app.channel_names, truncate_len=15)
-            checkbox = self.set_checkboxes(ch_name, "intensity")
+            checkbox = self.set_checkboxes(ch_name, "intensity", channel_data=ch)
             isChecked = ch in self.app.intensity_plots_to_show
             checkbox.setChecked(isChecked)
             if len(self.app.intensity_plots_to_show) >=4 and ch not in self.app.intensity_plots_to_show:
@@ -134,13 +134,16 @@ class PlotsConfigPopup(QWidget):
         self.update_layout(self.intensity_checkboxes_wrappers, self.intensity_ch_grid, "intensity")        
 
 
-    def set_checkboxes(self, text, typology):
+    def set_checkboxes(self, text, typology, channel_data=None):
         checkbox_wrapper = QWidget()
         checkbox_wrapper.setObjectName(f"simple_checkbox_wrapper")
         row = QHBoxLayout()
         checkbox = QCheckBox(text)
         checkbox.setStyleSheet(GUIStyles.set_tau_checkbox_style(color = "#FB8C00" if typology == 'intensity' else "#31c914" ))
         checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        # Store channel data directly in the checkbox for reliable access
+        if channel_data is not None:
+            checkbox.setProperty("channel_data", channel_data)
         checkbox.toggled.connect(partial(self.on_ch_intensity_toggled, checkbox=checkbox) if typology == 'intensity' else partial(self.on_ch_gt_toggled, checkbox=checkbox))
         row.addWidget(checkbox)
         checkbox_wrapper.setLayout(row)
@@ -179,8 +182,11 @@ class PlotsConfigPopup(QWidget):
             grid.addWidget(widget, row, col)
 
     def on_ch_intensity_toggled(self, state, checkbox):
-        label_text = checkbox.text() 
-        ch_num_index = extract_channel_from_label(label_text) 
+        # Get channel number from stored property, fallback to extraction from label
+        ch_num_index = checkbox.property("channel_data")
+        if ch_num_index is None:
+            label_text = checkbox.text()
+            ch_num_index = extract_channel_from_label(label_text)
         if state:
             if ch_num_index not in self.app.intensity_plots_to_show:
                 self.app.intensity_plots_to_show.append(ch_num_index)
@@ -191,7 +197,8 @@ class PlotsConfigPopup(QWidget):
         self.app.settings.setValue(SETTINGS_INTENSITY_PLOTS_TO_SHOW, json.dumps(self.app.intensity_plots_to_show)) 
         if len(self.app.intensity_plots_to_show) >= 4:
             for checkbox in self.intensity_checkboxes:
-                if checkbox.text() != label_text and not checkbox.isChecked():
+                cb_channel = checkbox.property("channel_data")
+                if cb_channel != ch_num_index and not checkbox.isChecked():
                     checkbox.setEnabled(False)
         else:
             for checkbox in self.intensity_checkboxes:
@@ -202,9 +209,12 @@ class PlotsConfigPopup(QWidget):
 
 
     def on_ch_gt_toggled(self, state, checkbox):    
-        label_text = checkbox.text() 
+        # Get correlation tuple from stored property, fallback to extraction from label
+        corr_tuple = checkbox.property("channel_data")
+        if corr_tuple is None:
+            label_text = checkbox.text()
+            corr_tuple = self.extract_correlation_from_label(label_text)
         gt_plot_to_show = [tuple(item) if isinstance(item, list) else item for item in self.app.gt_plots_to_show]
-        corr_tuple = self.extract_correlation_from_label(label_text) 
         if state:
             if corr_tuple not in gt_plot_to_show:
                 gt_plot_to_show.append(corr_tuple)
@@ -215,7 +225,8 @@ class PlotsConfigPopup(QWidget):
         self.app.settings.setValue(SETTINGS_GT_PLOTS_TO_SHOW, json.dumps(gt_plot_to_show)) 
         if len(gt_plot_to_show) >= 4:
             for checkbox in self.gt_checkboxes:
-                if checkbox.text() != label_text and not checkbox.isChecked():
+                cb_corr = checkbox.property("channel_data")
+                if cb_corr != corr_tuple and not checkbox.isChecked():
                     checkbox.setEnabled(False)
         else:
             for checkbox in self.gt_checkboxes:
@@ -234,7 +245,9 @@ class PlotsConfigPopup(QWidget):
 
 
     def extract_correlation_from_label(self, text):
-        numbers = re.findall(r'\d+', text)
+        # Extract channel numbers from "(ChN)" pattern only
+        # This avoids picking up numbers from custom channel names
+        numbers = re.findall(r'\(Ch(\d+)\)', text)
         corr_tuples = tuple(int(num) - 1 for num in numbers)
         return corr_tuples
     
