@@ -76,18 +76,8 @@ class ReadData:
         app.reader_data["fcs"]["data"]["lag_index"] = lag_index
         app.reader_data["fcs"]["data"]["g2_correlations"] = g2_correlations
         
-        # Extract channel_names from notes if present
-        if "notes" in metadata and metadata["notes"]:
-            try:
-                notes_data = json.loads(metadata["notes"])
-                if isinstance(notes_data, dict) and "channel_names" in notes_data:
-                    app.reader_data["fcs"]["metadata"]["channel_names"] = notes_data["channel_names"]
-                    app.reader_data["fcs"]["metadata"]["notes"] = notes_data.get("notes", "")
-                else:
-                    app.reader_data["fcs"]["metadata"]["channel_names"] = {}
-            except:
-                # If notes is not JSON, keep it as is
-                app.reader_data["fcs"]["metadata"]["channel_names"] = {}
+        if "channel_names" in metadata:
+            app.reader_data["fcs"]["metadata"]["channel_names"] = metadata["channel_names"]
         else:
             app.reader_data["fcs"]["metadata"]["channel_names"] = {}
 
@@ -487,6 +477,14 @@ class ReaderPopup(QWidget):
         screen_geometry = QApplication.primaryScreen().availableGeometry().center()
         window_geometry.moveCenter(screen_geometry)
         self.move(window_geometry.topLeft())
+
+    def extract_correlation_from_label(self, text):
+        # Extract channel numbers from "(Ch1)" and "(Ch2)" pattern only
+        # This avoids picking up numbers from custom channel names like "test11"
+        numbers = re.findall(r"\(Ch(\d+)\)", text)
+        corr_tuples = tuple(int(num) - 1 for num in numbers)
+        return corr_tuples
+
 
 class ReaderMetadataPopup(QWidget):
     def __init__(self, window):

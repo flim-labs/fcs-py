@@ -131,11 +131,9 @@ class ScriptFileUtils:
     @classmethod
     def manipulate_file_content(cls, content, file_paths, channel_names, file_extension):
         manipulated_lines = []
-        # Prepare channel names for injection
         if file_extension == "py":
-            channel_names_str = json.dumps(channel_names)
+            channel_names_str = json.dumps(channel_names)  # JSON string that will be embedded in Python code
         else:  # MATLAB
-            # Convert Python dict to MATLAB struct format
             if channel_names:
                 fields = [f'"x{k}", "{v}"' for k, v in channel_names.items()]
                 channel_names_str = f'struct({", ".join(fields)})'

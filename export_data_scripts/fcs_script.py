@@ -7,8 +7,11 @@ import matplotlib.pyplot as plt
 file_path = "<FILE-PATH>"
 print("Using data file: " + file_path)
 
-# Channel custom names
-channel_names = <CHANNEL-NAMES>
+channel_names_json = '<CHANNEL-NAMES>'
+try:
+    channel_names = json.loads(channel_names_json) if channel_names_json and channel_names_json != '<CHANNEL-NAMES>' else {}
+except:
+    channel_names = {}
 
 def get_channel_name(channel_id, truncate_len=5):
     """
@@ -36,6 +39,10 @@ with open(file_path, "rb") as f:
     null = None
     metadata = eval(f.read(json_length).decode("utf-8"))
 
+    # If channel_names was not provided via placeholder, try to read from metadata
+    if not channel_names and "channel_names" in metadata:
+        channel_names = metadata["channel_names"]
+
     # Read g2_correlations JSON length
     (g2_correlations_json_length,) = struct.unpack("I", f.read(4))
     g2_correlations_json_string = f.read(g2_correlations_json_length).decode("utf-8")
@@ -58,10 +65,10 @@ with open(file_path, "rb") as f:
 
     # CORRELATIONS (info about correlated channels)
     if "correlations" in metadata and metadata["correlations"] is not None:
-        correlated_channels = [
-            [channel + 1 for channel in pair] for pair in metadata["correlations"]
+        correlated_channels_names = [
+            [get_channel_name(ch) for ch in pair] for pair in metadata["correlations"]
         ]
-        print("Channels correlations: " + str(correlated_channels))
+        print("Channels correlations: " + str(correlated_channels_names))
 
     # NUMBER OF ACQUISITIONS
     if "num_acquisitions" in metadata and metadata["num_acquisitions"] is not None:

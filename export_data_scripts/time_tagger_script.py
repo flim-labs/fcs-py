@@ -10,8 +10,23 @@ import warnings
 
 file_path = "<FILE-PATH>"
 
+channel_names_json = '<CHANNEL-NAMES>'
+try:
+    channel_names = json.loads(channel_names_json) if channel_names_json else {}
+except:
+    channel_names = {}
+
 init(autoreset=True)  
 warnings.filterwarnings("ignore", category=FutureWarning, module="pandas")
+
+def get_channel_name(channel_id, truncate_len=15):
+    """Get custom channel name with channel reference, or default name."""
+    custom_name = channel_names.get(str(channel_id), None)
+    if custom_name:
+        if len(custom_name) > truncate_len:
+            custom_name = custom_name[:truncate_len] + "..."
+        return f"{custom_name} (Ch{channel_id + 1})"
+    return f"Channel {channel_id + 1}"
 
 def read_time_tagger_bin(file_path, chunk_size=100000):
     """
@@ -70,7 +85,7 @@ def read_time_tagger_bin(file_path, chunk_size=100000):
             header = read_header(f)
             if "channels" in header and header["channels"] is not None:
                 enabled_channels = ", ".join(
-                    ["Channel " + str(ch + 1) for ch in header["channels"]]
+                    [get_channel_name(ch) for ch in header["channels"]]
                 )
             if "laser_period_ns" in header and header["laser_period_ns"] is not None:
                 laser_period = str(header["laser_period_ns"]) + "ns"
@@ -93,7 +108,7 @@ def read_time_tagger_bin(file_path, chunk_size=100000):
         elif event == 80:
             event_string = "P"  # Pixel
         else:
-            event_string = f"ch{event + 1}" # Channel          
+            event_string = get_channel_name(event)  # Use custom channel name          
         records.append((event_string, time))
 
         if (i + 1) % chunk_size == 0:
